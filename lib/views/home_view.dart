@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'character_gallery_view.dart';
+import 'db_explorer_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -166,7 +167,17 @@ class _HomeViewState extends State<HomeView> {
                             collapsed: !_isSidebarOpen,
                           ),
                           const SizedBox(height: 8),
-                          _SidebarButton(label: 'DATABASE', icon: Icons.storage, accent: accent, onPressed: () {}, collapsed: !_isSidebarOpen),
+                          _SidebarButton(
+                            label: 'DATABASE',
+                            icon: Icons.storage,
+                            accent: accent,
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const DBExplorerView()),
+                              );
+                            },
+                            collapsed: !_isSidebarOpen,
+                          ),
                           const SizedBox(height: 8),
                           _SidebarButton(label: 'OPTIONS', icon: Icons.settings, accent: accent, onPressed: () {}, collapsed: !_isSidebarOpen),
                           // espaces pour futur contenu
