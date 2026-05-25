@@ -35,37 +35,47 @@ class DBProvider {
     );
   }
 
+
   FutureOr<void> _onCreate(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE characters(
+      CREATE TABLE my_characters(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        imagePath TEXT,
-        notes TEXT,
         createdAt INTEGER
       )
     ''');
   }
 
+    Future<void> checkIfTableExists(Database db, String tableName) async {
+      final result = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+        [tableName],
+      );
+      if (result.isEmpty) {
+        await db.execute('''
+          CREATE TABLE $tableName(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            createdAt INTEGER
+          )
+        ''');
+      }
+    }
   // ---- CRUD basiques sur la table characters ----
-  Future<int> insertCharacter(Map<String, dynamic> row) async {
+  Future<int> insertMyCharacter(String name) async {
     final db = await database;
-    return await db.insert('characters', row, conflictAlgorithm: ConflictAlgorithm.replace);
+    checkIfTableExists(db, 'my_characters');
+    Map<String, dynamic> character = {
+      'name': name,
+      'createdAt': DateTime.now().millisecondsSinceEpoch,
+    };
+    return await db.insert('my_characters', character, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<List<Map<String, dynamic>>> getAllCharacters() async {
+  Future<List<Map<String, dynamic>>> getAllMyCharacters() async {
     final db = await database;
-    return await db.query('characters', orderBy: 'createdAt DESC');
-  }
-
-  Future<int> updateCharacter(Map<String, dynamic> row) async {
-    final db = await database;
-    return await db.update('characters', row, where: 'id = ?', whereArgs: [row['id']]);
-  }
-
-  Future<int> deleteCharacter(int id) async {
-    final db = await database;
-    return await db.delete('characters', where: 'id = ?', whereArgs: [id]);
+    checkIfTableExists(db, 'my_characters');
+    return await db.query('my_characters', orderBy: 'createdAt DESC');
   }
 
   Future<void> close() async {

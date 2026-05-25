@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'character_gallery_view.dart';
 import 'db_explorer_view.dart';
+import '../repositories/character_repository.dart';
+import '../models/character_model.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -12,6 +14,49 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   bool _isSidebarOpen = true;
   final Duration _animDuration = const Duration(milliseconds: 300);
+
+  // ---- nouveau état pour charger les characters depuis la DB ----
+  final CharacterRepository _characterRepo = CharacterRepository();
+  List<Character> _myCharacters = [];
+  bool _loadingCharacters = true;
+  int _hoveredIndex = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMyCharacters();
+  }
+
+  Future<void> _loadMyCharacters() async {
+    setState(() => _loadingCharacters = true);
+    try {
+      final list = await _characterRepo.fetchAllCharacters();
+      setState(() {
+        _myCharacters = list;
+      });
+    } catch (_) {
+      setState(() {
+        _myCharacters = [];
+      });
+    } finally {
+      setState(() => _loadingCharacters = false);
+    }
+  }
+
+  int _columnsForWidth(double width) {
+    if (width > 1400) return 8;
+    if (width > 1000) return 7;
+    if (width > 700) return 6;
+    if (width > 480) return 5;
+    return 4;
+  }
+
+  String _assetPathForCharacter(Character c) {
+    if (c.imagePath != null && c.imagePath!.isNotEmpty) return c.imagePath!;
+    // essayer de dériver un slug à partir du nom (ex: "Alisa" -> "alisa-portrait.png")
+    final slug = c.name.toLowerCase().replaceAll(RegExp(r'\s+'), '-').replaceAll(RegExp(r'[^a-z0-9\-]'), '');
+    return 'assets/images/character_images/$slug-portrait.png';
+  }
 
   void _toggleSidebar() {
     setState(() => _isSidebarOpen = !_isSidebarOpen);
@@ -160,7 +205,7 @@ class _HomeViewState extends State<HomeView> {
                             icon: Icons.add,
                             accent: accent,
                             onPressed: () {
-                              Navigator.of(context).push(
+                              Navigator.of(context).pushReplacement(
                                 MaterialPageRoute(builder: (_) => const CharacterGalleryView()),
                               );
                             },
@@ -204,7 +249,7 @@ class _HomeViewState extends State<HomeView> {
                             ),
                             const SizedBox(height: 12),
 
-                            // Zone centrale
+                            // Zone centrale -> remplacer le placeholder par la grille de la DB
                             Expanded(
                               child: Container(
                                 decoration: BoxDecoration(
@@ -212,17 +257,85 @@ class _HomeViewState extends State<HomeView> {
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(color: Colors.white.withOpacity(0.03)),
                                 ),
-                                child: const Center(
-                                  child: Text(
-                                    'PLACE HOLDER',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 34,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1.8,
-                                    ),
-                                  ),
-                                ),
+                                padding: const EdgeInsets.all(12),
+                                child: _loadingCharacters
+                                    ? const Center(child: CircularProgressIndicator())
+                                    : _myCharacters.isEmpty
+                                        ? Center(child: Text('Aucun personnage', style: TextStyle(color: Colors.white70)))
+                                        : LayoutBuilder(
+                                            builder: (context, constraints) {
+                                              final cols = _columnsForWidth(constraints.maxWidth);
+                                              return GridView.builder(
+                                                itemCount: _myCharacters.length,
+                                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                                  crossAxisCount: cols,
+                                                  crossAxisSpacing: 12,
+                                                  mainAxisSpacing: 12,
+                                                  childAspectRatio: 0.78,
+                                                ),
+                                                itemBuilder: (context, index) {
+                                                  final c = _myCharacters[index];
+                                                  final assetPath = _assetPathForCharacter(c);
+                                                  final name = c.name.isNotEmpty ? c.name[0].toUpperCase() + c.name.substring(1) : 'Unknown';
+                                                  return MouseRegion(
+                                                    cursor: SystemMouseCursors.click,
+                                                    onEnter: (_) => setState(() => _hoveredIndex = index),
+                                                    onExit: (_) => setState(() => _hoveredIndex = -1),
+                                                    child: AnimatedContainer(
+                                                      duration: const Duration(milliseconds: 160),
+                                                      curve: Curves.easeOut,
+                                                      transform: _hoveredIndex == index ? (Matrix4.identity()..scale(1.03)) : Matrix4.identity(),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white.withOpacity(0.03),
+                                                        borderRadius: BorderRadius.circular(10),
+                                                        border: Border.all(color: Colors.white.withOpacity(0.03)),
+                                                        boxShadow: _hoveredIndex == index
+                                                            ? [BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 6))]
+                                                            : null,
+                                                      ),
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                                                        children: [
+                                                          Expanded(
+                                                            child: ClipRRect(
+                                                              borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                                                              child: Image.asset(
+                                                                assetPath,
+                                                                fit: BoxFit.cover,
+                                                                errorBuilder: (context, error, stackTrace) {
+                                                                  return Container(
+                                                                    color: Colors.white12,
+                                                                    child: Center(
+                                                                      child: Text(name, style: TextStyle(color: Colors.white70, fontSize: 28, fontWeight: FontWeight.w700)),
+                                                                    ),
+                                                                  );
+                                                                },
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          Container(
+                                                            decoration: BoxDecoration(
+                                                              color: const Color.fromRGBO(3, 36, 101, 1),
+                                                              borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
+                                                              border: Border.all(color: Colors.white.withOpacity(0.03)),
+                                                            ),
+                                                            child: Padding(
+                                                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                                                              child: Text(
+                                                                name,
+                                                                textAlign: TextAlign.center,
+                                                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                              );
+                                            },
+                                          ),
                               ),
                             ),
                           ],
@@ -287,46 +400,3 @@ class _SidebarButton extends StatelessWidget {
     );
   }
 }
-
-Set<String> characterNamesList = {
-  "alisa",
-  "anna",
-  "armor-king",
-  "asuka",
-  "azucena",
-  "bryan",
-  "claudio",
-  "clive",
-  "devil-jin",
-  "dragunov",
-  "eddy",
-  "fahkumram",
-  "feng",
-  "heihachi",
-  "hwoarang",
-  "jack-8",
-  "jin",
-  "jun",
-  "kazuya",
-  "king",
-  "kuma",
-  "lars",
-  "law",
-  "lee",
-  "leo",
-  "leroy",
-  "lidia",
-  "lili",
-  "miary-zo",
-  "nina",
-  "panda",
-  "paul",
-  "raven",
-  "reina",
-  "shaheen",
-  "steve",
-  "victor",
-  "xiaoyu",
-  "yoshimitsu",
-  "zafina"
-};

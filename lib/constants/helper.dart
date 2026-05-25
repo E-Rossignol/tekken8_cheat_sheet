@@ -1,3 +1,5 @@
+import '../models/stance_model.dart';
+
 Set<String> characterNamesList = {
   "alisa",
   "anna",
@@ -41,7 +43,13 @@ Set<String> characterNamesList = {
   "zafina"
 };
 
-Set<String> myCharactersList = {
-  "anna",
-  "leroy"
-};
+List<Stance> stancesList = [
+  Stance(
+    characterName: "anna",
+    shortcut: 'HC'
+  ),
+  Stance(
+    characterName: "anna",
+    shortcut: "CJ"
+  ),
+];

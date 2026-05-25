@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/constants/helper.dart';
+import '../repositories/character_repository.dart';
+import '../models/character_model.dart';
+import 'home_view.dart';
+import '../constants/helper.dart';
 
 class CharacterGalleryView extends StatefulWidget {
   const CharacterGalleryView({super.key});
@@ -11,6 +15,7 @@ class CharacterGalleryView extends StatefulWidget {
 class _CharacterGalleryViewState extends State<CharacterGalleryView> {
   List<String> _images = [];
   bool _loading = true;
+  int _hoveredIndex = -1;
 
   @override
   void initState() {
@@ -18,10 +23,34 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
     _loadAssetImages();
   }
 
+  // Ajoute le personnage en DB et affiche une confirmation.
+  Future<void> _addCharacterToDB(String path) async {
+    final displayName = _displayNameFromPath(path);
+    final character = Character(name: displayName.toLowerCase(), imagePath: path);
+    try {
+      final repo = CharacterRepository();
+      await repo.addCharacter(character);
+      // Retirer localement l'image pour éviter double ajout (optionnel)
+      setState(() {
+        _images.remove(path);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$displayName ajouté'), duration: const Duration(seconds: 2)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors de l\'ajout de $displayName'), backgroundColor: Colors.red, duration: const Duration(seconds: 2)),
+      );
+    }
+  }
+
   Future<void> _loadAssetImages() async {
+    final repo = CharacterRepository();
+    final existingCharacters = await repo.fetchAllCharacters();
+    final existingNames = existingCharacters.map((c) => c.name).toSet();
     List<String> images = [];
     for (var name in characterNamesList) {
-      if (myCharactersList.contains(name)) continue;
+      if (existingNames.contains(name)) continue;
       final path = 'assets/images/character_images/$name-portrait.png';
       images.add(path);
     }
@@ -43,7 +72,7 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
     if (width > 1000) return 9;
     if (width > 700) return 8;
     if (width > 480) return 7;
-    return 2;
+    return 6;
   }
 
   @override
@@ -55,6 +84,13 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
         elevation: 0,
         foregroundColor: Colors.white,
         centerTitle: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const HomeView()),
+          ),
+          tooltip: 'Back',
+        ),
       ),
       extendBodyBehindAppBar: true,
       body: Container(
@@ -79,37 +115,73 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
                 itemBuilder: (context, index) {
                   final path = _images[index];
                   final displayName = _displayNameFromPath(path);
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.03),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.white.withOpacity(0.03)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-                            child: Image.asset(path, fit: BoxFit.cover),
-                          ),
+                  return MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    onEnter: (_) => setState(() => _hoveredIndex = index),
+                    onExit: (_) => setState(() => _hoveredIndex = -1),
+                    child: GestureDetector(
+                      onTap: () => _addCharacterToDB(path),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 160),
+                        curve: Curves.easeOut,
+                        transform: _hoveredIndex == index ? (Matrix4.identity()..scale(1.03)) : Matrix4.identity(),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white.withOpacity(0.03)),
+                          boxShadow: _hoveredIndex == index
+                              ? [BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 6))]
+                              : null,
                         ),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Color.fromRGBO(3, 36, 101, 1),
-                            borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
-                            border: Border.all(color: Colors.white.withOpacity(0.03)),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                            child: Text(
-                              displayName,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                        child: Stack(
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  child: ClipRRect(
+                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                                    child: Image.asset(path, fit: BoxFit.cover),
+                                  ),
+                                ),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color.fromRGBO(3, 36, 101, 1),
+                                    borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
+                                    border: Border.all(color: Colors.white.withOpacity(0.03)),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                                    child: Text(
+                                      displayName,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
+                            // Overlay visible au hover pour indiquer l'action clic
+                            if (_hoveredIndex == index)
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.20),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: const [
+                                        Icon(Icons.add_circle, color: Colors.white70, size: 36),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   );
                 },
@@ -118,4 +190,3 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
     );
   }
 }
-

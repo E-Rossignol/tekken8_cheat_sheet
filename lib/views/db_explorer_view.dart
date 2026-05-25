@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/db_provider.dart';
+import 'home_view.dart';
 
 class DBExplorerView extends StatefulWidget {
   const DBExplorerView({super.key});
@@ -20,6 +21,51 @@ class _DBExplorerViewState extends State<DBExplorerView> {
   void initState() {
     super.initState();
     _refresh();
+  }
+
+  // Demande de confirmation générique
+  Future<bool> _confirmDialog(String title, String content) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Confirmer')),
+        ],
+      ),
+    );
+    return result == true;
+  }
+
+  // Supprime la table puis rafraîchit
+  Future<void> _dropTable(String table) async {
+    final ok = await _confirmDialog('Supprimer la table', 'Voulez-vous vraiment supprimer la table "$table" ? Cette opération est irréversible.');
+    if (!ok) return;
+    final db = await _db.database;
+    try {
+      await db.execute('DROP TABLE IF EXISTS "$table"');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Table "$table" supprimée'), duration: const Duration(seconds: 2)));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur lors de la suppression de "$table"'), backgroundColor: Colors.red));
+    }
+    await _refresh();
+  }
+
+  // Supprime une ligne identifiée par pkColumn/pkValue dans la table sélectionnée
+  Future<void> _deleteRow(String table, String pkColumn, dynamic pkValue) async {
+    final ok = await _confirmDialog('Supprimer l\'entrée', 'Supprimer cette entrée de "$table" ?');
+    if (!ok) return;
+    final db = await _db.database;
+    try {
+      await db.delete(table, where: '"$pkColumn" = ?', whereArgs: [pkValue]);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Entrée supprimée'), duration: const Duration(seconds: 2)));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Erreur lors de la suppression'), backgroundColor: Colors.red));
+    }
+    // recharger la table courante
+    if (_selectedTable != null) await _loadTable(_selectedTable!);
   }
 
   Future<void> _refresh() async {
@@ -106,6 +152,11 @@ class _DBExplorerViewState extends State<DBExplorerView> {
                   title: Text(t, style: TextStyle(color: selected ? Colors.white : Colors.white70)),
                   tileColor: selected ? Colors.white10 : null,
                   onTap: () => _loadTable(t),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.redAccent, size: 20),
+                    tooltip: 'Supprimer la table',
+                    onPressed: () => _dropTable(t),
+                  ),
                 );
               },
             ),
@@ -129,6 +180,9 @@ class _DBExplorerViewState extends State<DBExplorerView> {
     // Limiter affichage colonnes si très nombreuses
     final displayCols = _columns.length > 10 ? _columns.sublist(0, 10) : _columns;
 
+    // déterminer colonne clé primaire à utiliser pour suppression (id si présent sinon première colonne affichée)
+    final pkColumn = _columns.contains('id') ? 'id' : _columns.first;
+
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -141,15 +195,39 @@ class _DBExplorerViewState extends State<DBExplorerView> {
               scrollDirection: Axis.horizontal,
               child: SingleChildScrollView(
                 child: DataTable(
-                  columns: displayCols.map((c) => DataColumn(label: Text(c, style: const TextStyle(color: Colors.white70)))).toList(),
+                  columns: [
+                    ...displayCols.map((c) => DataColumn(label: Text(c, style: const TextStyle(color: Colors.white70)))),
+                    const DataColumn(label: Text('Actions', style: TextStyle(color: Colors.white70))),
+                  ],
                   rows: _rows.map((r) {
-                    return DataRow(cells: displayCols.map((c) {
+                    final cells = displayCols.map((c) {
                       final v = r.containsKey(c) ? r[c] : null;
                       return DataCell(Container(
                         constraints: const BoxConstraints(maxWidth: 240),
                         child: Text(v?.toString() ?? 'NULL', style: const TextStyle(color: Colors.white70), overflow: TextOverflow.ellipsis),
                       ));
-                    }).toList());
+                    }).toList();
+
+                    // PK value pour suppression
+                    final pkValue = r.containsKey(pkColumn) ? r[pkColumn] : null;
+                    cells.add(
+                      DataCell(
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.delete_forever, color: Colors.redAccent, size: 20),
+                              tooltip: 'Supprimer cette entrée',
+                              onPressed: pkValue == null
+                                  ? null
+                                  : () => _deleteRow(_selectedTable!, pkColumn, pkValue),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+
+                    return DataRow(cells: cells);
                   }).toList(),
                 ),
               ),
@@ -171,6 +249,12 @@ class _DBExplorerViewState extends State<DBExplorerView> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const HomeView()),
+          ),
+        ),
         actions: [
           IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh)),
         ],
@@ -195,4 +279,3 @@ class _DBExplorerViewState extends State<DBExplorerView> {
     );
   }
 }
-
