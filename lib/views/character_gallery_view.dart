@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/constants/helper.dart';
 import '../repositories/character_repository.dart';
-import '../models/character_model.dart';
 import 'home_view.dart';
-import '../constants/helper.dart';
+import 'new_character_view.dart';
 
 class CharacterGalleryView extends StatefulWidget {
   const CharacterGalleryView({super.key});
@@ -21,27 +20,6 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
   void initState() {
     super.initState();
     _loadAssetImages();
-  }
-
-  // Ajoute le personnage en DB et affiche une confirmation.
-  Future<void> _addCharacterToDB(String path) async {
-    final displayName = _displayNameFromPath(path);
-    final character = Character(name: displayName.toLowerCase(), imagePath: path);
-    try {
-      final repo = CharacterRepository();
-      await repo.addCharacter(character);
-      // Retirer localement l'image pour éviter double ajout (optionnel)
-      setState(() {
-        _images.remove(path);
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$displayName ajouté'), duration: const Duration(seconds: 2)),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur lors de l\'ajout de $displayName'), backgroundColor: Colors.red, duration: const Duration(seconds: 2)),
-      );
-    }
   }
 
   Future<void> _loadAssetImages() async {
@@ -120,7 +98,11 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
                     onEnter: (_) => setState(() => _hoveredIndex = index),
                     onExit: (_) => setState(() => _hoveredIndex = -1),
                     child: GestureDetector(
-                      onTap: () => _addCharacterToDB(path),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => NewCharacterView(characterName: displayName.toLowerCase())),
+                        );
+                      },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 160),
                         curve: Curves.easeOut,

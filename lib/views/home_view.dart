@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'character_gallery_view.dart';
 import 'db_explorer_view.dart';
+import 'new_character_view.dart';
 import '../repositories/character_repository.dart';
 import '../models/character_model.dart';
 
@@ -54,7 +55,10 @@ class _HomeViewState extends State<HomeView> {
   String _assetPathForCharacter(Character c) {
     if (c.imagePath != null && c.imagePath!.isNotEmpty) return c.imagePath!;
     // essayer de dériver un slug à partir du nom (ex: "Alisa" -> "alisa-portrait.png")
-    final slug = c.name.toLowerCase().replaceAll(RegExp(r'\s+'), '-').replaceAll(RegExp(r'[^a-z0-9\-]'), '');
+    final slug = c.name
+        .toLowerCase()
+        .replaceAll(RegExp(r'\s+'), '-')
+        .replaceAll(RegExp(r'[^a-z0-9\-]'), '');
     return 'assets/images/character_images/$slug-portrait.png';
   }
 
@@ -84,12 +88,18 @@ class _HomeViewState extends State<HomeView> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.black.withOpacity(0.35), Colors.black.withOpacity(0.15)],
+                    colors: [
+                      Colors.black.withOpacity(0.35),
+                      Colors.black.withOpacity(0.15),
+                    ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
                   border: Border(
-                    bottom: BorderSide(color: accent.withOpacity(0.12), width: 1),
+                    bottom: BorderSide(
+                      color: accent.withOpacity(0.12),
+                      width: 1,
+                    ),
                   ),
                 ),
                 child: Row(
@@ -103,10 +113,19 @@ class _HomeViewState extends State<HomeView> {
                         height: 48,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
-                          boxShadow: [BoxShadow(color: accent.withOpacity(0.18), blurRadius: 8, offset: const Offset(0, 4))],
+                          boxShadow: [
+                            BoxShadow(
+                              color: accent.withOpacity(0.18),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
                         child: Center(
-                          child: Image.asset('assets/images/logo.png', fit: BoxFit.contain),
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            fit: BoxFit.contain,
+                          ),
                         ),
                       ),
                     ),
@@ -136,13 +155,20 @@ class _HomeViewState extends State<HomeView> {
                         children: [
                           IconButton(
                             onPressed: () {},
-                            icon: Icon(Icons.notifications, color: accent.withOpacity(0.9)),
+                            icon: Icon(
+                              Icons.notifications,
+                              color: accent.withOpacity(0.9),
+                            ),
                           ),
                           const SizedBox(width: 8),
                           CircleAvatar(
                             radius: 18,
                             backgroundColor: Colors.white12,
-                            child: const Icon(Icons.person, color: Colors.white70, size: 18),
+                            child: const Icon(
+                              Icons.person,
+                              color: Colors.white70,
+                              size: 18,
+                            ),
                           ),
                         ],
                       ),
@@ -159,11 +185,16 @@ class _HomeViewState extends State<HomeView> {
                     AnimatedContainer(
                       duration: _animDuration,
                       width: _isSidebarOpen ? 220 : 72,
-                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 20,
+                        horizontal: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.03),
                         border: Border(
-                          right: BorderSide(color: Colors.white.withOpacity(0.03)),
+                          right: BorderSide(
+                            color: Colors.white.withOpacity(0.03),
+                          ),
                         ),
                       ),
                       child: Column(
@@ -175,16 +206,26 @@ class _HomeViewState extends State<HomeView> {
                             Row(
                               children: [
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8.0,
+                                    vertical: 6,
+                                  ),
                                   child: Text(
                                     'MENU',
-                                    style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12, letterSpacing: 1.2),
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.6),
+                                      fontSize: 12,
+                                      letterSpacing: 1.2,
+                                    ),
                                   ),
                                 ),
                                 const Spacer(),
                                 IconButton(
                                   onPressed: _toggleSidebar,
-                                  icon: Icon(Icons.chevron_left, color: accent.withOpacity(0.9)),
+                                  icon: Icon(
+                                    Icons.chevron_left,
+                                    color: accent.withOpacity(0.9),
+                                  ),
                                   tooltip: 'Close menu',
                                 ),
                               ],
@@ -194,7 +235,10 @@ class _HomeViewState extends State<HomeView> {
                             Center(
                               child: IconButton(
                                 onPressed: _toggleSidebar,
-                                icon: Icon(Icons.chevron_right, color: accent.withOpacity(0.9)),
+                                icon: Icon(
+                                  Icons.chevron_right,
+                                  color: accent.withOpacity(0.9),
+                                ),
                                 tooltip: 'Open menu',
                               ),
                             ),
@@ -206,7 +250,9 @@ class _HomeViewState extends State<HomeView> {
                             accent: accent,
                             onPressed: () {
                               Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(builder: (_) => const CharacterGalleryView()),
+                                MaterialPageRoute(
+                                  builder: (_) => const CharacterGalleryView(),
+                                ),
                               );
                             },
                             collapsed: !_isSidebarOpen,
@@ -218,18 +264,32 @@ class _HomeViewState extends State<HomeView> {
                             accent: accent,
                             onPressed: () {
                               Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const DBExplorerView()),
+                                MaterialPageRoute(
+                                  builder: (_) => const DBExplorerView(),
+                                ),
                               );
                             },
                             collapsed: !_isSidebarOpen,
                           ),
                           const SizedBox(height: 8),
-                          _SidebarButton(label: 'OPTIONS', icon: Icons.settings, accent: accent, onPressed: () {}, collapsed: !_isSidebarOpen),
+                          _SidebarButton(
+                            label: 'OPTIONS',
+                            icon: Icons.settings,
+                            accent: accent,
+                            onPressed: () {},
+                            collapsed: !_isSidebarOpen,
+                          ),
                           // espaces pour futur contenu
                           const Spacer(),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
-                            child: Text('v0.1', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11)),
+                            child: Text(
+                              'v0.1',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.4),
+                                fontSize: 11,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -245,7 +305,11 @@ class _HomeViewState extends State<HomeView> {
                             // (optionnel) petit fil d'ariane ou sous-titre
                             Text(
                               'MY CHARACTERS',
-                              style: TextStyle(color: Colors.white.withOpacity(0.45), fontSize: 12, letterSpacing: 1.4),
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.45),
+                                fontSize: 12,
+                                letterSpacing: 1.4,
+                              ),
                             ),
                             const SizedBox(height: 12),
 
@@ -255,87 +319,209 @@ class _HomeViewState extends State<HomeView> {
                                 decoration: BoxDecoration(
                                   color: Colors.white.withOpacity(0.02),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.white.withOpacity(0.03)),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.03),
+                                  ),
                                 ),
                                 padding: const EdgeInsets.all(12),
                                 child: _loadingCharacters
-                                    ? const Center(child: CircularProgressIndicator())
+                                    ? const Center(
+                                        child: CircularProgressIndicator(),
+                                      )
                                     : _myCharacters.isEmpty
-                                        ? Center(child: Text('Aucun personnage', style: TextStyle(color: Colors.white70)))
-                                        : LayoutBuilder(
-                                            builder: (context, constraints) {
-                                              final cols = _columnsForWidth(constraints.maxWidth);
-                                              return GridView.builder(
-                                                itemCount: _myCharacters.length,
-                                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                    ? Center(
+                                        child: Text(
+                                          'Aucun personnage',
+                                          style: TextStyle(
+                                            color: Colors.white70,
+                                          ),
+                                        ),
+                                      )
+                                    : LayoutBuilder(
+                                        builder: (context, constraints) {
+                                          final cols = _columnsForWidth(
+                                            constraints.maxWidth,
+                                          );
+                                          return GridView.builder(
+                                            itemCount: _myCharacters.length,
+                                            gridDelegate:
+                                                SliverGridDelegateWithFixedCrossAxisCount(
                                                   crossAxisCount: cols,
                                                   crossAxisSpacing: 12,
                                                   mainAxisSpacing: 12,
                                                   childAspectRatio: 0.78,
                                                 ),
-                                                itemBuilder: (context, index) {
-                                                  final c = _myCharacters[index];
-                                                  final assetPath = _assetPathForCharacter(c);
-                                                  final name = c.name.isNotEmpty ? c.name[0].toUpperCase() + c.name.substring(1) : 'Unknown';
-                                                  return MouseRegion(
-                                                    cursor: SystemMouseCursors.click,
-                                                    onEnter: (_) => setState(() => _hoveredIndex = index),
-                                                    onExit: (_) => setState(() => _hoveredIndex = -1),
-                                                    child: AnimatedContainer(
-                                                      duration: const Duration(milliseconds: 160),
-                                                      curve: Curves.easeOut,
-                                                      transform: _hoveredIndex == index ? (Matrix4.identity()..scale(1.03)) : Matrix4.identity(),
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.white.withOpacity(0.03),
-                                                        borderRadius: BorderRadius.circular(10),
-                                                        border: Border.all(color: Colors.white.withOpacity(0.03)),
-                                                        boxShadow: _hoveredIndex == index
-                                                            ? [BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 6))]
-                                                            : null,
+                                            itemBuilder: (context, index) {
+                                              final c = _myCharacters[index];
+                                              final assetPath =
+                                                  _assetPathForCharacter(c);
+                                              final name = c.name.isNotEmpty
+                                                  ? c.name[0].toUpperCase() +
+                                                        c.name.substring(1)
+                                                  : 'Unknown';
+                                              return MouseRegion(
+                                                cursor:
+                                                    SystemMouseCursors.click,
+                                                onEnter: (_) => setState(
+                                                  () => _hoveredIndex = index,
+                                                ),
+                                                onExit: (_) => setState(
+                                                  () => _hoveredIndex = -1,
+                                                ),
+                                                child: GestureDetector(
+                                                  onTap: () {
+                                                    Navigator.of(context).push(
+                                                      MaterialPageRoute(
+                                                        builder: (_) =>
+                                                            NewCharacterView(
+                                                              characterName:
+                                                                  c.name,
+                                                            ),
                                                       ),
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                                                        children: [
-                                                          Expanded(
-                                                            child: ClipRRect(
-                                                              borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-                                                              child: Image.asset(
-                                                                assetPath,
-                                                                fit: BoxFit.cover,
-                                                                errorBuilder: (context, error, stackTrace) {
-                                                                  return Container(
-                                                                    color: Colors.white12,
-                                                                    child: Center(
-                                                                      child: Text(name, style: TextStyle(color: Colors.white70, fontSize: 28, fontWeight: FontWeight.w700)),
-                                                                    ),
-                                                                  );
-                                                                },
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          Container(
-                                                            decoration: BoxDecoration(
-                                                              color: const Color.fromRGBO(3, 36, 101, 1),
-                                                              borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
-                                                              border: Border.all(color: Colors.white.withOpacity(0.03)),
-                                                            ),
-                                                            child: Padding(
-                                                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                                                              child: Text(
-                                                                name,
-                                                                textAlign: TextAlign.center,
-                                                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
+                                                    );
+                                                  },
+                                                  child: AnimatedContainer(
+                                                    duration: const Duration(
+                                                      milliseconds: 160,
                                                     ),
-                                                  );
-                                                },
+                                                    curve: Curves.easeOut,
+                                                    transform:
+                                                        _hoveredIndex == index
+                                                        ? (Matrix4.identity()
+                                                            ..scale(1.03))
+                                                        : Matrix4.identity(),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white
+                                                          .withOpacity(0.03),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            10,
+                                                          ),
+                                                      border: Border.all(
+                                                        color: Colors.white
+                                                            .withOpacity(0.03),
+                                                      ),
+                                                      boxShadow:
+                                                          _hoveredIndex == index
+                                                          ? [
+                                                              BoxShadow(
+                                                                color: Colors
+                                                                    .black
+                                                                    .withOpacity(
+                                                                      0.35,
+                                                                    ),
+                                                                blurRadius: 12,
+                                                                offset:
+                                                                    const Offset(
+                                                                      0,
+                                                                      6,
+                                                                    ),
+                                                              ),
+                                                            ]
+                                                          : null,
+                                                    ),
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .stretch,
+                                                      children: [
+                                                        Expanded(
+                                                          child: ClipRRect(
+                                                            borderRadius:
+                                                                const BorderRadius.vertical(
+                                                                  top:
+                                                                      Radius.circular(
+                                                                        10,
+                                                                      ),
+                                                                ),
+                                                            child: Image.asset(
+                                                              assetPath,
+                                                              fit: BoxFit.cover,
+                                                              errorBuilder:
+                                                                  (
+                                                                    context,
+                                                                    error,
+                                                                    stackTrace,
+                                                                  ) {
+                                                                    return Container(
+                                                                      color: Colors
+                                                                          .white12,
+                                                                      child: Center(
+                                                                        child: Text(
+                                                                          name,
+                                                                          style: TextStyle(
+                                                                            color:
+                                                                                Colors.white70,
+                                                                            fontSize:
+                                                                                28,
+                                                                            fontWeight:
+                                                                                FontWeight.w700,
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    );
+                                                                  },
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        Container(
+                                                          decoration: BoxDecoration(
+                                                            color:
+                                                                const Color.fromRGBO(
+                                                                  3,
+                                                                  36,
+                                                                  101,
+                                                                  1,
+                                                                ),
+                                                            borderRadius:
+                                                                const BorderRadius.only(
+                                                                  bottomLeft:
+                                                                      Radius.circular(
+                                                                        10,
+                                                                      ),
+                                                                  bottomRight:
+                                                                      Radius.circular(
+                                                                        10,
+                                                                      ),
+                                                                ),
+                                                            border: Border.all(
+                                                              color: Colors
+                                                                  .white
+                                                                  .withOpacity(
+                                                                    0.03,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                          child: Padding(
+                                                            padding:
+                                                                const EdgeInsets.symmetric(
+                                                                  vertical: 8,
+                                                                  horizontal: 8,
+                                                                ),
+                                                            child: Text(
+                                                              name,
+                                                              textAlign:
+                                                                  TextAlign
+                                                                      .center,
+                                                              style: const TextStyle(
+                                                                color: Colors
+                                                                    .white,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
                                               );
                                             },
-                                          ),
+                                          );
+                                        },
+                                      ),
                               ),
                             ),
                           ],
@@ -388,7 +574,13 @@ class _SidebarButton extends StatelessWidget {
     return ElevatedButton.icon(
       onPressed: onPressed,
       icon: Icon(icon, color: accent, size: 18),
-      label: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
+      label: Text(
+        label,
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+      ),
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
         backgroundColor: Colors.white.withOpacity(0.03),
