@@ -3,6 +3,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import '../constants/helper.dart';
 
 class DBProvider {
   DBProvider._();
@@ -63,7 +64,6 @@ class DBProvider {
   // ---- CRUD basiques sur la table characters ----
   Future<int> insertMyCharacter(String name) async {
     final db = await database;
-    checkIfTableExists(db, 'my_characters');
     Map<String, dynamic> character = {
       'name': name,
       'createdAt': DateTime.now().millisecondsSinceEpoch,
@@ -73,7 +73,6 @@ class DBProvider {
 
   Future<List<Map<String, dynamic>>> getAllMyCharacters() async {
     final db = await database;
-    checkIfTableExists(db, 'my_characters');
     return await db.query('my_characters', orderBy: 'createdAt DESC');
   }
 

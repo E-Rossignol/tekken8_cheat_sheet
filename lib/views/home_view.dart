@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // <-- ajouté pour SystemChrome
 import 'character_gallery_view.dart';
 import 'db_explorer_view.dart';
 import 'new_character_view.dart';
@@ -25,6 +26,7 @@ class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
+    // SystemChrome moved to main.dart to set fullscreen at app startup.
     _loadMyCharacters();
   }
 
@@ -153,14 +155,6 @@ class _HomeViewState extends State<HomeView> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          IconButton(
-                            onPressed: () {},
-                            icon: Icon(
-                              Icons.notifications,
-                              color: accent.withOpacity(0.9),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
                           CircleAvatar(
                             radius: 18,
                             backgroundColor: Colors.white12,
