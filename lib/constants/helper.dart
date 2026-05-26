@@ -43,7 +43,7 @@ Set<String> characterNamesList = {
   "zafina"
 };
 
-List<Map<String, dynamic>> stances = [
+List<Map<String, dynamic>> stancesList = [
   {'characterName': 'alisa', 'name': 'DES'},
   {'characterName': 'alisa', 'name': 'SBT'},
   {'characterName': 'alisa', 'name': 'DBT'},
@@ -149,3 +149,11 @@ List<Map<String, dynamic>> stances = [
   {'characterName': 'miary-zo', 'name': 'MMO'},
   {'characterName': 'miary-zo', 'name': 'KMH'},
 ];
+
+String getPath(String characterName){
+  return 'assets/images/character_images/${characterName.toLowerCase().replaceAll(' ', '-')}-portrait.png';
+}
+
+String getBeautifulName(String characterName){
+  return (characterName[0].toUpperCase() + characterName.substring(1)).replaceAll('-',' ');
+}

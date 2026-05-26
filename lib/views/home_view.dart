@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // <-- ajouté pour SystemChrome
 import 'character_gallery_view.dart';
 import 'db_explorer_view.dart';
-import 'new_character_view.dart';
+import 'my_character_view.dart';
 import '../repositories/character_repository.dart';
 import '../models/character_model.dart';
+import '../constants/helper.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -61,7 +61,7 @@ class _HomeViewState extends State<HomeView> {
         .toLowerCase()
         .replaceAll(RegExp(r'\s+'), '-')
         .replaceAll(RegExp(r'[^a-z0-9\-]'), '');
-    return 'assets/images/character_images/$slug-portrait.png';
+    return getPath(slug);
   }
 
   void _toggleSidebar() {
@@ -77,7 +77,6 @@ class _HomeViewState extends State<HomeView> {
       end: Alignment.bottomRight,
     );
     final accent = const Color.fromRGBO(93, 208, 252, 1); // cyan néon
-
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(gradient: bgGradient),
@@ -306,7 +305,6 @@ class _HomeViewState extends State<HomeView> {
                               ),
                             ),
                             const SizedBox(height: 12),
-
                             // Zone centrale -> remplacer le placeholder par la grille de la DB
                             Expanded(
                               child: Container(
@@ -349,10 +347,7 @@ class _HomeViewState extends State<HomeView> {
                                               final c = _myCharacters[index];
                                               final assetPath =
                                                   _assetPathForCharacter(c);
-                                              final name = c.name.isNotEmpty
-                                                  ? c.name[0].toUpperCase() +
-                                                        c.name.substring(1)
-                                                  : 'Unknown';
+                                              final name = getBeautifulName(c.name);
                                               return MouseRegion(
                                                 cursor:
                                                     SystemMouseCursors.click,
@@ -367,7 +362,7 @@ class _HomeViewState extends State<HomeView> {
                                                     Navigator.of(context).push(
                                                       MaterialPageRoute(
                                                         builder: (_) =>
-                                                            NewCharacterView(
+                                                            MyCharacterView(
                                                               characterName:
                                                                   c.name,
                                                             ),

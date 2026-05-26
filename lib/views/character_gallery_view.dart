@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/constants/helper.dart';
 import '../repositories/character_repository.dart';
 import 'home_view.dart';
-import 'new_character_view.dart';
+import 'my_character_view.dart';
 
 class CharacterGalleryView extends StatefulWidget {
   const CharacterGalleryView({super.key});
@@ -29,8 +29,7 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
     List<String> images = [];
     for (var name in characterNamesList) {
       if (existingNames.contains(name)) continue;
-      final path = 'assets/images/character_images/$name-portrait.png';
-      images.add(path);
+      images.add(getPath(name));
     }
     setState(() {
       _images = images;
@@ -63,7 +62,7 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
         foregroundColor: Colors.white,
         centerTitle: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_ios),
           onPressed: () => Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const HomeView()),
           ),
@@ -100,7 +99,7 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
                     child: GestureDetector(
                       onTap: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => NewCharacterView(characterName: displayName.toLowerCase())),
+                          MaterialPageRoute(builder: (_) => MyCharacterView(characterName: displayName.toLowerCase())),
                         );
                       },
                       child: AnimatedContainer(
