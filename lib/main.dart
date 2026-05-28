@@ -17,7 +17,7 @@ void main() async {
     await windowManager.show();
     await windowManager.focus();
     await windowManager.maximize();
-  });;
+  });
   runApp(const MyApp());
 }
 

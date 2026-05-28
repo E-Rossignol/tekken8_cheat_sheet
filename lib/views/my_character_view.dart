@@ -41,13 +41,13 @@ class MyCharacterView extends StatelessWidget {
               children: [
                 // Left: image + name (garde l'aspect existant)
                 Expanded(
-                  flex: 2,
+                  flex: 1,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SizedBox(
-                        width: 250,
-                        height: 300,
+                        width: 200,
+                        height: 250,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
@@ -93,16 +93,6 @@ class MyCharacterView extends StatelessWidget {
                         child: Column(
                           children: [
                             ListTile(
-                              leading: const Icon(Icons.auto_fix_high, color: Colors.white70),
-                              title: const Text('Combos', style: TextStyle(color: Colors.white)),
-                              subtitle: const Text('Voir / créer / modifier les combos personnalisés', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                              trailing: const Icon(Icons.chevron_right, color: Colors.white70),
-                              onTap: () {
-
-                              },
-                            ),
-                            const Divider(color: Colors.white12, height: 1),
-                            ListTile(
                               leading: const Icon(Icons.star_border, color: Colors.white70),
                               title: const Text('Key Moves', style: TextStyle(color: Colors.white)),
                               subtitle: const Text('Accéder aux mouvements clés', style: TextStyle(color: Colors.white70, fontSize: 12)),
@@ -114,6 +104,27 @@ class MyCharacterView extends StatelessWidget {
                                 );
                               }
                             ),
+                            const Divider(color: Colors.white12, height: 1),
+                            ListTile(
+                              leading: const Icon(Icons.punch_clock, color: Colors.white70),
+                              title: const Text('Punishes', style: TextStyle(color: Colors.white)),
+                              subtitle: const Text('Voir les punishs', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                              trailing: const Icon(Icons.chevron_right, color: Colors.white70),
+                              onTap: () {
+
+                              },
+                            ),
+                            const Divider(color: Colors.white12, height: 1),
+                            ListTile(
+                              leading: const Icon(Icons.auto_fix_high, color: Colors.white70),
+                              title: const Text('Combos', style: TextStyle(color: Colors.white)),
+                              subtitle: const Text('Voir / créer / modifier les combos personnalisés', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                              trailing: const Icon(Icons.chevron_right, color: Colors.white70),
+                              onTap: () {
+
+                              },
+                            ),
+                            const Divider(color: Colors.white12, height: 1),
                             const Divider(color: Colors.white12, height: 1),
                             ListTile(
                               leading: const Icon(Icons.note_alt_outlined, color: Colors.white70),

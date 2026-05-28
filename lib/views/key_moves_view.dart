@@ -5,6 +5,7 @@ import '../constants/helper.dart';
 import 'package:tekken_cheat_sheet/models/input_data.dart';
 import 'package:tekken_cheat_sheet/widgets/input_grid.dart';
 import 'package:tekken_cheat_sheet/widgets/saved_moves_panel.dart';
+import '../services/db_provider.dart';
 
 class KeyMovesView extends StatefulWidget {
   final String characterName;
@@ -70,10 +71,10 @@ class _KeyMovesViewState extends State<KeyMovesView> {
   final TextEditingController _onHitController = TextEditingController();
   final TextEditingController _onBlockController = TextEditingController();
   final TextEditingController _remarkController = TextEditingController();
-
   @override
   void initState() {
     super.initState();
+
     // calculer les stances et les ajouter une seule fois aux inputs
     stances = stancesList
         .where(
@@ -83,6 +84,18 @@ class _KeyMovesViewState extends State<KeyMovesView> {
         .map((s) => s['name'] as String)
         .toList();
     inputs.addAll(stances.map((s) => InputData(s, "-")));
+    initSavedMoves();
+  }
+
+  Future<void> initSavedMoves() async {
+    final db = DBProvider.instance;
+    List<String> savedMoves = await db.getKeyMovesForCharacter(widget.characterName);
+    for(var move in savedMoves){
+      List<String> moveList = move.split('/');
+      setState(() {
+        savedStrings.add(moveList);
+      });
+    }
   }
 
   @override
@@ -121,6 +134,14 @@ class _KeyMovesViewState extends State<KeyMovesView> {
     });
   }
 
+  void recordStrings(){
+    final db = DBProvider.instance;
+    for (var string in savedStrings) {
+      var stringJoined = string.join('/');
+      db.insertKeyMove(widget.characterName, stringJoined);
+    }
+  }
+
   Future<void> _deleteSavedString(int index) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -142,13 +163,23 @@ class _KeyMovesViewState extends State<KeyMovesView> {
       ),
     );
     if (ok == true) {
-      setState(() => savedStrings.removeAt(index));
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Move deleted'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      var res = await DBProvider.instance.deleteKeyMove(widget.characterName, savedStrings[index].join('/'));
+      if (res){
+        setState(() => savedStrings.removeAt(index));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Move deleted'),
+              duration: Duration(seconds: 2),
+            ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error deleting move'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 
@@ -401,6 +432,21 @@ class _KeyMovesViewState extends State<KeyMovesView> {
             MaterialPageRoute(builder: (_) => MyCharacterView(characterName: widget.characterName)),
           ),
         ),
+        actions: [
+          IconButton(
+            tooltip: 'Save all moves to database',
+              onPressed: () {
+              recordStrings();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('All moves saved to database'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+              },
+              icon: const Icon(Icons.save, color: Colors.green)
+          )
+        ],
         title: Text(
           widget.characterName.toUpperCase(),
           style: const TextStyle(

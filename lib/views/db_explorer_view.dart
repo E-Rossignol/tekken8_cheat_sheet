@@ -68,6 +68,20 @@ class _DBExplorerViewState extends State<DBExplorerView> {
     if (_selectedTable != null) await _loadTable(_selectedTable!);
   }
 
+  Future<void> _resetDatabase() async {
+    final ok = await _confirmDialog('Supprimer la base de données', 'Voulez-vous vraiment supprimer la base de données entière ? Cette opération est irréversible et supprimera toutes les tables et données.');
+    if (!ok) return;
+    try {
+      // Ferme et supprime le fichier physique, puis recrée la DB (onCreate sera appelé)
+      await _db.deleteDatabaseFile();
+      await _db.initDb();
+      await _refresh();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Base de données réinitialisée'), duration: Duration(seconds: 2)));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Erreur lors de la suppression de la base'), backgroundColor: Colors.red));
+    }
+  }
+
   Future<void> _refresh() async {
     setState(() {
       _loading = true;
@@ -250,13 +264,14 @@ class _DBExplorerViewState extends State<DBExplorerView> {
         elevation: 0,
         foregroundColor: Colors.white,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back_ios),
           onPressed: () => Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const HomeView()),
           ),
         ),
         actions: [
           IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh)),
+          IconButton(onPressed: _resetDatabase, icon: const Icon(Icons.auto_delete)),
         ],
       ),
       extendBodyBehindAppBar: true,

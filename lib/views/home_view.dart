@@ -5,6 +5,7 @@ import 'my_character_view.dart';
 import '../repositories/character_repository.dart';
 import '../models/character_model.dart';
 import '../constants/helper.dart';
+import '../services/db_provider.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -66,6 +67,63 @@ class _HomeViewState extends State<HomeView> {
 
   void _toggleSidebar() {
     setState(() => _isSidebarOpen = !_isSidebarOpen);
+  }
+
+  // Helper confirmation (si HomeView n'en possède pas déjà un)
+  Future<bool> _confirmDialog(String title, String content) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Confirmer')),
+        ],
+      ),
+    );
+    return result == true;
+  }
+
+  // Remplacez ici le builder de chaque tuile personnage par cette version
+  Widget _buildCharacterTile(Map<String, dynamic> character) {
+    final int? id = character['id'] as int?;
+    final String name = (character['name'] as String?) ?? 'Unknown';
+    final assetPath = 'assets/images/character_images/${name.toLowerCase()}.png';
+    return GestureDetector(
+      onTap: () {
+      },
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Image card (garder votre style existant)
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Colors.white12,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Image.asset(
+                    assetPath,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => Image.asset('assets/images/anna.png', fit: BoxFit.contain),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(name, style: const TextStyle(color: Colors.white70)),
+            ],
+          ),
+          // Bouton delete placé en haut à droite de l'image
+        ],
+      ),
+    );
   }
 
   @override
@@ -415,26 +473,22 @@ class _HomeViewState extends State<HomeView> {
                                                               .stretch,
                                                       children: [
                                                         Expanded(
-                                                          child: ClipRRect(
-                                                            borderRadius:
-                                                                const BorderRadius.vertical(
-                                                                  top:
-                                                                      Radius.circular(
-                                                                        10,
-                                                                      ),
+                                                          child: Stack(
+                                                            children: [
+                                                              ClipRRect(
+                                                                borderRadius: const BorderRadius.vertical(
+                                                                  top: Radius.circular(10),
                                                                 ),
-                                                            child: Image.asset(
-                                                              assetPath,
-                                                              fit: BoxFit.cover,
-                                                              errorBuilder:
-                                                                  (
+                                                                child: Image.asset(
+                                                                  assetPath,
+                                                                  fit: BoxFit.cover,
+                                                                  errorBuilder: (
                                                                     context,
                                                                     error,
                                                                     stackTrace,
                                                                   ) {
                                                                     return Container(
-                                                                      color: Colors
-                                                                          .white12,
+                                                                      color: Colors.white12,
                                                                       child: Center(
                                                                         child: Text(
                                                                           name,
@@ -450,54 +504,56 @@ class _HomeViewState extends State<HomeView> {
                                                                       ),
                                                                     );
                                                                   },
-                                                            ),
+                                                                ),
+                                                              ),
+                                                              // Bouton delete en haut à droite
+                                                              Positioned(
+                                                                top: 8,
+                                                                right: 8,
+                                                                child: Material(
+                                                                  color: Colors.transparent,
+                                                                  child: IconButton(
+                                                                    iconSize: 20,
+                                                                    padding: EdgeInsets.zero,
+                                                                    constraints: const BoxConstraints(),
+                                                                    icon: const CircleAvatar(
+                                                                      radius: 14,
+                                                                      backgroundColor: Colors.black54,
+                                                                      child: Icon(Icons.delete, color: Colors.redAccent, size: 16),
+                                                                    ),
+                                                                    tooltip: 'Supprimer ce personnage',
+                                                                    onPressed: () async {
+                                                                      DBProvider.instance.deleteAllCharacterData(c.name);
+                                                                    },
+
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
                                                           ),
                                                         ),
                                                         Container(
                                                           decoration: BoxDecoration(
-                                                            color:
-                                                                const Color.fromRGBO(
-                                                                  3,
-                                                                  36,
-                                                                  101,
-                                                                  1,
-                                                                ),
-                                                            borderRadius:
-                                                                const BorderRadius.only(
-                                                                  bottomLeft:
-                                                                      Radius.circular(
-                                                                        10,
-                                                                      ),
-                                                                  bottomRight:
-                                                                      Radius.circular(
-                                                                        10,
-                                                                      ),
-                                                                ),
+                                                            color: const Color.fromRGBO(3, 36, 101, 1),
+                                                            borderRadius: const BorderRadius.only(
+                                                              bottomLeft: Radius.circular(10),
+                                                              bottomRight: Radius.circular(10),
+                                                            ),
                                                             border: Border.all(
-                                                              color: Colors
-                                                                  .white
-                                                                  .withOpacity(
-                                                                    0.03,
-                                                                  ),
+                                                              color: Colors.white.withOpacity(0.03),
                                                             ),
                                                           ),
                                                           child: Padding(
-                                                            padding:
-                                                                const EdgeInsets.symmetric(
-                                                                  vertical: 8,
-                                                                  horizontal: 8,
-                                                                ),
+                                                            padding: const EdgeInsets.symmetric(
+                                                              vertical: 8,
+                                                              horizontal: 8,
+                                                            ),
                                                             child: Text(
                                                               name,
-                                                              textAlign:
-                                                                  TextAlign
-                                                                      .center,
+                                                              textAlign: TextAlign.center,
                                                               style: const TextStyle(
-                                                                color: Colors
-                                                                    .white,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w600,
+                                                                color: Colors.white,
+                                                                fontWeight: FontWeight.w600,
                                                               ),
                                                             ),
                                                           ),
