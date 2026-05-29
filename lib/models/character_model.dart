@@ -1,12 +1,10 @@
 class Character {
-  final int? id;
   final String name;
   final String? imagePath;
   final String? notes;
   final DateTime createdAt;
 
   Character({
-    this.id,
     required this.name,
     this.imagePath,
     this.notes,
@@ -15,7 +13,6 @@ class Character {
 
   Map<String, dynamic> toMap() {
     return {
-      if (id != null) 'id': id,
       'name': name,
       'imagePath': imagePath,
       'notes': notes,
@@ -25,7 +22,6 @@ class Character {
 
   factory Character.fromMap(Map<String, dynamic> map) {
     return Character(
-      id: map['id'] as int?,
       name: map['name'] as String? ?? '',
       imagePath: map['imagePath'] as String?,
       notes: map['notes'] as String?,
@@ -41,7 +37,6 @@ class Character {
     DateTime? createdAt,
   }) {
     return Character(
-      id: id ?? this.id,
       name: name ?? this.name,
       imagePath: imagePath ?? this.imagePath,
       notes: notes ?? this.notes,

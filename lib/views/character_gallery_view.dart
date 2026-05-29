@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/constants/helper.dart';
-import '../repositories/character_repository.dart';
+import 'package:tekken_cheat_sheet/services/db_provider.dart';
 import 'home_view.dart';
 import 'my_character_view.dart';
 
@@ -23,9 +23,8 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
   }
 
   Future<void> _loadAssetImages() async {
-    final repo = CharacterRepository();
-    final existingCharacters = await repo.fetchAllCharacters();
-    final existingNames = existingCharacters.map((c) => c.name).toSet();
+    final existingCharacters = await DBProvider.instance.getAllMyCharacters();
+    final existingNames = existingCharacters.map((c) => c['name'].toLowerCase()).toSet();
     List<String> images = [];
     for (var name in characterNamesList) {
       if (existingNames.contains(name)) continue;

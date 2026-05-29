@@ -7,6 +7,7 @@ class SavedMovesPanel extends StatelessWidget {
   final List<InputData> inputs;
   final Future<void> Function(int) onDelete;
   final Color accent;
+  final List<int>? savedFrames; // optionnel : frames associés (punishes)
 
   const SavedMovesPanel({
     super.key,
@@ -14,129 +15,133 @@ class SavedMovesPanel extends StatelessWidget {
     required this.inputs,
     required this.onDelete,
     required this.accent,
+    this.savedFrames,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.02),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.white.withOpacity(0.03)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Titre + icône d'accès aux détails (action à implémenter ultérieurement)
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Text(
-                "SAVED MOVES",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
+              const Expanded(
+                child: Text(
+                  "SAVED MOVES",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
-              // Icône indiquant que l'on peut cliquer pour voir le détail (placeholder)
               IconButton(
+                icon: Icon(Icons.open_in_new, color: accent),
                 onPressed: () {
                   // TODO: ouvrir la vue de détail des saved moves
                 },
-                tooltip: 'Voir détails',
-                icon: Icon(
-                  Icons.info_outline,
-                  color: accent,
-                  size: 20,
-                ),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 8),
           Expanded(
             child: savedStrings.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
-                      "No moves saved yet.\nBuild your move on the left and save it here!",
+                      "Aucun",
                       style: TextStyle(color: Colors.white54),
-                      textAlign: TextAlign.center,
                     ),
                   )
-                : LayoutBuilder(builder: (context, constraints) {
-                    final panelInnerWidth = constraints.maxWidth;
-                    const actionWidth = 48.0;
-                    final availableForIcons = max(80.0, panelInnerWidth - actionWidth - 12.0);
-                    // taille de base, max 40px par icône
-                    const baseIcon = 40.0;
-                    const baseSpacing = 8.0;
-                    final maxLen = savedStrings.map((s) => s.length).fold<int>(1, (p, c) => max(p, c));
-                    final baseNeeded = maxLen * baseIcon + max(0, maxLen - 1) * baseSpacing;
-                    final scale = min(1.0, availableForIcons / baseNeeded);
-                    final iconSize = (baseIcon * scale).clamp(16.0, baseIcon);
-                    final spacing = baseSpacing * scale;
+                : ListView.builder(
+                    itemCount: savedStrings.length,
+                    itemBuilder: (context, index) {
+                      final string = savedStrings[index];
+                      final frames = (savedFrames != null && savedFrames!.length > index)
+                          ? savedFrames![index]
+                          : null;
+                      // calcul simple de la taille d'icone (ici on laisse la taille gérée
+                      // par le parent / style global) ; on utilise 32 par défaut
+                      final double iconSize = 32;
+                      final double spacing = 6;
 
-                    return ListView.builder(
-                      itemCount: savedStrings.length,
-                      itemBuilder: (context, index) {
-                        final string = savedStrings[index];
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.01),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Row(
-                                  children: string.asMap().entries.map((entry) {
-                                    final data = inputs.firstWhere(
-                                      (e) => e.code == entry.value,
-                                      orElse: () => InputData(entry.value, "-"),
-                                    );
-                                    return Padding(
-                                      padding: EdgeInsets.only(right: entry.key == string.length - 1 ? 0 : spacing),
-                                      child: SizedBox(
-                                        width: iconSize,
-                                        height: iconSize,
-                                        child: data.assetPath == "-"
-                                            ? Center(
-                                                child: Text(
-                                                  data.code,
-                                                  style: const TextStyle(color: Colors.white70, fontSize: 12),
-                                                ),
-                                              )
-                                            : Image.asset(
-                                                data.assetPath,
-                                                fit: BoxFit.contain,
-                                                width: iconSize,
-                                                height: iconSize,
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color.fromRGBO(5, 11, 32, 1),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
+                          children: [
+                            // icônes du string
+                            Expanded(
+                              child: Row(
+                                children: string.asMap().entries.map((entry) {
+                                  final code = entry.value;
+                                  final data = inputs.firstWhere(
+                                    (e) => e.code == code,
+                                    orElse: () => InputData(code, '-'),
+                                  );
+                                  return Padding(
+                                    padding: EdgeInsets.only(
+                                      right: entry.key == string.length - 1 ? 0 : spacing,
+                                    ),
+                                    child: SizedBox(
+                                      width: iconSize,
+                                      height: iconSize,
+                                      child: data.assetPath == '-'
+                                          ? Center(
+                                              child: Text(
+                                                data.code,
+                                                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                                overflow: TextOverflow.ellipsis,
                                               ),
-                                      ),
-                                    );
-                                  }).toList(),
+                                            )
+                                          : Image.asset(data.assetPath, fit: BoxFit.contain),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+
+                            // si frames présent, l'afficher
+                            if (frames != null) ...[
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white10,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    '$frames',
+                                    style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 4),
-                              IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.redAccent),
-                                tooltip: 'Delete move',
-                                onPressed: () async {
-                                    await onDelete(index);
-                                },
-                              ),
                             ],
-                          ),
-                        );
-                      },
-                    );
-                  }),
+
+                            // bouton supprimer
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.redAccent),
+                              tooltip: 'Supprimer',
+                              onPressed: () async {
+                                await onDelete(index);
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:tekken_cheat_sheet/views/my_character_view.dart';
 import '../constants/helper.dart';
 import 'package:tekken_cheat_sheet/models/input_data.dart';
@@ -7,27 +6,24 @@ import 'package:tekken_cheat_sheet/widgets/input_grid.dart';
 import 'package:tekken_cheat_sheet/widgets/saved_moves_panel.dart';
 import '../services/db_provider.dart';
 
-class KeyMovesView extends StatefulWidget {
+class PunishesView extends StatefulWidget {
   final String characterName;
 
-  const KeyMovesView({super.key, required this.characterName});
+  const PunishesView({super.key, required this.characterName});
 
   @override
-  State<KeyMovesView> createState() => _KeyMovesViewState();
+  State<PunishesView> createState() => _PunishesViewState();
 }
 
-class _KeyMovesViewState extends State<KeyMovesView> {
+class _PunishesViewState extends State<PunishesView> {
   /// String actuellement en cours de création
   final List<String> currentInputs = [];
 
-  /// Historique sauvegardé
+  /// Historique sauvegardé (inputs)
   final List<List<String>> savedStrings = [];
 
-  /// Metadata optionnelle associée à chaque saved string
-  final List<int?> savedFrames = [];
-  final List<int?> savedOnHit = [];
-  final List<int?> savedOnBlock = [];
-  final List<String?> savedRemarks = [];
+  /// Frames associés à chaque savedStrings (même index)
+  final List<int> savedFrames = [];
 
   // stances calculées en initState pour éviter doublons sur rebuild
   List<String> stances = [];
@@ -72,11 +68,12 @@ class _KeyMovesViewState extends State<KeyMovesView> {
     InputData("~", "assets/images/inputs/tilde.png"),
   ];
 
-  // controllers pour les champs numériques demandés
-  final TextEditingController _framesController = TextEditingController();
-  final TextEditingController _onHitController = TextEditingController();
-  final TextEditingController _onBlockController = TextEditingController();
-  final TextEditingController _remarkController = TextEditingController();
+  // Sélection courante de frames (valeur par défaut)
+  int _selectedFrames = 10;
+
+  // Valeurs autorisées pour Frames (définies ici pour validation)
+  static const List<int> _allowedFrames = [10, 11, 12, 13, 14, 15, 16];
+
   @override
   void initState() {
     super.initState();
@@ -85,41 +82,40 @@ class _KeyMovesViewState extends State<KeyMovesView> {
     stances = stancesList
         .where(
           (s) =>
-              s['characterName'] == widget.characterName.replaceAll(' ', '-'),
-        )
+      s['characterName'] == widget.characterName.replaceAll(' ', '-'),
+    )
         .map((s) => s['name'] as String)
         .toList();
     inputs.addAll(stances.map((s) => InputData(s, "-")));
-    initSavedMoves();
+    initPunishes();
   }
 
-  Future<void> initSavedMoves() async {
+  Future<void> initPunishes() async {
     final db = DBProvider.instance;
-    // getKeyMovesForCharacter now returns List<Map<String,dynamic>> with optional metadata
-    final res = await db.getKeyMovesForCharacter(widget.characterName);
+    // charge les punishes (inputs + frames) pour ce personnage
+    final res = await db.getPunishesForCharacter(widget.characterName);
     for (var row in res) {
       final inputsStr = (row['inputs'] ?? '') as String;
-      final frames = (row['frames'] is int) ? row['frames'] as int : (row['frames'] == null ? null : int.tryParse('${row['frames']}'));
-      final onHit = (row['onHit'] is int) ? row['onHit'] as int : (row['onHit'] == null ? null : int.tryParse('${row['onHit']}'));
-      final onBlock = (row['onBlock'] is int) ? row['onBlock'] as int : (row['onBlock'] == null ? null : int.tryParse('${row['onBlock']}'));
-      final remark = row['remark'] is String ? row['remark'] as String : null;
+      final frames = (row['frames'] is int) ? row['frames'] as int : int.tryParse('${row['frames']}') ?? 10;
       List<String> moveList = inputsStr.split('/');
       setState(() {
         savedStrings.add(moveList);
         savedFrames.add(frames);
-        savedOnHit.add(onHit);
-        savedOnBlock.add(onBlock);
-        savedRemarks.add(remark);
+      });
+    }
+
+    // si la frame sélectionnée par défaut est déjà utilisée, choisir la première disponible
+    final used = savedFrames.toSet();
+    final firstAvailable = _allowedFrames.firstWhere((v) => !used.contains(v), orElse: () => _allowedFrames.first);
+    if (used.contains(_selectedFrames) && firstAvailable != _selectedFrames) {
+      setState(() {
+        _selectedFrames = firstAvailable;
       });
     }
   }
 
   @override
   void dispose() {
-    _framesController.dispose();
-    _onHitController.dispose();
-    _onBlockController.dispose();
-    _remarkController.dispose();
     super.dispose();
   }
 
@@ -142,68 +138,59 @@ class _KeyMovesViewState extends State<KeyMovesView> {
     });
   }
 
-  // remplace saveString pour écrire directement en base avant d'ajouter à savedStrings
+  // remplace saveString pour écrire directement en base avant d'ajouter à savedStrings/savedFrames
   Future<void> saveString() async {
     if (currentInputs.isEmpty) return;
+
+    // validation : n'autorise la sauvegarde que si la valeur de frames sélectionnée
+    // fait partie des frames autorisées (sécurité supplémentaire).
+    if (!_allowedFrames.contains(_selectedFrames)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Valeur de frames invalide'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    // validation : n'autorise pas de créer un nouveau string pour une frame déjà présente
+    if (savedFrames.contains(_selectedFrames)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cette valeur de frames est déjà utilisée. Supprimez d\'abord l\'ancien punish pour la réutiliser.'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
 
     final db = DBProvider.instance;
     final moveJoined = currentInputs.join('/');
 
-    // parse optional numeric fields
-    final frames = int.tryParse(_framesController.text.trim());
-    final onHit = int.tryParse(_onHitController.text.trim());
-    final onBlock = int.tryParse(_onBlockController.text.trim());
-    final remark = _remarkController.text.trim().isEmpty ? null : _remarkController.text.trim();
-
     try {
-      final res = await db.insertKeyMove(
-        widget.characterName,
-        moveJoined,
-        frames: frames,
-        onHit: onHit,
-        onBlock: onBlock,
-        remark: remark,
+      final res = await db.insertPunish(widget.characterName, moveJoined, _selectedFrames);
+      // insertPunish ne renvoie pas explicitement int dans l'implémentation actuelle,
+      // mais si insertPunish est asynchrone void, on peut considérer le try comme succès.
+      // Ici on vérifie simplement l'absence d'exception pour succès.
+      setState(() {
+        savedStrings.add(List<String>.from(currentInputs));
+        savedFrames.add(_selectedFrames);
+        currentInputs.clear();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Punish saved'),
+          duration: Duration(seconds: 2),
+        ),
       );
-      if (res is int && res > 0) {
-        // insertion OK : ajouter en mémoire et vider currentInputs + champs optionnels
-        setState(() {
-          savedStrings.add(List<String>.from(currentInputs));
-          savedFrames.add(frames);
-          savedOnHit.add(onHit);
-          savedOnBlock.add(onBlock);
-          savedRemarks.add(remark);
-          currentInputs.clear();
-          _framesController.clear();
-          _onHitController.clear();
-          _onBlockController.clear();
-          _remarkController.clear();
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Move saved'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      } else if(res == -1) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Move already exists'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-      else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error saving move'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Error saving move'),
+          content: Text('Error saving punish'),
+          backgroundColor: Colors.red,
           duration: Duration(seconds: 2),
         ),
       );
@@ -214,9 +201,9 @@ class _KeyMovesViewState extends State<KeyMovesView> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete move?'),
+        title: const Text('Delete punish?'),
         content: const Text(
-          'Are you sure you want to delete this move? This action cannot be undone.',
+          'Are you sure you want to delete this punish? This action cannot be undone.',
         ),
         actions: [
           TextButton(
@@ -231,26 +218,39 @@ class _KeyMovesViewState extends State<KeyMovesView> {
       ),
     );
     if (ok == true) {
-      var res = await DBProvider.instance.deleteKeyMove(widget.characterName, savedStrings[index].join('/'));
-      if (res){
-        setState(() {
-          savedStrings.removeAt(index);
-          // remove metadata at same index if présent
-          if (savedFrames.length > index) savedFrames.removeAt(index);
-          if (savedOnHit.length > index) savedOnHit.removeAt(index);
-          if (savedOnBlock.length > index) savedOnBlock.removeAt(index);
-          if (savedRemarks.length > index) savedRemarks.removeAt(index);
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
+      final db = await DBProvider.instance.database;
+      final inputsStr = savedStrings[index].join('/');
+      final frames = savedFrames[index];
+      try {
+        final res = await db.delete(
+          'punishes',
+          where: 'characterName = ? AND inputs = ? AND frames = ?',
+          whereArgs: [widget.characterName, inputsStr, frames],
+        );
+        if (res > 0) {
+          setState(() {
+            savedStrings.removeAt(index);
+            savedFrames.removeAt(index);
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Move deleted'),
+              content: Text('Punish deleted'),
               duration: Duration(seconds: 2),
             ),
-        );
-      } else {
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No row deleted'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Error deleting move'),
+            content: Text('Error deleting punish'),
+            backgroundColor: Colors.red,
             duration: Duration(seconds: 2),
           ),
         );
@@ -258,7 +258,7 @@ class _KeyMovesViewState extends State<KeyMovesView> {
     }
   }
 
-  // buildCurrentString inchangé (légères adaptations pour utiliser InputData du model)
+  // buildCurrentString adapté : current string + actions + dropdown frames (plus pas de remark / onHit / onBlock)
   Widget buildCurrentString() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -362,84 +362,63 @@ class _KeyMovesViewState extends State<KeyMovesView> {
 
         const SizedBox(height: 12),
 
-        // Remark field (sous le current input)
-        Container(
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: const Color.fromRGBO(5, 11, 32, 1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: TextField(
-            controller: _remarkController,
-            style: const TextStyle(color: Colors.white70),
-            decoration: const InputDecoration(
-              hintText: 'Remark (optional)',
-              border: InputBorder.none,
-              isDense: true,
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 12),
-
-        // Champs numériques empilés (Frames, On hit, On block)
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        // Frames selector (Dropdown)
+        Row(
           children: [
-            _numberField('Frames', _framesController),
-            const SizedBox(height: 8),
-            _numberField('On hit', _onHitController),
-            const SizedBox(height: 8),
-            _numberField('On block', _onBlockController),
-          ],
-        ),
-      ],
-    );
-  }
-
-  // helper pour un champ numérique avec label (léger ajustement visuel)
-  Widget _numberField(String label, TextEditingController controller) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 6),
-        Container(
-          width: 80,
-          height: 40,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E1E26),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: Colors.white12,
-            ), // indique visuellement qu'il s'agit d'un champ
-          ),
-          child: Expanded(
-            child: TextField(
-              controller: controller,
-              keyboardType: const TextInputType.numberWithOptions(
-                signed: true,
-                decimal: false,
+            const Text(
+              'Frames:',
+              style: TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E26),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.white12),
               ),
-              inputFormatters: [
-                // autorise un signe "-" initial puis des chiffres (accepte temporairement entrées intermédiaires)
-                FilteringTextInputFormatter.allow(RegExp(r'-?\d*')),
-              ],
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontWeight: FontWeight.w600,
-              ),
-              decoration: InputDecoration(
-                hintText: label,
-                hintStyle: TextStyle(color: Colors.white24),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: 8),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<int>(
+                  value: _selectedFrames,
+                  dropdownColor: const Color(0xFF11121A),
+                  items: _allowedFrames.map((v) {
+                    final used = savedFrames.contains(v);
+                    return DropdownMenuItem<int>(
+                      value: v,
+                      // disabled visuel et tooltip explicatif si déjà utilisé
+                      enabled: !used,
+                      child: Tooltip(
+                        message: used
+                            ? 'Delete other punish first'
+                            : '',
+                        child: Text(
+                          '$v',
+                          style: TextStyle(color: used ? Colors.white24 : Colors.white70),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (v) {
+                    if (v == null) return;
+                    // empêche la sélection d'une valeur déjà utilisée (sécurité côté UI)
+                    if (savedFrames.contains(v)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('This value of frames is already used. Delete the existing punish first to reuse it.'),
+                          backgroundColor: Colors.orange,
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+                      return;
+                    }
+                    setState(() {
+                      _selectedFrames = v;
+                    });
+                  },
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ],
     );
@@ -448,6 +427,7 @@ class _KeyMovesViewState extends State<KeyMovesView> {
   // Nouveau : construit une ligne (une seule ligne visuelle) contenant les icônes du string
   Widget buildSavedRow(int index, double iconSize, double spacing) {
     final string = savedStrings[index];
+    final frames = savedFrames[index];
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(8),
@@ -475,11 +455,19 @@ class _KeyMovesViewState extends State<KeyMovesView> {
               }).toList(),
             ),
           ),
+          // affichage frames
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Text(
+              '$frames',
+              style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+            ),
+          ),
           // bouton supprimer
           const SizedBox(width: 4),
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.redAccent),
-            tooltip: 'Delete move',
+            tooltip: 'Delete punish',
             onPressed: () => _deleteSavedString(index),
           ),
         ],
@@ -522,7 +510,7 @@ class _KeyMovesViewState extends State<KeyMovesView> {
         ),
         centerTitle: false,
       ),
-      backgroundColor: Color.fromRGBO(5, 11, 32, 1),
+      backgroundColor: const Color.fromRGBO(5, 11, 32, 1),
       body: Container(
         decoration: BoxDecoration(gradient: bgGradient),
         child: SafeArea(
@@ -542,8 +530,10 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Current string + actions + remark + numeric fields
+                        // Current string + actions + frames selector
                         buildCurrentString(),
+                        const SizedBox(height: 12),
+                        // ici vous pouvez ajouter autres contrôles spécifiques si besoin
                       ],
                     ),
                   ),
@@ -571,11 +561,12 @@ class _KeyMovesViewState extends State<KeyMovesView> {
 
                 const SizedBox(width: 20),
 
-                // RIGHT PANEL (saved moves) themed
+                // RIGHT PANEL (saved punishes) themed
                 SizedBox(
                   width: 380,
                   child: SavedMovesPanel(
                     savedStrings: savedStrings,
+                    savedFrames: savedFrames, // <-- passe les frames pour affichage
                     inputs: inputs,
                     onDelete: _deleteSavedString,
                     accent: accent,

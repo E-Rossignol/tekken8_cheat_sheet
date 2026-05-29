@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/constants/helper.dart';
+import 'package:tekken_cheat_sheet/views/punishes_view.dart';
 import 'home_view.dart';
 import 'key_moves_view.dart';
 
@@ -110,9 +111,12 @@ class MyCharacterView extends StatelessWidget {
                               title: const Text('Punishes', style: TextStyle(color: Colors.white)),
                               subtitle: const Text('Voir les punishs', style: TextStyle(color: Colors.white70, fontSize: 12)),
                               trailing: const Icon(Icons.chevron_right, color: Colors.white70),
-                              onTap: () {
-
-                              },
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) =>
+                                        PunishesView(characterName: characterName)),
+                                  );
+                                }
                             ),
                             const Divider(color: Colors.white12, height: 1),
                             ListTile(
