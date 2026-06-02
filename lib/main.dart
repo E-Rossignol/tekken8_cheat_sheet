@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tekken_cheat_sheet/views/home_view.dart';
+import 'package:tekken_cheat_sheet/views/main_views/home_view.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {

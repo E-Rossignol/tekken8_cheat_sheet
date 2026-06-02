@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'character_gallery_view.dart';
 import 'db_explorer_view.dart';
 import 'my_character_view.dart';
-import '../models/character_model.dart';
-import '../constants/helper.dart';
-import '../services/db_provider.dart';
+import '../../models/character_model.dart';
+import '../../constants/helper.dart';
+import '../../services/db_provider.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -459,6 +459,7 @@ class _HomeViewState extends State<HomeView> {
                                                                   color: Colors.transparent,
                                                                   child: IconButton(
                                                                     iconSize: 20,
+                                                                    mouseCursor: MouseCursor.uncontrolled,
                                                                     padding: EdgeInsets.zero,
                                                                     constraints: const BoxConstraints(),
                                                                     icon: const CircleAvatar(
@@ -466,11 +467,47 @@ class _HomeViewState extends State<HomeView> {
                                                                       backgroundColor: Colors.black54,
                                                                       child: Icon(Icons.delete, color: Colors.redAccent, size: 16),
                                                                     ),
-                                                                    tooltip: 'Supprimer ce personnage',
+                                                                    tooltip: 'Delete',
                                                                     onPressed: () async {
-                                                                      DBProvider.instance.deleteAllCharacterData(c.name);
+                                                                      final confirm = await showDialog<bool>(
+                                                                        context: context,
+                                                                        builder: (ctx) => AlertDialog(
+                                                                          title: const Text('Delete character?'),
+                                                                          content: Text('Are you sure you want to delete "$name" and all its data? This action cannot be undone.'),
+                                                                          actions: [
+                                                                            TextButton(
+                                                                              onPressed: () => Navigator.of(ctx).pop(false),
+                                                                              child: const Text('Cancel'),
+                                                                            ),
+                                                                            TextButton(
+                                                                              onPressed: () => Navigator.of(ctx).pop(true),
+                                                                              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                                                            ),
+                                                                          ],
+                                                                        ),
+                                                                      );
+                                                                      if (confirm != true) return;
+                                                                      try {
+                                                                        await DBProvider.instance.deleteAllCharacterData(c.name);
+                                                                        setState(() {
+                                                                          _myCharacters.removeAt(index);
+                                                                        });
+                                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                                          SnackBar(
+                                                                            content: Text('Character "$name" deleted'),
+                                                                            duration: const Duration(seconds: 2),
+                                                                          ),
+                                                                        );
+                                                                      } catch (e) {
+                                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                                          const SnackBar(
+                                                                            content: Text('Error deleting character'),
+                                                                            backgroundColor: Colors.red,
+                                                                            duration: Duration(seconds: 2),
+                                                                          ),
+                                                                        );
+                                                                      }
                                                                     },
-
                                                                   ),
                                                                 ),
                                                               ),

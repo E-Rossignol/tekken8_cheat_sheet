@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:tekken_cheat_sheet/views/my_character_view.dart';
-import '../constants/helper.dart';
+import 'package:tekken_cheat_sheet/views/main_views/my_character_view.dart';
+import 'package:tekken_cheat_sheet/widgets/customAppBar.dart';
+import 'package:tekken_cheat_sheet/widgets/key_moves_punish_saved_panel.dart';
+import '../../constants/helper.dart';
 import 'package:tekken_cheat_sheet/models/input_data.dart';
 import 'package:tekken_cheat_sheet/widgets/input_grid.dart';
-import 'package:tekken_cheat_sheet/widgets/saved_moves_panel.dart';
-import '../services/db_provider.dart';
+import '../../models/pagetype_model.dart';
+import '../../services/db_provider.dart';
 
 class KeyMovesView extends StatefulWidget {
   final String characterName;
@@ -164,7 +166,7 @@ class _KeyMovesViewState extends State<KeyMovesView> {
         onBlock: onBlock,
         remark: remark,
       );
-      if (res is int && res > 0) {
+      if (res > 0) {
         // insertion OK : ajouter en mémoire et vider currentInputs + champs optionnels
         setState(() {
           savedStrings.add(List<String>.from(currentInputs));
@@ -272,57 +274,85 @@ class _KeyMovesViewState extends State<KeyMovesView> {
           ),
           child: Row(
             children: [
-              // zone qui contient la série d'icônes ; utilise SingleChildScrollView horizontal si trop longue
+              // zone qui contient la série d'icônes ; bascule dynamique entre 1 ligne (si ça tient)
+              // et 2 lignes (Wrap) si la largeur totale dépasse la largeur disponible.
               Expanded(
-                child: SizedBox(
-                  height: 56,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: currentInputs.asMap().entries.map((entry) {
-                        final data = inputs.firstWhere(
-                          (e) => e.code == entry.value,
-                          orElse: () => InputData(entry.value, "-"),
-                        );
-                        final isComma =
-                            data.assetPath != "-" &&
-                            data.assetPath.toLowerCase().endsWith('comma.png');
-                        final w = isComma ? 28.0 : 40.0;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: SizedBox(
-                            width: w,
-                            height: 40,
-                            child: data.assetPath == "-"
-                                ? Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.lightBlueAccent,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        data.code,
-                                        style: const TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final entries = currentInputs.asMap().entries.toList();
+                    // préparer widgets et calculer largeur nécessaire
+                    double totalWidth = 0.0;
+                    final List<Widget> iconWidgets = entries.map((entry) {
+                      final data = inputs.firstWhere(
+                        (e) => e.code == entry.value,
+                        orElse: () => InputData(entry.value, "-"),
+                      );
+                      final isComma =
+                          data.assetPath != "-" &&
+                          data.assetPath.toLowerCase().endsWith('comma.png');
+                      final double w = isComma ? 28.0 : 40.0;
+                      totalWidth += w + 8; // icône + espacement droit estimé
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: SizedBox(
+                          width: w,
+                          height: 40,
+                          child: data.assetPath == "-"
+                              ? Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.lightBlueAccent,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      data.code,
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                  )
-                                : Image.asset(
-                                    data.assetPath,
-                                    fit: BoxFit.contain,
                                   ),
+                                )
+                              : Image.asset(
+                                  data.assetPath,
+                                  fit: BoxFit.contain,
+                                ),
+                        ),
+                      );
+                    }).toList();
+
+                    // si ça tient sur une seule ligne -> conserver le comportement horizontal (scroll si besoin)
+                    if (totalWidth <= constraints.maxWidth) {
+                      return SizedBox(
+                        height: 56,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: iconWidgets,
                           ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
+                        ),
+                      );
+                    }
+
+                    // sinon : afficher sur deux lignes via Wrap ; limiter la hauteur à deux lignes et permettre le scroll vertical si nécessaire
+                    const double twoLineHeight = 40 * 2 + 12; // 2*iconHeight + runSpacing/padding
+                    return SizedBox(
+                      height: twoLineHeight,
+                      child: SingleChildScrollView(
+                        // vertical scroll si plus de deux lignes
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: iconWidgets,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
 
@@ -498,30 +528,7 @@ class _KeyMovesViewState extends State<KeyMovesView> {
     final accent = const Color.fromRGBO(93, 208, 252, 1);
     return Scaffold(
       // appbar style cohérent avec HomeView
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => MyCharacterView(characterName: widget.characterName)),
-          ),
-        ),
-        title: Row(
-          children: [
-            const SizedBox(width: 8),
-            Text(
-              widget.characterName.toUpperCase(),
-              style: const TextStyle(
-                letterSpacing: 1.2,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-        centerTitle: false,
-      ),
+      appBar: customAppBar(PageType.keyMoves, widget.characterName, context),
       backgroundColor: Color.fromRGBO(5, 11, 32, 1),
       body: Container(
         decoration: BoxDecoration(gradient: bgGradient),
@@ -574,11 +581,13 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                 // RIGHT PANEL (saved moves) themed
                 SizedBox(
                   width: 380,
-                  child: SavedMovesPanel(
+                  child: KeyMovesPunishSavedPanel(
+                    characterName: widget.characterName,
                     savedStrings: savedStrings,
                     inputs: inputs,
                     onDelete: _deleteSavedString,
                     accent: accent,
+                    pageType: 0,
                   ),
                 ),
               ],

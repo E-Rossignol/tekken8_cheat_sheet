@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:tekken_cheat_sheet/views/my_character_view.dart';
-import '../constants/helper.dart';
+import 'package:tekken_cheat_sheet/models/pagetype_model.dart';
+import 'package:tekken_cheat_sheet/views/main_views/my_character_view.dart';
+import 'package:tekken_cheat_sheet/widgets/customAppBar.dart';
+import '../../constants/helper.dart';
 import 'package:tekken_cheat_sheet/models/input_data.dart';
 import 'package:tekken_cheat_sheet/widgets/input_grid.dart';
-import 'package:tekken_cheat_sheet/widgets/saved_moves_panel.dart';
-import '../services/db_provider.dart';
+import '../../services/db_provider.dart';
+import '../../widgets/key_moves_punish_saved_panel.dart';
 
 class PunishesView extends StatefulWidget {
   final String characterName;
@@ -27,46 +29,6 @@ class _PunishesViewState extends State<PunishesView> {
 
   // stances calculées en initState pour éviter doublons sur rebuild
   List<String> stances = [];
-
-  /// Tous les inputs disponibles (garde la liste de base ici)
-  final List<InputData> inputs = [
-    InputData("1", "assets/images/inputs/1.png"),
-    InputData("2", "assets/images/inputs/2.png"),
-    InputData("3", "assets/images/inputs/3.png"),
-    InputData("4", "assets/images/inputs/4.png"),
-    InputData("1+2", "assets/images/inputs/1+2.png"),
-    InputData("1+3", "assets/images/inputs/1+3.png"),
-    InputData("1+4", "assets/images/inputs/1+4.png"),
-    InputData("2+3", "assets/images/inputs/2+3.png"),
-    InputData("2+4", "assets/images/inputs/2+4.png"),
-    InputData("3+4", "assets/images/inputs/3+4.png"),
-    InputData("1+2+3", "assets/images/inputs/1+2+3.png"),
-    InputData("1+2+4", "assets/images/inputs/1+2+4.png"),
-    InputData("2+3+4", "assets/images/inputs/2+3+4.png"),
-    InputData("1+2+3+4", "assets/images/inputs/1+2+3+4.png"),
-    InputData("+", "assets/images/inputs/next.png"),
-
-    InputData("n", "assets/images/inputs/n.png"),
-    InputData("f", "assets/images/inputs/f.png"),
-    InputData("df", "assets/images/inputs/df.png"),
-    InputData("d", "assets/images/inputs/d.png"),
-    InputData("db", "assets/images/inputs/db.png"),
-    InputData("b", "assets/images/inputs/b.png"),
-    InputData("ub", "assets/images/inputs/ub.png"),
-    InputData("u", "assets/images/inputs/u.png"),
-    InputData("uf", "assets/images/inputs/uf.png"),
-    InputData("f_h", "assets/images/inputs/f_h.png"),
-    InputData("df_h", "assets/images/inputs/df_h.png"),
-    InputData("d_h", "assets/images/inputs/d_h.png"),
-    InputData("db_h", "assets/images/inputs/db_h.png"),
-    InputData("b_h", "assets/images/inputs/b_h.png"),
-    InputData("ub_h", "assets/images/inputs/ub_h.png"),
-    InputData("u_h", "assets/images/inputs/u_h.png"),
-    InputData("uf_h", "assets/images/inputs/uf_h.png"),
-
-    InputData(",", "assets/images/inputs/comma.png"),
-    InputData("~", "assets/images/inputs/tilde.png"),
-  ];
 
   // Sélection courante de frames (valeur par défaut)
   int _selectedFrames = 10;
@@ -171,7 +133,7 @@ class _PunishesViewState extends State<PunishesView> {
     final moveJoined = currentInputs.join('/');
 
     try {
-      final res = await db.insertPunish(widget.characterName, moveJoined, _selectedFrames);
+      await db.insertPunish(widget.characterName, moveJoined, _selectedFrames);
       // insertPunish ne renvoie pas explicitement int dans l'implémentation actuelle,
       // mais si insertPunish est asynchrone void, on peut considérer le try comme succès.
       // Ici on vérifie simplement l'absence d'exception pour succès.
@@ -218,16 +180,11 @@ class _PunishesViewState extends State<PunishesView> {
       ),
     );
     if (ok == true) {
-      final db = await DBProvider.instance.database;
       final inputsStr = savedStrings[index].join('/');
       final frames = savedFrames[index];
       try {
-        final res = await db.delete(
-          'punishes',
-          where: 'characterName = ? AND inputs = ? AND frames = ?',
-          whereArgs: [widget.characterName, inputsStr, frames],
-        );
-        if (res > 0) {
+        final res = await DBProvider.instance.deletePunish(widget.characterName, inputsStr, frames);
+        if (res) {
           setState(() {
             savedStrings.removeAt(index);
             savedFrames.removeAt(index);
@@ -274,55 +231,78 @@ class _PunishesViewState extends State<PunishesView> {
             children: [
               // zone qui contient la série d'icônes ; utilise SingleChildScrollView horizontal si trop longue
               Expanded(
-                child: SizedBox(
-                  height: 56,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: currentInputs.asMap().entries.map((entry) {
-                        final data = inputs.firstWhere(
-                          (e) => e.code == entry.value,
-                          orElse: () => InputData(entry.value, "-"),
-                        );
-                        final isComma =
-                            data.assetPath != "-" &&
-                            data.assetPath.toLowerCase().endsWith('comma.png');
-                        final w = isComma ? 28.0 : 40.0;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: SizedBox(
-                            width: w,
-                            height: 40,
-                            child: data.assetPath == "-"
-                                ? Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.lightBlueAccent,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        data.code,
-                                        style: const TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final entries = currentInputs.asMap().entries.toList();
+                    double totalWidth = 0.0;
+                    final List<Widget> iconWidgets = entries.map((entry) {
+                      final data = inputs.firstWhere(
+                        (e) => e.code == entry.value,
+                        orElse: () => InputData(entry.value, "-"),
+                      );
+                      final isComma =
+                          data.assetPath != "-" &&
+                          data.assetPath.toLowerCase().endsWith('comma.png');
+                      final double w = isComma ? 28.0 : 40.0;
+                      totalWidth += w + 8;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: SizedBox(
+                          width: w,
+                          height: 40,
+                          child: data.assetPath == "-"
+                              ? Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.lightBlueAccent,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      data.code,
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                  )
-                                : Image.asset(
-                                    data.assetPath,
-                                    fit: BoxFit.contain,
                                   ),
+                                )
+                              : Image.asset(
+                                  data.assetPath,
+                                  fit: BoxFit.contain,
+                                ),
+                        ),
+                      );
+                    }).toList();
+
+                    if (totalWidth <= constraints.maxWidth) {
+                      return SizedBox(
+                        height: 56,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: iconWidgets,
                           ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
+                        ),
+                      );
+                    }
+
+                    const double twoLineHeight = 40 * 2 + 12;
+                    return SizedBox(
+                      height: twoLineHeight,
+                      child: SingleChildScrollView(
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: iconWidgets,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
 
@@ -486,30 +466,7 @@ class _PunishesViewState extends State<PunishesView> {
     final accent = const Color.fromRGBO(93, 208, 252, 1);
     return Scaffold(
       // appbar style cohérent avec HomeView
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => MyCharacterView(characterName: widget.characterName)),
-          ),
-        ),
-        title: Row(
-          children: [
-            const SizedBox(width: 8),
-            Text(
-              widget.characterName.toUpperCase(),
-              style: const TextStyle(
-                letterSpacing: 1.2,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-        centerTitle: false,
-      ),
+      appBar: customAppBar(PageType.punish, widget.characterName, context),
       backgroundColor: const Color.fromRGBO(5, 11, 32, 1),
       body: Container(
         decoration: BoxDecoration(gradient: bgGradient),
@@ -561,15 +518,15 @@ class _PunishesViewState extends State<PunishesView> {
 
                 const SizedBox(width: 20),
 
-                // RIGHT PANEL (saved punishes) themed
                 SizedBox(
                   width: 380,
-                  child: SavedMovesPanel(
+                  child: KeyMovesPunishSavedPanel(
+                    characterName: widget.characterName,
                     savedStrings: savedStrings,
-                    savedFrames: savedFrames, // <-- passe les frames pour affichage
                     inputs: inputs,
                     onDelete: _deleteSavedString,
                     accent: accent,
+                    pageType: 0,
                   ),
                 ),
               ],

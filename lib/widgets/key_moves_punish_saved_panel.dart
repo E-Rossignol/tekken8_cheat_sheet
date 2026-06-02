@@ -1,0 +1,225 @@
+import 'package:flutter/material.dart';
+
+import '../models/input_data.dart';
+import '../views/main_views/db_browser_view.dart';
+
+class KeyMovesPunishSavedPanel extends StatefulWidget {
+  final List<List<String>> savedStrings;
+  final List<InputData> inputs;
+  final Future<void> Function(int) onDelete;
+  final Color accent;
+  final List<int>? savedFrames; // optionnel : frames associés (punishes)
+  final String characterName; // nouvel argument requis
+  final int pageType; // 0 = saved moves, 1 = punishes (à utiliser pour différencier les vues dans DBBrowserView)
+
+
+  const KeyMovesPunishSavedPanel({
+    super.key,
+    required this.savedStrings,
+    required this.inputs,
+    required this.onDelete,
+    required this.accent,
+    required this.characterName,
+    required this.pageType,
+    this.savedFrames,});
+
+  @override
+  State<KeyMovesPunishSavedPanel> createState() => _KeyMovesPunishSavedPanelState();
+}
+
+class _KeyMovesPunishSavedPanelState extends State<KeyMovesPunishSavedPanel> {
+
+  @override
+  Widget build(BuildContext context) {
+    late String title;
+    switch (widget.pageType) {
+      case 0:
+        title = "SAVED MOVES";
+        break;
+      case 1:
+        title = "SAVED PUNISHES";
+        break;
+      default:
+        title = "SAVED MOVES";
+    }
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.02),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.03)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Titre + icône d'accès aux détails (action à implémenter ultérieurement)
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.open_in_new, color: widget.accent),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => DBBrowserView(characterName: widget.characterName, index: widget.pageType),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: widget.savedStrings.isEmpty
+                ? Center(
+              child: Text(
+                "Aucun",
+                style: TextStyle(color: Colors.white54),
+              ),
+            )
+                : ListView.builder(
+              itemCount: widget.savedStrings.length,
+              itemBuilder: (context, index) {
+                final string = widget.savedStrings[index];
+                final frames = (widget.savedFrames != null && widget.savedFrames!.length > index)
+                    ? widget.savedFrames![index]
+                    : null;
+                // calcul simple de la taille d'icone (ici on laisse la taille gérée
+                // par le parent / style global) ; on utilise 32 par défaut
+                final double iconSize = 32;
+                final double spacing = 6;
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color.fromRGBO(5, 11, 32, 1),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      // icônes du string -> remplaçé par un LayoutBuilder qui bascule sur 1 ou 2 lignes
+                      Expanded(
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            // estimation largeur nécessaire
+                            final int count = string.length;
+                            final double totalWidth = count * (iconSize + spacing) - spacing;
+                            // réserver de la place pour la zone frames + bouton delete
+                            final double reserved = (frames != null ? 64.0 : 0.0) + 48.0;
+                            // si ça tient -> une ligne scrollable
+                            if (totalWidth <= constraints.maxWidth - reserved) {
+                              return SizedBox(
+                                height: iconSize + 8,
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: string.asMap().entries.map((entry) {
+                                      final code = entry.value;
+                                      final data = widget.inputs.firstWhere(
+                                            (e) => e.code == code,
+                                        orElse: () => InputData(code, '-'),
+                                      );
+                                      return Padding(
+                                        padding: EdgeInsets.only(
+                                          right: entry.key == string.length - 1 ? 0 : spacing,
+                                        ),
+                                        child: SizedBox(
+                                          width: iconSize,
+                                          height: iconSize,
+                                          child: data.assetPath == '-'
+                                              ? Center(
+                                            child: Text(
+                                              data.code,
+                                              style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          )
+                                              : Image.asset(data.assetPath, fit: BoxFit.contain),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              );
+                            }
+
+                            // sinon : afficher sur deux lignes via Wrap ; hauteur limitée à 2 lignes
+                            const double twoLineHeight = (32 + 8) * 2;
+                            return SizedBox(
+                              height: twoLineHeight,
+                              child: SingleChildScrollView(
+                                child: Wrap(
+                                  spacing: spacing,
+                                  runSpacing: 8,
+                                  children: string.map((code) {
+                                    final data = widget.inputs.firstWhere(
+                                          (e) => e.code == code,
+                                      orElse: () => InputData(code, '-'),
+                                    );
+                                    return SizedBox(
+                                      width: iconSize,
+                                      height: iconSize,
+                                      child: data.assetPath == '-'
+                                          ? Center(
+                                        child: Text(
+                                          data.code,
+                                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      )
+                                          : Image.asset(data.assetPath, fit: BoxFit.contain),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+
+                      // si frames présent, l'afficher
+                      if (frames != null) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white10,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '$frames',
+                              style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ),
+                      ],
+
+                      // bouton supprimer
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.redAccent),
+                        tooltip: 'Supprimer',
+                        onPressed: () async {
+                          await widget.onDelete(index);
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

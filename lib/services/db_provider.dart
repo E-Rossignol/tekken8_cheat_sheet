@@ -36,10 +36,13 @@ class DBProvider {
     return await openDatabase(
       path,
       version: 1,
+      onConfigure: (db) async {
+        // Activer les contraintes de clé étrangère pour respecter les relations
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
       onCreate: _onCreate,
     );
   }
-
 
   FutureOr<void> _onCreate(Database db, int version) async {
     await db.execute('''
@@ -68,6 +71,24 @@ class DBProvider {
         inputs TEXT NOT NULL,
         frames INTEGER NOT NULL,
         createdAt INTEGER
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE combos(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        characterName TEXT NOT NULL,
+        inputs TEXT NOT NULL,
+        createdAt INTEGER
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE launchers(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        characterName TEXT NOT NULL,
+        inputs TEXT NOT NULL,
+        comboId INTEGER NOT NULL,
+        createdAt INTEGER,
+        FOREIGN KEY (comboId) REFERENCES combos(id) ON DELETE CASCADE
       )
     ''');
   }
@@ -107,21 +128,11 @@ class DBProvider {
     return await db.query('my_characters', orderBy: 'createdAt DESC');
   }
 
-  /// Supprime un personnage de la table my_characters par son id.
-  Future<bool> deleteMyCharacter(int id) async {
-    final db = await database;
-    final res = await db.delete(
-      'my_characters',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    return res > 0;
-  }
-
   Future<void> deleteAllCharacterData(String characterName) async {
     final db = await database;
     await db.execute('DELETE FROM my_characters WHERE name = ?', [characterName]);
     await db.execute('DELETE FROM key_moves WHERE characterName = ?', [characterName]);
+    await db.execute('DELETE FROM punishes WHERE characterName = ?', [characterName]);
   }
 
   Future<void> close() async {
@@ -240,4 +251,119 @@ class DBProvider {
     }).toList();
     return formattedRes;
   }
+
+  Future<bool> deletePunish(String characterName, String string, int frames) async {
+    final db = await database;
+    var res = await db.delete(
+      'punishes',
+      where: 'characterName = ? AND inputs = ? AND frames = ?',
+      whereArgs: [characterName, string, frames],
+    );
+    return res > 0;
+  }
+
+
+  Future<int> insertCombo(String characterName, String input) async {
+    final db = await database;
+    List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
+    if (!existingChars.any((c) => c['name'] == characterName)) {
+      await insertMyCharacter(characterName);
+    }
+    Map<String, dynamic> combo = {
+      'characterName': characterName ,
+      'inputs': input,
+      'createdAt': DateTime.now().millisecondsSinceEpoch,
+    };
+    return await db.insert('combos', combo, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<int> insertLauncher(String characterName, String input, int comboId) async {
+    final db = await database;
+    List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
+    if (!existingChars.any((c) => c['name'] == characterName)) {
+      await insertMyCharacter(characterName);
+    }
+    Map<String, dynamic> launcher = {
+      'characterName': characterName,
+      'inputs': input,
+      'comboId': comboId,
+      'createdAt': DateTime.now().millisecondsSinceEpoch,
+    };
+    return await db.insert('launchers', launcher, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<Map<String, dynamic>?> getComboWithLaunchers(String characterName, int comboId) async {
+    final db = await database;
+    final comboRes = await db.query(
+      'combos',
+      where: 'characterName = ? AND id = ?',
+      whereArgs: [characterName, comboId],
+    );
+    if (comboRes.isEmpty) return null;
+
+    final combo = Map<String, dynamic>.from(comboRes.first);
+    final launchersRes = await db.query(
+      'launchers',
+      where: 'comboId = ?',
+      whereArgs: [comboId],
+      orderBy: 'createdAt ASC',
+    );
+    combo['launchers'] = launchersRes.map((l) => {
+      'id': l['id'],
+      'inputs': l['inputs'],
+    }).toList();
+    return combo;
+  }
+
+  Future<List<Map<String, dynamic>>> getCombosForCharacter(String characterName) async {
+    final db = await database;
+    final res = await db.query(
+      'combos',
+      where: 'characterName = ?',
+      whereArgs: [characterName],
+      orderBy: 'createdAt ASC',
+    );
+    List<Map<String, dynamic>> formattedRes = [];
+    for (var row in res) {
+      final int comboId = row['id'] as int;
+      final launchersRes = await db.query(
+        'launchers',
+        where: 'comboId = ?',
+        whereArgs: [comboId],
+        orderBy: 'createdAt ASC',
+      );
+      formattedRes.add({
+        'id': comboId,
+        'inputs': row['inputs'],
+        'launchers': launchersRes.map((l) => {
+          'id': l['id'],
+          'inputs': l['inputs'],
+        }).toList(),
+      });
+    }
+    return formattedRes;
+  }
+
+  Future<bool> deleteCombo(String characterName, int comboId) async {
+    final db = await database;
+    final res = await db.delete(
+      'combos',
+      where: 'characterName = ? AND id = ?',
+      whereArgs: [characterName, comboId],
+    );
+    // foreign key ON DELETE CASCADE supprimera les launchers liés
+    return res > 0;
+  }
+
+  Future<bool> deleteLauncher(String characterName, int launcherId) async {
+    final db = await database;
+    final res = await db.delete(
+      'launchers',
+      where: 'id = ? AND characterName = ?',
+      whereArgs: [launcherId, characterName],
+    );
+    return res > 0;
+  }
+
+
 }

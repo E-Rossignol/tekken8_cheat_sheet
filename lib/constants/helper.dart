@@ -1,4 +1,7 @@
-
+import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import '../models/input_data.dart';
+import '../models/pagetype_model.dart';
 
 Set<String> characterNamesList = {
   "alisa",
@@ -22,6 +25,7 @@ Set<String> characterNamesList = {
   "kazuya",
   "king",
   "kuma",
+  "kunimitsu",
   "lars",
   "law",
   "lee",
@@ -98,6 +102,9 @@ List<Map<String, dynamic>> stancesList = [
   {'characterName': 'kuma', 'name': 'HBS'},
   {'characterName': 'kuma', 'name': 'SIT'},
   {'characterName': 'kuma', 'name': 'ROLL'},
+  {'characterName': 'kunimistu', 'name': 'BT'},
+  {'characterName': 'kunimistu', 'name': 'KT'},
+  {'characterName': 'kunimistu', 'name': 'SSG'},
   {'characterName': 'lars', 'name': 'DEN'},
   {'characterName': 'lars', 'name': 'SEN'},
   {'characterName': 'lars', 'name': 'LEN'},
@@ -156,4 +163,130 @@ String getPath(String characterName){
 
 String getBeautifulName(String characterName){
   return (characterName[0].toUpperCase() + characterName.substring(1)).replaceAll('-',' ');
+}
+
+/// Tous les inputs disponibles (garde la liste de base ici)
+final List<InputData> inputs = [
+  InputData("1", "assets/images/inputs/1.png"),
+  InputData("2", "assets/images/inputs/2.png"),
+  InputData("3", "assets/images/inputs/3.png"),
+  InputData("4", "assets/images/inputs/4.png"),
+  InputData("1+2", "assets/images/inputs/1+2.png"),
+  InputData("1+3", "assets/images/inputs/1+3.png"),
+  InputData("1+4", "assets/images/inputs/1+4.png"),
+  InputData("2+3", "assets/images/inputs/2+3.png"),
+  InputData("2+4", "assets/images/inputs/2+4.png"),
+  InputData("3+4", "assets/images/inputs/3+4.png"),
+  InputData("1+2+3", "assets/images/inputs/1+2+3.png"),
+  InputData("1+2+4", "assets/images/inputs/1+2+4.png"),
+  InputData("2+3+4", "assets/images/inputs/2+3+4.png"),
+  InputData("1+2+3+4", "assets/images/inputs/1+2+3+4.png"),
+  InputData("+", "assets/images/inputs/next.png"),
+
+  InputData("n", "assets/images/inputs/n.png"),
+  InputData("f", "assets/images/inputs/f.png"),
+  InputData("df", "assets/images/inputs/df.png"),
+  InputData("d", "assets/images/inputs/d.png"),
+  InputData("db", "assets/images/inputs/db.png"),
+  InputData("b", "assets/images/inputs/b.png"),
+  InputData("ub", "assets/images/inputs/ub.png"),
+  InputData("u", "assets/images/inputs/u.png"),
+  InputData("uf", "assets/images/inputs/uf.png"),
+  InputData("f_h", "assets/images/inputs/f_h.png"),
+  InputData("df_h", "assets/images/inputs/df_h.png"),
+  InputData("d_h", "assets/images/inputs/d_h.png"),
+  InputData("db_h", "assets/images/inputs/db_h.png"),
+  InputData("b_h", "assets/images/inputs/b_h.png"),
+  InputData("ub_h", "assets/images/inputs/ub_h.png"),
+  InputData("u_h", "assets/images/inputs/u_h.png"),
+  InputData("uf_h", "assets/images/inputs/uf_h.png"),
+
+  InputData(",", "assets/images/inputs/comma.png"),
+  InputData("~", "assets/images/inputs/tilde.png"),
+];
+
+void onHelpButtonClick(PageType pageType, BuildContext context) {
+  switch (pageType) {
+    case PageType.keyMoves:
+      openKeyMovesHelpDialog(context);
+      break;
+    case PageType.punish:
+      openPunishesHelpDialog(context);
+      break;
+    case PageType.combos:
+      openComboHelpDialog(context);
+      break;
+    default:
+      openKeyMovesHelpDialog(context);
+  }
+}
+
+void openKeyMovesHelpDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: Color(0xFF0E1220),
+      title: const Text(
+          'HOW TO USE THIS PAGE',
+          style: TextStyle(color: Colors.white70)),
+      content: const Text(''
+          '-> On this page, you can enter and save your favourite moves.\n'
+          '-> On the left side, you can record and save the move/string.\n'
+          '-> On the right side, you can manage your saved key moves.\n'
+          '          - To delete a key move, click the trash icon on the right.',
+          style: TextStyle(color: Colors.white70)),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text('Got it!'),
+        ),
+      ],
+    ),
+  );
+}
+
+void openPunishesHelpDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: Color(0xFF0E1220),
+      title: const Text(
+          'HOW TO USE THIS PAGE',
+          style: TextStyle(color: Colors.white70)),
+      content: const Text('',
+          style: TextStyle(color: Colors.white70)),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text('Got it!'),
+        ),
+      ],
+    ),
+  );
+}
+void openComboHelpDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: Color(0xFF0E1220),
+      title: const Text(
+          'HOW TO USE THIS PAGE',
+          style: TextStyle(color: Colors.white70)),
+      content: const Text(''
+          '-> On this page, you can enter and save your favourite combos.\n'
+          '-> On the left side, you can record and save the combo (NO LAUNCHER NEEDED).\n'
+          '-> On the right side, you can manage your saved combos and link them to launchers for quick access.\n'
+          '          - Each combo displays its inputs as icons. Below, you can see and manage its launchers.\n'
+          '          - To add a launcher, click the "+ Add launcher" button and select from your saved launchers.\n'
+          '          - To delete a launcher, click the red "X" on its chip.\n'
+          '          - To delete an entire combo, click the trash icon on the right.',
+          style: TextStyle(color: Colors.white70)),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text('Got it!'),
+        ),
+      ],
+    ),
+  );
 }

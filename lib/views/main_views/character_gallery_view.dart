@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/constants/helper.dart';
+import 'package:tekken_cheat_sheet/models/pagetype_model.dart';
 import 'package:tekken_cheat_sheet/services/db_provider.dart';
-import 'home_view.dart';
+import 'package:tekken_cheat_sheet/widgets/customAppBar.dart';
 import 'my_character_view.dart';
 
 class CharacterGalleryView extends StatefulWidget {
@@ -54,20 +55,7 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Select character'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.white,
-        centerTitle: false,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const HomeView()),
-          ),
-          tooltip: 'Back',
-        ),
-      ),
+      appBar: customAppBar(PageType.characterChoice, null, context),
       extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(

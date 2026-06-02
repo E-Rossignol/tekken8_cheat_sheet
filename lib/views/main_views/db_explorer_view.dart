@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/db_provider.dart';
+import '../../services/db_provider.dart';
 import 'home_view.dart';
 
 class DBExplorerView extends StatefulWidget {
