@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:window_manager/window_manager.dart';
 import '../constants/helper.dart';
-import '../models/pagetype_model.dart';
+import '../models/page_type_model.dart';
 import '../views/main_views/home_view.dart';
 import '../views/main_views/my_character_view.dart';
 
@@ -15,7 +16,7 @@ PreferredSizeWidget customAppBar(
         IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white70),
           onPressed: () {
-            if (characterName == null) {
+            if (characterName == null || pageType == PageType.characterDetail) {
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(builder: (_) => const HomeView()),
               );
@@ -30,11 +31,11 @@ PreferredSizeWidget customAppBar(
           tooltip: 'Back',
         ),
         SizedBox(width: 20),
-            IconButton(
+        IconButton(
           onPressed: () {
-            onHelpButtonClick(pageType, context);
+            Helper().onHelpButtonClick(pageType, context);
           },
-          icon: const Icon(Icons.info_outline, color: Colors.white, size : 30),
+          icon: const Icon(Icons.info_outline, color: Colors.white, size: 30),
           tooltip: 'How to use this page',
         ),
         SizedBox(width: 30),
@@ -59,13 +60,12 @@ PreferredSizeWidget customAppBar(
             ),
           ),
         ),
-        // centre : prend l'espace restant et centre le titre
         Expanded(
           child: Center(
             child: Text(
               characterName == null
                   ? 'TEKKEN 8 CHEAT SHEET'
-                  : getBeautifulName(characterName).toUpperCase(),
+                  : Helper().getBeautifulName(characterName).toUpperCase(),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -79,8 +79,14 @@ PreferredSizeWidget customAppBar(
       ],
     ),
     leading: const SizedBox(),
-    // pour éviter que le titre ne soit décalé à gauche
     backgroundColor: Color.fromRGBO(5, 11, 32, 1),
     elevation: 0,
+    actions: [
+      IconButton(
+        icon: Icon(Icons.close, color: Colors.redAccent, size: 30),
+        tooltip: 'Close app',
+        onPressed: () => WindowManager.instance.close(),
+      ),
+    ],
   );
 }

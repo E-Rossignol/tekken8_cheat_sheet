@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:tekken_cheat_sheet/models/pagetype_model.dart';
-import 'package:tekken_cheat_sheet/views/main_views/my_character_view.dart';
-import 'package:tekken_cheat_sheet/widgets/customAppBar.dart';
+import 'package:tekken_cheat_sheet/models/page_type_model.dart';
+import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
 import '../../constants/helper.dart';
 import 'package:tekken_cheat_sheet/models/input_data.dart';
 import 'package:tekken_cheat_sheet/widgets/input_grid.dart';
@@ -33,6 +32,8 @@ class _PunishesViewState extends State<PunishesView> {
   // Sélection courante de frames (valeur par défaut)
   int _selectedFrames = 10;
 
+  List<InputData> inputs = Helper().inputs;
+
   // Valeurs autorisées pour Frames (définies ici pour validation)
   static const List<int> _allowedFrames = [10, 11, 12, 13, 14, 15, 16];
 
@@ -41,7 +42,7 @@ class _PunishesViewState extends State<PunishesView> {
     super.initState();
 
     // calculer les stances et les ajouter une seule fois aux inputs
-    stances = stancesList
+    stances = Helper().stancesList
         .where(
           (s) =>
       s['characterName'] == widget.characterName.replaceAll(' ', '-'),
@@ -65,7 +66,6 @@ class _PunishesViewState extends State<PunishesView> {
         savedFrames.add(frames);
       });
     }
-
     // si la frame sélectionnée par défaut est déjà utilisée, choisir la première disponible
     final used = savedFrames.toSet();
     final firstAvailable = _allowedFrames.firstWhere((v) => !used.contains(v), orElse: () => _allowedFrames.first);
@@ -240,10 +240,7 @@ class _PunishesViewState extends State<PunishesView> {
                         (e) => e.code == entry.value,
                         orElse: () => InputData(entry.value, "-"),
                       );
-                      final isComma =
-                          data.assetPath != "-" &&
-                          data.assetPath.toLowerCase().endsWith('comma.png');
-                      final double w = isComma ? 28.0 : 40.0;
+                      final double w = 40.0;
                       totalWidth += w + 8;
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
@@ -480,9 +477,9 @@ class _PunishesViewState extends State<PunishesView> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.02),
+                      color: Colors.white.withValues(alpha: 0.02),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withOpacity(0.03)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -504,9 +501,9 @@ class _PunishesViewState extends State<PunishesView> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.02),
+                      color: Colors.white.withValues(alpha: 0.02),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withOpacity(0.03)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
                     ),
                     child: InputGrid(
                       inputs: inputs,
@@ -524,9 +521,10 @@ class _PunishesViewState extends State<PunishesView> {
                     characterName: widget.characterName,
                     savedStrings: savedStrings,
                     inputs: inputs,
+                    savedFrames: savedFrames,
                     onDelete: _deleteSavedString,
                     accent: accent,
-                    pageType: 0,
+                    pageType: 1,
                   ),
                 ),
               ],

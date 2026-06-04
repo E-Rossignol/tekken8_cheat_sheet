@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:tekken_cheat_sheet/models/pagetype_model.dart';
-import 'package:tekken_cheat_sheet/views/main_views/my_character_view.dart';
+import 'package:tekken_cheat_sheet/models/page_type_model.dart';
 import 'package:tekken_cheat_sheet/widgets/combo_panel.dart';
-import 'package:tekken_cheat_sheet/widgets/customAppBar.dart';
+import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
 import '../../constants/helper.dart';
 import 'package:tekken_cheat_sheet/models/input_data.dart';
 import 'package:tekken_cheat_sheet/widgets/input_grid.dart';
@@ -20,6 +19,8 @@ class CombosView extends StatefulWidget {
 class _CombosViewState extends State<CombosView> {
   final List<String> currentInputs = [];
 
+  List<InputData> inputs = Helper().inputs;
+
   /// savedCombos : chaque élément = { id: int, inputs: String, launchers: List<Map{id,inputs}}
   final List<Map<String, dynamic>> savedCombos = [];
 
@@ -36,7 +37,7 @@ class _CombosViewState extends State<CombosView> {
     super.initState();
 
     // calculer les stances et les ajouter une seule fois aux inputs
-    stances = stancesList
+    stances = Helper().stancesList
         .where(
           (s) =>
               s['characterName'] == widget.characterName.replaceAll(' ', '-'),
@@ -140,7 +141,7 @@ class _CombosViewState extends State<CombosView> {
     if (ok == true) {
       // suppression d'un combo complet
       final combo = savedCombos[index];
-      final okDel = await DBProvider.instance.deleteCombo(widget.characterName, combo['id'] as int);
+      final okDel = await DBProvider.instance.deleteCombo(widget.characterName, combo['inputs']);
       if (okDel) {
         setState(() {
           savedCombos.removeAt(index);
@@ -180,8 +181,7 @@ class _CombosViewState extends State<CombosView> {
           // dialogue sombre thématisé
           return Theme(
             data: Theme.of(context).copyWith(
-              dialogBackgroundColor: const Color(0xFF0E1220),
-              textTheme: Theme.of(context).textTheme.apply(bodyColor: Colors.white),
+              textTheme: Theme.of(context).textTheme.apply(bodyColor: Colors.white), dialogTheme: DialogThemeData(backgroundColor: const Color(0xFF0E1220)),
             ),
             child: AlertDialog(
               backgroundColor: const Color(0xFF0E1220),
@@ -284,10 +284,7 @@ class _CombosViewState extends State<CombosView> {
                         (e) => e.code == entry.value,
                         orElse: () => InputData(entry.value, "-"),
                       );
-                      final isComma =
-                          data.assetPath != "-" &&
-                          data.assetPath.toLowerCase().endsWith('comma.png');
-                      final double w = isComma ? 28.0 : 40.0;
+                      final double w = 40.0;
                       totalWidth += w + 8; // icône + espacement droit estimé
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
@@ -479,9 +476,9 @@ class _CombosViewState extends State<CombosView> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.02),
+                      color: Colors.white.withValues(alpha: 0.02),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withOpacity(0.03)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -501,9 +498,9 @@ class _CombosViewState extends State<CombosView> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.02),
+                      color: Colors.white.withValues(alpha: 0.02),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withOpacity(0.03)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
                     ),
                     child: InputGrid(
                       inputs: inputs,

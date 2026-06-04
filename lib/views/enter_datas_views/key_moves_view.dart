@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:tekken_cheat_sheet/views/main_views/my_character_view.dart';
-import 'package:tekken_cheat_sheet/widgets/customAppBar.dart';
+import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
 import 'package:tekken_cheat_sheet/widgets/key_moves_punish_saved_panel.dart';
 import '../../constants/helper.dart';
 import 'package:tekken_cheat_sheet/models/input_data.dart';
 import 'package:tekken_cheat_sheet/widgets/input_grid.dart';
-import '../../models/pagetype_model.dart';
+import '../../models/page_type_model.dart';
 import '../../services/db_provider.dart';
 
 class KeyMovesView extends StatefulWidget {
@@ -30,49 +29,10 @@ class _KeyMovesViewState extends State<KeyMovesView> {
   final List<int?> savedOnHit = [];
   final List<int?> savedOnBlock = [];
   final List<String?> savedRemarks = [];
+  List<InputData> inputs = Helper().inputs;
 
   // stances calculées en initState pour éviter doublons sur rebuild
   List<String> stances = [];
-
-  /// Tous les inputs disponibles (garde la liste de base ici)
-  final List<InputData> inputs = [
-    InputData("1", "assets/images/inputs/1.png"),
-    InputData("2", "assets/images/inputs/2.png"),
-    InputData("3", "assets/images/inputs/3.png"),
-    InputData("4", "assets/images/inputs/4.png"),
-    InputData("1+2", "assets/images/inputs/1+2.png"),
-    InputData("1+3", "assets/images/inputs/1+3.png"),
-    InputData("1+4", "assets/images/inputs/1+4.png"),
-    InputData("2+3", "assets/images/inputs/2+3.png"),
-    InputData("2+4", "assets/images/inputs/2+4.png"),
-    InputData("3+4", "assets/images/inputs/3+4.png"),
-    InputData("1+2+3", "assets/images/inputs/1+2+3.png"),
-    InputData("1+2+4", "assets/images/inputs/1+2+4.png"),
-    InputData("2+3+4", "assets/images/inputs/2+3+4.png"),
-    InputData("1+2+3+4", "assets/images/inputs/1+2+3+4.png"),
-    InputData("+", "assets/images/inputs/next.png"),
-
-    InputData("n", "assets/images/inputs/n.png"),
-    InputData("f", "assets/images/inputs/f.png"),
-    InputData("df", "assets/images/inputs/df.png"),
-    InputData("d", "assets/images/inputs/d.png"),
-    InputData("db", "assets/images/inputs/db.png"),
-    InputData("b", "assets/images/inputs/b.png"),
-    InputData("ub", "assets/images/inputs/ub.png"),
-    InputData("u", "assets/images/inputs/u.png"),
-    InputData("uf", "assets/images/inputs/uf.png"),
-    InputData("f_h", "assets/images/inputs/f_h.png"),
-    InputData("df_h", "assets/images/inputs/df_h.png"),
-    InputData("d_h", "assets/images/inputs/d_h.png"),
-    InputData("db_h", "assets/images/inputs/db_h.png"),
-    InputData("b_h", "assets/images/inputs/b_h.png"),
-    InputData("ub_h", "assets/images/inputs/ub_h.png"),
-    InputData("u_h", "assets/images/inputs/u_h.png"),
-    InputData("uf_h", "assets/images/inputs/uf_h.png"),
-
-    InputData(",", "assets/images/inputs/comma.png"),
-    InputData("~", "assets/images/inputs/tilde.png"),
-  ];
 
   // controllers pour les champs numériques demandés
   final TextEditingController _framesController = TextEditingController();
@@ -84,7 +44,7 @@ class _KeyMovesViewState extends State<KeyMovesView> {
     super.initState();
 
     // calculer les stances et les ajouter une seule fois aux inputs
-    stances = stancesList
+    stances = Helper().stancesList
         .where(
           (s) =>
               s['characterName'] == widget.characterName.replaceAll(' ', '-'),
@@ -287,10 +247,7 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                         (e) => e.code == entry.value,
                         orElse: () => InputData(entry.value, "-"),
                       );
-                      final isComma =
-                          data.assetPath != "-" &&
-                          data.assetPath.toLowerCase().endsWith('comma.png');
-                      final double w = isComma ? 28.0 : 40.0;
+                      final double w = 40.0;
                       totalWidth += w + 8; // icône + espacement droit estimé
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
@@ -542,9 +499,9 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.02),
+                      color: Colors.white.withValues(alpha: 0.02),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withOpacity(0.03)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -564,9 +521,9 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.02),
+                      color: Colors.white.withValues(alpha: 0.02),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withOpacity(0.03)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
                     ),
                     child: InputGrid(
                       inputs: inputs,

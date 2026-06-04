@@ -48,7 +48,7 @@ class InputGrid extends StatelessWidget {
                     ),
                     child: Text(
                       item.code,
-                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                      style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),
                       textAlign: TextAlign.center,
                     ),
                   ),

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/constants/helper.dart';
-import 'package:tekken_cheat_sheet/models/pagetype_model.dart';
+import 'package:tekken_cheat_sheet/models/page_type_model.dart';
 import 'package:tekken_cheat_sheet/services/db_provider.dart';
-import 'package:tekken_cheat_sheet/widgets/customAppBar.dart';
+import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
 import 'my_character_view.dart';
 
 class CharacterGalleryView extends StatefulWidget {
@@ -27,9 +27,9 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
     final existingCharacters = await DBProvider.instance.getAllMyCharacters();
     final existingNames = existingCharacters.map((c) => c['name'].toLowerCase()).toSet();
     List<String> images = [];
-    for (var name in characterNamesList) {
+    for (var name in Helper().characterNamesList) {
       if (existingNames.contains(name)) continue;
-      images.add(getPath(name));
+      images.add(Helper().getPath(name));
     }
     setState(() {
       _images = images;
@@ -94,9 +94,9 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
                         curve: Curves.easeOut,
                         transform: _hoveredIndex == index ? (Matrix4.identity()..scale(1.03)) : Matrix4.identity(),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.03),
+                          color: Colors.white.withValues(alpha: 0.03),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.white.withOpacity(0.03)),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
                           boxShadow: _hoveredIndex == index
                               ? [BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 6))]
                               : null,

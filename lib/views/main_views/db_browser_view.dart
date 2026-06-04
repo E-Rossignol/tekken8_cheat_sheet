@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:tekken_cheat_sheet/models/pagetype_model.dart';
-import 'package:tekken_cheat_sheet/widgets/customAppBar.dart';
+import 'package:tekken_cheat_sheet/models/page_type_model.dart';
+import 'package:tekken_cheat_sheet/views/enter_datas_views/combos_view.dart';
+import 'package:tekken_cheat_sheet/views/enter_datas_views/key_moves_view.dart';
+import 'package:tekken_cheat_sheet/views/enter_datas_views/punishes_view.dart';
+import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
 import '../../services/db_provider.dart';
 
 enum _Panel { keyMoves, punishes, combo }
@@ -23,6 +26,7 @@ class _DBBrowserViewState extends State<DBBrowserView> {
   _Panel _selected = _Panel.keyMoves;
   List<Map<String, dynamic>> _keyMoves = [];
   List<Map<String, dynamic>> _punishes = [];
+  List<Map<String, dynamic>> _combos = [];
   bool _loading = true;
 
   @override
@@ -37,9 +41,11 @@ class _DBBrowserViewState extends State<DBBrowserView> {
       final db = DBProvider.instance;
       final km = await db.getKeyMovesForCharacter(widget.characterName);
       final p = await db.getPunishesForCharacter(widget.characterName);
+      final c = await db.getCombosForCharacter(widget.characterName);
       setState(() {
         _keyMoves = km;
         _punishes = p;
+        _combos = c;
       });
     } catch (e) {
       // silence UI; optionally log
@@ -69,7 +75,7 @@ class _DBBrowserViewState extends State<DBBrowserView> {
       colors: [Color(0xFF5ED0FC), Color(0xFF2BA6F6)],
     );
 
-    Widget btn(String title, IconData icon, _Panel panel) {
+    Widget btn(String title, VoidCallback? onIconClick, _Panel panel, BuildContext ctx) {
       final bool active = _selected == panel;
       return InkWell(
         onTap: () => setState(() => _selected = panel),
@@ -96,10 +102,13 @@ class _DBBrowserViewState extends State<DBBrowserView> {
           width: double.infinity,
           child: Row(
             children: [
-              Icon(
-                icon,
+              IconButton(
+                icon: Icon(
+                  Icons.mode_edit_outline_outlined, color: Colors.white, size: 18
+                ),
                 color: active ? Colors.black : Colors.white70,
-                size: 20,
+                onPressed: onIconClick,
+
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -112,21 +121,6 @@ class _DBBrowserViewState extends State<DBBrowserView> {
                   ),
                 ),
               ),
-              if (active)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 4,
-                    horizontal: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.06),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
-                    'Active',
-                    style: TextStyle(fontSize: 12, color: Colors.black54),
-                  ),
-                ),
             ],
           ),
         ),
@@ -165,8 +159,9 @@ class _DBBrowserViewState extends State<DBBrowserView> {
           ),
           const Divider(color: Colors.white12),
           const SizedBox(height: 8),
-          btn('Key Moves', Icons.star_border, _Panel.keyMoves),
-          btn('Punishes', Icons.punch_clock, _Panel.punishes),
+          btn('Key Moves', onKeyMovesEdit, _Panel.keyMoves, ctx),
+          btn('Punishes', onPunishEdit, _Panel.punishes, ctx),
+          btn('Combos', onComboEdit, _Panel.combo, ctx),
           const Spacer(),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
@@ -184,6 +179,18 @@ class _DBBrowserViewState extends State<DBBrowserView> {
     );
   }
 
+  void onKeyMovesEdit() {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => KeyMovesView(characterName: widget.characterName)));
+  }
+
+  void onPunishEdit() {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => PunishesView(characterName: widget.characterName)));
+  }
+
+  void onComboEdit() {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => CombosView(characterName: widget.characterName)));
+  }
+
   List<String> _pathFromInputs(String inputs) {
     final parts = inputs.split('/');
     var res = <String>[];
@@ -193,25 +200,29 @@ class _DBBrowserViewState extends State<DBBrowserView> {
     return res;
   }
 
-  Widget _chipsForInputs(String inputs) {
+  Widget _chipsForInputs(String inputs, {double size = 30}) {
     final parts = _pathFromInputs(inputs);
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: size/5,
+      runSpacing: size/5,
       children: parts.map((p) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.03),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.white.withOpacity(0.02)),
-          ),
-          child: Image.asset(
-            p,
-            height: 30,
-            errorBuilder: (_, __, ___) => Text(
-              p.split('/').last.split('.').first.toUpperCase(),
-              style: const TextStyle(color: Colors.white54, fontSize: 12),
+        return Image.asset(
+          p,
+          fit: BoxFit.cover,
+          height: size,
+          errorBuilder: (_, __, ___) => Container(
+            height: size,
+            width:size,
+            decoration: BoxDecoration(
+              color: Colors.blueGrey,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Center(
+              child: Text(
+                textAlign: TextAlign.center,
+                p.split('/').last.split('.').first.toUpperCase(),
+                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
         );
@@ -288,6 +299,77 @@ class _DBBrowserViewState extends State<DBBrowserView> {
     );
   }
 
+  // Affichage d'un combo avec tous ses launchers (joli + moderne)
+  Widget _comboCard(Map<String, dynamic> row) {
+    final inputs = (row['inputs'] ?? '') as String;
+    final launchers = (row['launchers'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    return Card(
+      color: const Color(0xFF0E1220),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: Colors.white.withOpacity(0.03)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // header : inputs du combo
+            Row(
+              children: [
+                Expanded(child: _chipsForInputs(inputs)),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white10,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Text('Combo', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w700)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // launchers list : chips lisibles
+            if (launchers.isEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white10,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text('No launchers', style: TextStyle(color: Colors.white54)),
+              )
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: launchers.map((l) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white10,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withOpacity(0.03)),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 6, offset: const Offset(0, 3))],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.local_fire_department, size: 16, color: Color(0xFFFFB86B)),
+                        _chipsForInputs(l['inputs'] as String, size: 20),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _metaChip(String label, String value, IconData icon) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -340,7 +422,7 @@ class _DBBrowserViewState extends State<DBBrowserView> {
           itemBuilder: (_, i) => _keyMoveCard(_keyMoves[i]),
         ),
       );
-    } else {
+    } else if (_selected == _Panel.punishes) {
       if (_punishes.isEmpty) {
         return const Center(
           child: Text('No punishes', style: TextStyle(color: Colors.white54)),
@@ -360,6 +442,23 @@ class _DBBrowserViewState extends State<DBBrowserView> {
           itemBuilder: (_, i) => _punishCard(_punishes[i]),
         ),
       );
+    } else if (_selected == _Panel.combo) {
+      if (_combos.isEmpty) {
+        return const Center(
+          child: Text('No combos', style: TextStyle(color: Colors.white54)),
+        );
+      }
+      return RefreshIndicator.adaptive(
+        onRefresh: _loadAll,
+        child: ListView.separated(
+          padding: const EdgeInsets.all(12),
+          itemCount: _combos.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: (_, i) => _comboCard(_combos[i]),
+        ),
+      );
+    } else {
+      return const SizedBox.shrink();
     }
   }
 

@@ -29,32 +29,6 @@ class ComboPanel extends StatefulWidget {
 class _ComboPanelState extends State<ComboPanel> {
   Color bg = const Color(0xFF0E1220);
 
-  void _openHelpDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: bg,
-        title: const Text(
-            'HOW TO USE THIS PAGE',
-            style: TextStyle(color: Colors.white70)),
-        content: const Text(''
-        '-> On this page, you can enter and save your favourite combos.\n'
-        '-> On the left side, you can record and save the combo (NO LAUNCHER NEEDED).\n'
-        '-> On the right side, you can manage your saved combos and link them to launchers for quick access.\n'
-            '          - Each combo displays its inputs as icons. Below, you can see and manage its launchers.\n'
-          '          - To add a launcher, click the "+ Add launcher" button and select from your saved launchers.\n'
-          '          - To delete a launcher, click the red "X" on its chip.\n'
-          '          - To delete an entire combo, click the trash icon on the right.',
-        style: TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Got it!'),
-          ),
-        ],
-      ),
-    );
-  }
   @override
   Widget build(BuildContext context) {
     if (widget.combos.isEmpty) {
@@ -72,8 +46,7 @@ class _ComboPanelState extends State<ComboPanel> {
                 Expanded(
                     child: Row(
                   children: [
-                    const Text('SAVED COMBOS', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
-                    IconButton(onPressed: (){}, icon: Icon(Icons.info_outline, color: Colors.white), tooltip: 'How to use this panel')
+                    const Text('SAVED COMBOS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
                   ],
                 )),
                 IconButton(
@@ -109,8 +82,7 @@ class _ComboPanelState extends State<ComboPanel> {
                 child: Row(
                   children: [
                     const Text('SAVED COMBOS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                    IconButton(onPressed: _openHelpDialog, icon: const Icon(Icons.info_outline, color: Colors.white), tooltip: 'How to use this panel')
-                  ],
+                    ],
                 ),
               ),
               IconButton(
@@ -132,11 +104,41 @@ class _ComboPanelState extends State<ComboPanel> {
                 final launchers = (combo['launchers'] as List).cast<Map<String, dynamic>>();
                 const double iconSize = 32;
                 const double spacing = 6.0;
-
+                List<Widget> launchersInputs = [];
+                for (var l in launchers) {
+                  final lInputs = (l['inputs'] as String).split('/');
+                  var tmpWidgets = <Widget>[];
+                  for (var code in lInputs) {
+                    tmpWidgets.add(
+                        code == '-' ? Text(code, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)) : Image.asset('assets/images/inputs/$code.png', width: 20, height: 20, fit: BoxFit.contain)
+                    );
+                  }
+                  launchersInputs.add(
+                      Chip(
+                        backgroundColor: Color.fromRGBO(
+                            1, 28, 115, 1.0),
+                        label: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: tmpWidgets
+                        ),
+                        deleteIcon: const Icon(Icons.close, size: 18, color: Colors.redAccent),
+                        deleteButtonTooltipMessage: 'Delete launcher',
+                        onDeleted: () => widget.onDeleteLauncher(index, l['id'] as int),
+                      )
+                  );
+                }
+                launchersInputs.add(
+                  ActionChip(
+                    label: const Text('+ Add launcher', style: TextStyle(color: Colors.white)),
+                    backgroundColor: Color.fromRGBO(
+                        1, 28, 115, 1.0),
+                    onPressed: () => widget.onAddLauncher(combo['id'] as int),
+                  ),
+                );
                 return Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF23232D),
+                    color: const Color.fromRGBO(5, 11, 32, 1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -163,21 +165,7 @@ class _ComboPanelState extends State<ComboPanel> {
                             Wrap(
                               spacing: 8,
                               runSpacing: 8,
-                              children: [
-                                ...launchers.map((l) {
-                                  return Chip(
-                                    backgroundColor: bg,
-                                    label: Text((l['inputs'] as String).replaceAll('/', ''), style: const TextStyle(color: Colors.white70)),
-                                    deleteIcon: const Icon(Icons.close, size: 18, color: Colors.redAccent),
-                                    onDeleted: () => widget.onDeleteLauncher(index, l['id'] as int),
-                                  );
-                                }),
-                                ActionChip(
-                                  label: const Text('+ Add launcher', style: TextStyle(color: Colors.white)),
-                                  backgroundColor: Color(0xFF232D4F),
-                                  onPressed: () => widget.onAddLauncher(combo['id'] as int),
-                                ),
-                              ],
+                              children: launchersInputs
                             ),
                           ],
                         ),

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/constants/helper.dart';
 import 'package:tekken_cheat_sheet/views/enter_datas_views/combos_view.dart';
 import 'package:tekken_cheat_sheet/views/enter_datas_views/punishes_view.dart';
-import '../../models/pagetype_model.dart';
-import '../../widgets/customAppBar.dart';
+import '../../models/page_type_model.dart';
+import '../../services/db_provider.dart';
+import '../../widgets/custom_appbar.dart';
 import '../enter_datas_views/key_moves_view.dart';
-import 'db_browser_view.dart'; // <--- nouvel import
+import 'db_browser_view.dart';
+import 'home_view.dart'; // <--- nouvel import
 
 class MyCharacterView extends StatefulWidget {
   final String characterName;
@@ -82,7 +84,7 @@ class _MyCharacterViewState extends State<MyCharacterView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: customAppBar(PageType.characterDetail, null, context),
+      appBar: customAppBar(PageType.characterDetail, widget.characterName, context),
       extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
@@ -113,21 +115,84 @@ class _MyCharacterViewState extends State<MyCharacterView> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Expanded(
-                                  child: ClipRRect(
-                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-                                    child: Image.asset(getPath(widget.characterName), fit: BoxFit.fill, errorBuilder: (c,e,s){
-                                      return Container(
-                                        color: Colors.white12,
-                                        child: Center(
-                                          child: Text(
-                                            getBeautifulName(widget.characterName),
-                                            style: const TextStyle(color: Colors.white70, fontSize: 28, fontWeight: FontWeight.w700),
+                                Stack(
+                                  children: [
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                                      child: Image.asset(Helper().getPath(widget.characterName), fit: BoxFit.fill, errorBuilder: (c,e,s){
+                                        return Container(
+                                          color: Colors.white12,
+                                          child: Center(
+                                            child: Text(
+                                              Helper().getBeautifulName(widget.characterName),
+                                              style: const TextStyle(color: Colors.white70, fontSize: 28, fontWeight: FontWeight.w700),
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    }),
+                                        );
+                                      }),
+                                    ),
                                   ),
+                                    Positioned(
+                                      top: 8,
+                                      right: 8,
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: IconButton(
+                                          iconSize: 20,
+                                          mouseCursor: MouseCursor.uncontrolled,
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(),
+                                          icon: const CircleAvatar(
+                                            radius: 14,
+                                            backgroundColor: Colors.black54,
+                                            child: Icon(Icons.delete, color: Colors.redAccent, size: 16),
+                                          ),
+                                          tooltip: 'Delete',
+                                          onPressed: () async {
+                                            final confirm = await showDialog<bool>(
+                                              context: context,
+                                              builder: (ctx) => AlertDialog(
+                                                title: const Text('Delete character?'),
+                                                content: Text('Are you sure you want to delete "${widget.characterName}" and all its data? This action cannot be undone.'),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () => Navigator.of(ctx).pop(false),
+                                                    child: const Text('Cancel'),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () => Navigator.of(ctx).pop(true),
+                                                    child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                            if (confirm != true) return;
+                                            try {
+                                              await DBProvider.instance.deleteAllCharacterData(widget.characterName);
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text('Character "${Helper().getBeautifulName(widget.characterName)}" deleted'),
+                                                  duration: const Duration(seconds: 2),
+                                                ),
+                                              );
+                                              Navigator.of(context).pushReplacement(
+                                                MaterialPageRoute(builder: (_) => HomeView()),
+                                              ); // revenir à la liste des personnages
+                                            } catch (e) {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text('Error deleting character'),
+                                                  backgroundColor: Colors.red,
+                                                  duration: Duration(seconds: 2),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+          ]
                                 ),
                                 cheatButton(),
                               ],

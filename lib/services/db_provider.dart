@@ -133,6 +133,8 @@ class DBProvider {
     await db.execute('DELETE FROM my_characters WHERE name = ?', [characterName]);
     await db.execute('DELETE FROM key_moves WHERE characterName = ?', [characterName]);
     await db.execute('DELETE FROM punishes WHERE characterName = ?', [characterName]);
+    await db.execute('DELETE FROM launchers WHERE characterName = ?', [characterName]);
+    await db.execute('DELETE FROM combos WHERE characterName = ?', [characterName]);
   }
 
   Future<void> close() async {
@@ -249,6 +251,7 @@ class DBProvider {
       'inputs': row['inputs'],
       'frames': row['frames'],
     }).toList();
+    formattedRes.sort((a, b) => (a['frames'] as int).compareTo(b['frames'] as int));
     return formattedRes;
   }
 
@@ -344,12 +347,12 @@ class DBProvider {
     return formattedRes;
   }
 
-  Future<bool> deleteCombo(String characterName, int comboId) async {
+  Future<bool> deleteCombo(String characterName, String inputs) async {
     final db = await database;
     final res = await db.delete(
       'combos',
-      where: 'characterName = ? AND id = ?',
-      whereArgs: [characterName, comboId],
+      where: 'characterName = ? AND inputs = ?',
+      whereArgs: [characterName, inputs],
     );
     // foreign key ON DELETE CASCADE supprimera les launchers liés
     return res > 0;
