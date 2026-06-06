@@ -3,6 +3,8 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'dart:convert'; // ajouté pour sérialisation JSON
+import '../constants/helper.dart'; // ajouté pour utiliser defaultDB
 
 class DBProvider {
   DBProvider._();
@@ -113,6 +115,10 @@ class DBProvider {
       // ignore / log si besoin
     }
   }
+
+  Future<bool> demonstration() async {
+    return true;
+}
 
   Future<int> insertMyCharacter(String name) async {
     final db = await database;
@@ -367,6 +373,91 @@ class DBProvider {
     );
     return res > 0;
   }
+  // --- Début des nouvelles méthodes pour réinsérer toutes les données depuis un JSON / Map ---
 
+  /// Parse un JSON (format produit par exportAllTablesToConsole) et l'insère en base.
+  /// Si clearFirst=true, vide d'abord les tables (ordre respectant les contraintes FK).
+  Future<void> importAllTablesFromJson(String jsonString, {bool clearFirst = true}) async {
+    final Map<String, dynamic> data = jsonDecode(jsonString) as Map<String, dynamic>;
+    await importAllTablesFromMap(data, clearFirst: clearFirst);
+  }
+
+  /// Insère en base le contenu de la Map contenant les listes pour chaque table.
+  /// La Map attend les clés : my_characters, key_moves, punishes, combos, launchers
+  Future<void> importAllTablesFromMap(Map<String, dynamic> all, {bool clearFirst = true}) async {
+    final db = await database;
+
+    await db.transaction((txn) async {
+      // Vider les tables dans l'ordre sécurisé (launchers -> combos -> key_moves -> punishes -> my_characters)
+      if (clearFirst) {
+        try {
+          await txn.delete('launchers');
+          await txn.delete('combos');
+          await txn.delete('key_moves');
+          await txn.delete('punishes');
+          await txn.delete('my_characters');
+        } catch (e) {
+          // Ignore / log si besoin
+          print('Warning while clearing tables: $e');
+        }
+      }
+
+      // Helper pour insérer une liste d'items (si absente, saute)
+      Future<void> insertList(String table, dynamic listObj) async {
+        if (listObj == null) return;
+        if (listObj is! List) return;
+        for (var raw in listObj) {
+          if (raw is Map) {
+            final Map<String, dynamic> row = Map<String, dynamic>.from(raw);
+            try {
+              await txn.insert(table, row, conflictAlgorithm: ConflictAlgorithm.replace);
+            } catch (e) {
+              print('Error inserting into $table: $e');
+            }
+          }
+        }
+      }
+
+      // Insérer dans l'ordre : my_characters, combos, key_moves, punishes, launchers
+      await insertList('my_characters', all['my_characters']);
+      await insertList('combos', all['combos']);
+      await insertList('key_moves', all['key_moves']);
+      await insertList('punishes', all['punishes']);
+      await insertList('launchers', all['launchers']);
+
+      // Tenter de mettre à jour sqlite_sequence pour conserver des autoincrement cohérents
+      try {
+        for (final table in ['my_characters', 'key_moves', 'punishes', 'combos', 'launchers']) {
+          final maxRes = await txn.rawQuery('SELECT MAX(id) as maxId FROM $table');
+          final maxId = (maxRes.isNotEmpty && maxRes.first['maxId'] != null) ? (maxRes.first['maxId'] as int) : 0;
+          // sqlite_sequence n'existe pas forcément (par ex. si DB vide dans certains contextes)
+          await txn.rawUpdate('UPDATE sqlite_sequence SET seq = ? WHERE name = ?', [maxId, table]);
+        }
+      } catch (e) {
+        // Pas critique : si sqlite_sequence absent ou requête échoue, on ignore
+        // utile à debug :
+        // print('Could not update sqlite_sequence: $e');
+      }
+    });
+  }
+
+  /// Insère en base le dump présent dans Helper().defaultDB.
+  /// Appeler DBProvider.instance.importDefaultDB() sans argument.
+  Future<void> importDefaultDB({bool clearFirst = true}) async {
+    final helper = Helper();
+    final dynamic raw = helper.defaultDB;
+    if (raw == null || raw is! Map<String, dynamic>) {
+      // tente de normaliser si c'est Map<dynamic,dynamic>
+      if (raw is Map) {
+        await importAllTablesFromMap(Map<String, dynamic>.from(raw), clearFirst: clearFirst);
+      } else {
+        print('importDefaultDB: defaultDB vide ou malformé');
+      }
+      return;
+    }
+    await importAllTablesFromMap(raw, clearFirst: clearFirst);
+  }
+
+  // --- Fin des nouvelles méthodes ---
 
 }

@@ -4,6 +4,172 @@ import '../models/page_type_model.dart';
 
 class Helper{
 
+  final dynamic defaultDB = {
+  "my_characters": [
+  {
+  "id": 7,
+  "name": "jin",
+  "createdAt": 1780705081290
+  },
+  {
+  "id": 8,
+  "name": "anna",
+  "createdAt": 1780705402287
+  }
+  ],
+  "key_moves": [
+  {
+  "id": 22,
+  "characterName": "jin",
+  "inputs": "1/3/4",
+  "frames": 10,
+  "onHit": 3,
+  "onBlock": -13,
+  "remark": "follow-up on CH",
+  "createdAt": 1780705235409
+  },
+  {
+  "id": 23,
+  "characterName": "jin",
+  "inputs": "ZEN/1+2",
+  "frames": 21,
+  "onHit": 4,
+  "onBlock": -14,
+  "remark": "powerful stance low",
+  "createdAt": 1780705272288
+  },
+  {
+  "id": 24,
+  "characterName": "anna",
+  "inputs": "1/2/1/4",
+  "frames": 10,
+  "onHit": 32,
+  "onBlock": 4,
+  "remark": "safe launcher",
+  "createdAt": 1780705402322
+  },
+  {
+  "id": 25,
+  "characterName": "anna",
+  "inputs": "df/1/2",
+  "frames": 13,
+  "onHit": 2,
+  "onBlock": -5,
+  "remark": "transition to HMC with F",
+  "createdAt": 1780705436552
+  }
+  ],
+  "punishes": [
+  {
+  "id": 18,
+  "characterName": "jin",
+  "inputs": "2/4",
+  "frames": 10,
+  "createdAt": 1780705315538
+  },
+  {
+  "id": 19,
+  "characterName": "jin",
+  "inputs": "2/4",
+  "frames": 11,
+  "createdAt": 1780705322392
+  },
+  {
+  "id": 20,
+  "characterName": "jin",
+  "inputs": "1+2/f_h/ZEN/1",
+  "frames": 14,
+  "createdAt": 1780705356443
+  },
+  {
+  "id": 21,
+  "characterName": "anna",
+  "inputs": "1/2/1",
+  "frames": 10,
+  "createdAt": 1780705445591
+  },
+  {
+  "id": 22,
+  "characterName": "anna",
+  "inputs": "1/2/1",
+  "frames": 11,
+  "createdAt": 1780705451587
+  },
+  {
+  "id": 23,
+  "characterName": "anna",
+  "inputs": "b/2/2",
+  "frames": 12,
+  "createdAt": 1780705459571
+  },
+  {
+  "id": 24,
+  "characterName": "anna",
+  "inputs": "3+4",
+  "frames": 13,
+  "createdAt": 1780705464938
+  }
+  ],
+  "combos": [
+  {
+  "id": 14,
+  "characterName": "jin",
+  "inputs": "b/3/next/b/3/f_h/next/ZEN/1/next/b/f/2/3/f_h/next/ZEN/u/1/TORNADO/next/f/3+4/next/ZEN/2/next/DASH/b/3/2",
+  "createdAt": 1780705081313
+  },
+  {
+  "id": 15,
+  "characterName": "anna",
+  "inputs": "2/2/next/HMC/2/1/next/b/4/next/HMC/2/2/next/PLT/f/3/next/uf/3/next/db/2/next/PLT/2",
+  "createdAt": 1780705542079
+  }
+  ],
+  "launchers": [
+  {
+  "id": 22,
+  "characterName": "jin",
+  "inputs": "uf/4",
+  "comboId": 14,
+  "createdAt": 1780705090574
+  },
+  {
+  "id": 23,
+  "characterName": "jin",
+  "inputs": "d/3+4",
+  "comboId": 14,
+  "createdAt": 1780705104526
+  },
+  {
+  "id": 24,
+  "characterName": "jin",
+  "inputs": "f/f_h/3",
+  "comboId": 14,
+  "createdAt": 1780705117252
+  },
+  {
+  "id": 26,
+  "characterName": "anna",
+  "inputs": "df/2",
+  "comboId": 15,
+  "createdAt": 1780705547975
+  },
+  {
+  "id": 27,
+  "characterName": "anna",
+  "inputs": "uf/3",
+  "comboId": 15,
+  "createdAt": 1780705557351
+  },
+  {
+  "id": 28,
+  "characterName": "anna",
+  "inputs": "SS/1+2",
+  "comboId": 15,
+  "createdAt": 1780705566216
+  }
+  ]
+  };
+
   final Set<String> characterNamesList = {
     "alisa",
     "anna",
