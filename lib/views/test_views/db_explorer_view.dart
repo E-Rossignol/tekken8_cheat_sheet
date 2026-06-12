@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/db_provider.dart';
-import 'home_view.dart';
+import '../main_views/home_view.dart';
 
 class DBExplorerView extends StatefulWidget {
   const DBExplorerView({super.key});

@@ -93,6 +93,19 @@ class DBProvider {
         FOREIGN KEY (comboId) REFERENCES combos(id) ON DELETE CASCADE
       )
     ''');
+    await db.execute('''
+      CREATE TABLE stance_moves(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        characterName TEXT NOT NULL,
+        inputs TEXT NOT NULL,
+        stance TEXT NOT NULL,
+        frames INTEGER,
+        onHit INTEGER,
+        onBlock INTEGER,
+        remark TEXT,
+        createdAt INTEGER
+      )
+    ''');
   }
 
   /// Ferme la base si ouverte puis supprime le fichier de base de données.
@@ -116,9 +129,7 @@ class DBProvider {
     }
   }
 
-  Future<bool> demonstration() async {
-    return true;
-}
+
 
   Future<int> insertMyCharacter(String name) async {
     final db = await database;
@@ -373,6 +384,75 @@ class DBProvider {
     );
     return res > 0;
   }
+
+  // modifié : accepte champs optionnels et retourne id inséré
+  Future<int> insertStanceMove(
+      String characterName,
+      String input,
+      String stance,{
+        String? remark,
+        int? frames,
+        int? onHit,
+        int? onBlock,
+      }) async {
+    final db = await database;
+    List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
+    if (!existingChars.any((c) => c['name'] == characterName)) {
+      await insertMyCharacter(characterName);
+    }
+    Map<String, dynamic> move = {
+      'characterName': characterName,
+      'inputs': input,
+      'stance': stance,
+      'frames': frames,
+      'onHit': onHit,
+      'onBlock': onBlock,
+      'remark': remark,
+      'createdAt': DateTime.now().millisecondsSinceEpoch,
+    };
+    final List<Map<String, dynamic>> existingMove = await db.query(
+      'stance_moves',
+      where: 'characterName = ? AND inputs = ? AND stance = ?',
+      whereArgs: [characterName, input, stance],
+    );
+    if (existingMove.isNotEmpty) {
+      return -1; // Indique que le move existe déjà, pas d'insertion
+    }
+    else {
+      return await db.insert('stance_moves', move, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+  }
+
+  // modifié : retourne les colonnes utiles (inputs + métadonnées)
+  Future<List<Map<String, dynamic>>> getStanceMovesForCharacter(String characterName) async {
+    final db = await database;
+    final res = await db.query(
+      'stance_moves',
+      where: 'characterName = ?',
+      whereArgs: [characterName],
+      orderBy: 'createdAt ASC',
+    );
+    // renvoyer maps structurés pour faciliter le parsing côté UI
+    return res.map((row) => {
+      'inputs': row['inputs'],
+      'stance': row['stance'],
+      'frames': row['frames'],
+      'onHit': row['onHit'],
+      'onBlock': row['onBlock'],
+      'remark': row['remark'],
+    }).toList();
+  }
+
+  Future<bool> deleteStanceMove(String characterName, String string, String stance) async {
+    final db = await database;
+    var res = await db.delete(
+      'stance_moves',
+      where: 'characterName = ? AND inputs = ? AND stance = ?',
+      whereArgs: [characterName, string, stance],
+    );
+    return res > 0;
+  }
+
   // --- Début des nouvelles méthodes pour réinsérer toutes les données depuis un JSON / Map ---
 
   /// Parse un JSON (format produit par exportAllTablesToConsole) et l'insère en base.

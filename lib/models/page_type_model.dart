@@ -5,5 +5,6 @@ enum PageType{
   keyMoves,
   punish,
   combos,
+  stanceMoves,
   dbBrowser
 }

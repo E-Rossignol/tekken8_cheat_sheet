@@ -3,30 +3,34 @@ import 'package:tekken_cheat_sheet/models/page_type_model.dart';
 import 'package:tekken_cheat_sheet/views/enter_datas_views/combos_view.dart';
 import 'package:tekken_cheat_sheet/views/enter_datas_views/key_moves_view.dart';
 import 'package:tekken_cheat_sheet/views/enter_datas_views/punishes_view.dart';
+import 'package:tekken_cheat_sheet/views/enter_datas_views/stances_view.dart';
 import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
+import 'package:tekken_cheat_sheet/widgets/my_icons.dart';
+import '../../constants/helper.dart';
 import '../../services/db_provider.dart';
 
-enum _Panel { keyMoves, punishes, combo }
+enum _Panel { keyMoves, punishes, combo, stances }
 
-class DBBrowserView extends StatefulWidget {
+class CheatSheetView extends StatefulWidget {
   final String characterName;
   final int index;
 
-  const DBBrowserView({
+  const CheatSheetView({
     super.key,
     required this.characterName,
     required this.index,
   });
 
   @override
-  State<DBBrowserView> createState() => _DBBrowserViewState();
+  State<CheatSheetView> createState() => _CheatSheetViewState();
 }
 
-class _DBBrowserViewState extends State<DBBrowserView> {
+class _CheatSheetViewState extends State<CheatSheetView> {
   _Panel _selected = _Panel.keyMoves;
   List<Map<String, dynamic>> _keyMoves = [];
   List<Map<String, dynamic>> _punishes = [];
   List<Map<String, dynamic>> _combos = [];
+  List<Map<String, dynamic>> _stances = [];
   bool _loading = true;
 
   @override
@@ -42,10 +46,12 @@ class _DBBrowserViewState extends State<DBBrowserView> {
       final km = await db.getKeyMovesForCharacter(widget.characterName);
       final p = await db.getPunishesForCharacter(widget.characterName);
       final c = await db.getCombosForCharacter(widget.characterName);
+      final s = await db.getStanceMovesForCharacter(widget.characterName);
       setState(() {
         _keyMoves = km;
         _punishes = p;
         _combos = c;
+        _stances = s;
       });
     } catch (e) {
       // silence UI; optionally log
@@ -62,6 +68,8 @@ class _DBBrowserViewState extends State<DBBrowserView> {
           case 2:
             _selected = _Panel.combo;
             break;
+          case 3:
+            _selected = _Panel.stances;
           default:
             _selected = _Panel.keyMoves;
         }
@@ -162,6 +170,7 @@ class _DBBrowserViewState extends State<DBBrowserView> {
           btn('Key Moves', onKeyMovesEdit, _Panel.keyMoves, ctx),
           btn('Punishes', onPunishEdit, _Panel.punishes, ctx),
           btn('Combos', onComboEdit, _Panel.combo, ctx),
+          btn('Stances', onStancesEdit, _Panel.stances, ctx),
           const Spacer(),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
@@ -189,6 +198,10 @@ class _DBBrowserViewState extends State<DBBrowserView> {
 
   void onComboEdit() {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => CombosView(characterName: widget.characterName)));
+  }
+
+  void onStancesEdit() {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => StancesView(characterName: widget.characterName)));
   }
 
   List<String> _pathFromInputs(String inputs) {
@@ -250,24 +263,30 @@ class _DBBrowserViewState extends State<DBBrowserView> {
           children: [
             // big inputs line
             _chipsForInputs(inputs),
+            const SizedBox(height: 8),
+            // remark displayed under inputs, small & italic (or "No remark")
+            Text(
+              (remark != null && remark.isNotEmpty) ? 'Remark: $remark' : '',
+              style: const TextStyle(
+                color: Colors.white54,
+                fontStyle: FontStyle.italic,
+                fontSize: 12,
+              ),
+            ),
             const SizedBox(height: 12),
             Row(
               children: [
-                if (frames != null) _metaChip('Frames', frames, Icons.timer),
+                if (frames != null) _metaChip('Frames', frames, FrameIcon(size: Size(30,20))),
                 if (onHit != null) ...[
                   const SizedBox(width: 8),
-                  _metaChip('On hit', onHit, Icons.flash_on),
+                  _metaChip('On hit', onHit, OnHitIcon(size: Size(30,20))),
                 ],
                 if (onBlock != null) ...[
                   const SizedBox(width: 8),
-                  _metaChip('On block', onBlock, Icons.shield),
+                  _metaChip('On block', onBlock, OnBlockIcon(size: Size(30,20))),
                 ],
                 const Spacer(),
-                if (remark != null && remark.isNotEmpty)
-                  Tooltip(
-                    message: remark,
-                    child: const Icon(Icons.note, color: Colors.white24),
-                  ),
+                // remark previously shown as tooltip; removed because remark is now rendered below inputs
               ],
             ),
           ],
@@ -292,7 +311,7 @@ class _DBBrowserViewState extends State<DBBrowserView> {
           children: [
             Expanded(child: _chipsForInputs(inputs)),
             const SizedBox(width: 12),
-            _metaChip('Frames', frames, Icons.timer),
+            _metaChip('Frames', frames, FrameIcon(size: Size(30,20))),
           ],
         ),
       ),
@@ -357,8 +376,8 @@ class _DBBrowserViewState extends State<DBBrowserView> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.local_fire_department, size: 16, color: Color(0xFFFFB86B)),
-                        _chipsForInputs(l['inputs'] as String, size: 20),
+                        LauncherIcon(size: Size(50,50)),
+                        _chipsForInputs(l['inputs'] as String, size: 25),
                       ],
                     ),
                   );
@@ -370,7 +389,64 @@ class _DBBrowserViewState extends State<DBBrowserView> {
     );
   }
 
-  Widget _metaChip(String label, String value, IconData icon) {
+  Widget _stanceCard(Map<String, dynamic> row) {
+    final stanceNames = row['stance']?.toString() ?? '';
+    final inputs = (row['inputs'] ?? '') as String;
+    final frames = row['frames']?.toString();
+    final onHit = row['onHit']?.toString();
+    final onBlock = row['onBlock']?.toString();
+    final remark = row['remark'] as String?;
+    return Card(
+      color: const Color(0xFF0E1220),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: Colors.white.withOpacity(0.03)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _metaChip('Stance', stanceNames, StanceIcon(size: Size(30,20))),
+                const SizedBox(width: 12),
+                Expanded(child: _chipsForInputs(inputs)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              (remark != null && remark.isNotEmpty) ? 'Remark: $remark' : '',
+              style: const TextStyle(
+                color: Colors.white54,
+                fontStyle: FontStyle.italic,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                if (frames != null) _metaChip('Frames', frames, FrameIcon(size: Size(30,20))),
+                if (onHit != null) ...[
+                  const SizedBox(width: 8),
+                  _metaChip('On hit', onHit, OnHitIcon(size: Size(30,20))),
+                ],
+                if (onBlock != null) ...[
+                  const SizedBox(width: 8),
+                  _metaChip('On block', onBlock, OnBlockIcon(size: Size(30,20))),
+                ],
+                const Spacer(),
+                // remark previously shown as tooltip; removed because remark is now rendered below inputs
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _metaChip(String label, String value, Widget icon) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       decoration: BoxDecoration(
@@ -380,7 +456,7 @@ class _DBBrowserViewState extends State<DBBrowserView> {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: Colors.white54),
+          icon,
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -457,7 +533,24 @@ class _DBBrowserViewState extends State<DBBrowserView> {
           itemBuilder: (_, i) => _comboCard(_combos[i]),
         ),
       );
-    } else {
+    }
+    else if (_selected == _Panel.stances) {
+      if (_stances.isEmpty) {
+        return const Center(
+          child: Text('No stance moves', style: TextStyle(color: Colors.white54)),
+        );
+      }
+      return RefreshIndicator.adaptive(
+        onRefresh: _loadAll,
+        child: ListView.separated(
+          padding: const EdgeInsets.all(12),
+          itemCount: _stances.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: (_, i) => _stanceCard(_stances[i]),
+        ),
+      );
+    }
+    else {
       return const SizedBox.shrink();
     }
   }

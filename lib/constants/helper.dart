@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/input_data.dart';
 import '../models/page_type_model.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class Helper{
 
@@ -418,6 +419,8 @@ class Helper{
       case PageType.combos:
         openComboHelpDialog(context);
         break;
+      case PageType.stanceMoves:
+        openStanceMovesHelpDialog(context);
       default:
         openKeyMovesHelpDialog(context);
     }
@@ -430,7 +433,7 @@ class Helper{
         title: const Text(
             'HOW TO USE THIS PAGE',
             style: TextStyle(color: Colors.white70)),
-        content: const Text('',
+        content: const Text('TODO',
             style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
@@ -471,7 +474,7 @@ class Helper{
         title: const Text(
             'HOW TO USE THIS PAGE',
             style: TextStyle(color: Colors.white70)),
-        content: const Text('',
+        content: const Text('TODO',
             style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
@@ -515,7 +518,7 @@ class Helper{
         title: const Text(
             'HOW TO USE THIS PAGE',
             style: TextStyle(color: Colors.white70)),
-        content: const Text('',
+        content: const Text('TODO',
             style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
@@ -542,6 +545,26 @@ class Helper{
             '          - To add a launcher, click the "+ Add launcher" button and select from your saved launchers.\n'
             '          - To delete a launcher, click the red "X" on its chip.\n'
             '          - To delete an entire combo, click the trash icon on the right.',
+            style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Got it!'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void openStanceMovesHelpDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Color(0xFF0E1220),
+        title: const Text(
+            'HOW TO USE THIS PAGE',
+            style: TextStyle(color: Colors.white70)),
+        content: const Text('TODO',
             style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(

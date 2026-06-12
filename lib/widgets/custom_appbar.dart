@@ -20,23 +20,11 @@ PreferredSizeWidget customAppBar(
                 onPressed: () {
                   if (characterName == null ||
                       pageType == PageType.characterDetail) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Returning to home page'),
-                        duration: Duration(seconds: 1),
-                      ),
-                    );
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(builder: (_) => const HomeView()),
                     );
                     return;
                   }
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Returning to character list'),
-                      duration: Duration(seconds: 1),
-                    ),
-                  );
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
                       builder: (_) =>

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/input_data.dart';
-import '../views/main_views/db_browser_view.dart';
+import '../views/main_views/cheat_sheet_view.dart';
 
 class KeyMovesPunishSavedPanel extends StatefulWidget {
   final List<List<String>> savedStrings;
@@ -9,6 +9,7 @@ class KeyMovesPunishSavedPanel extends StatefulWidget {
   final Future<void> Function(int) onDelete;
   final Color accent;
   final List<int>? savedFrames; // optionnel : frames associés (punishes)
+  final List<String>? savedStances; // optionnel : stances associés (stances view)
   final String characterName; // nouvel argument requis
   final int pageType; // 0 = saved moves, 1 = punishes (à utiliser pour différencier les vues dans DBBrowserView)
 
@@ -19,6 +20,7 @@ class KeyMovesPunishSavedPanel extends StatefulWidget {
     required this.inputs,
     required this.onDelete,
     required this.accent,
+    this.savedStances,
     required this.characterName,
     required this.pageType,
     this.savedFrames,});
@@ -69,7 +71,7 @@ class _KeyMovesPunishSavedPanelState extends State<KeyMovesPunishSavedPanel> {
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => DBBrowserView(characterName: widget.characterName, index: widget.pageType),
+                      builder: (_) => CheatSheetView(characterName: widget.characterName, index: widget.pageType),
                     ),
                   );
                 },
@@ -92,6 +94,9 @@ class _KeyMovesPunishSavedPanelState extends State<KeyMovesPunishSavedPanel> {
                 final frames = (widget.savedFrames != null && widget.savedFrames!.length > index)
                     ? widget.savedFrames![index]
                     : null;
+                final stance = (widget.savedStances != null && widget.savedStances!.length > index)
+                    ? widget.savedStances![index]
+                    : null;
                 // calcul simple de la taille d'icone (ici on laisse la taille gérée
                 // par le parent / style global) ; on utilise 32 par défaut
                 final double iconSize = 32;
@@ -113,8 +118,9 @@ class _KeyMovesPunishSavedPanelState extends State<KeyMovesPunishSavedPanel> {
                             // estimation largeur nécessaire
                             final int count = string.length;
                             final double totalWidth = count * (iconSize + spacing) - spacing;
-                            // réserver de la place pour la zone frames + bouton delete
-                            final double reserved = (frames != null ? 64.0 : 0.0) + 48.0;
+                            // réserver de la place pour la zone métadonnée (frames ou stance) + bouton delete
+                            final double metaReserved = (frames != null ? 64.0 : (stance != null ? 84.0 : 0.0));
+                            final double reserved = metaReserved + 48.0;
                             // si ça tient -> une ligne scrollable
                             if (totalWidth <= constraints.maxWidth - reserved) {
                               return SizedBox(
@@ -165,6 +171,7 @@ class _KeyMovesPunishSavedPanelState extends State<KeyMovesPunishSavedPanel> {
                                           (e) => e.code == code,
                                       orElse: () => InputData(code, '-'),
                                     );
+
                                     return SizedBox(
                                       width: iconSize,
                                       height: iconSize,
@@ -186,7 +193,7 @@ class _KeyMovesPunishSavedPanelState extends State<KeyMovesPunishSavedPanel> {
                         ),
                       ),
 
-                      // si frames présent, l'afficher
+                      // si frames ou stance présent(e), l'afficher(-e) (priorité frames si présent)
                       if (frames != null) ...[
                         Padding(
                           padding: const EdgeInsets.only(right: 8.0),
@@ -199,6 +206,21 @@ class _KeyMovesPunishSavedPanelState extends State<KeyMovesPunishSavedPanel> {
                             child: Text(
                               '$frames',
                               style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ),
+                      ] else if (stance != null) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white10,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              stance,
+                              style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700),
                             ),
                           ),
                         ),

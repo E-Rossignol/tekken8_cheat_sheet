@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/models/page_type_model.dart';
 import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
 import 'character_gallery_view.dart';
-import 'db_explorer_view.dart';
+import '../test_views/db_explorer_view.dart';
 import 'my_character_view.dart';
 import '../../models/character_model.dart';
 import '../../constants/helper.dart';
