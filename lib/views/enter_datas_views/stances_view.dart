@@ -54,12 +54,13 @@ class _StancesViewState extends State<StancesView> {
     stances = Helper().stancesList
         .where(
           (s) =>
-      s['characterName'] == widget.characterName.replaceAll(' ', '-'),
+      s['characterName'] == widget.characterName.replaceAll(' ', '-').toLowerCase(),
     )
         .map((s) => s['name'] as String)
         .toList();
     inputs.addAll(stances.map((s) => InputData(s, "-")));
-    _selectedStance = stances[0];
+    // safe initialization: avoid index error if no stances are defined
+    _selectedStance = stances.isNotEmpty ? stances[0] : '';
     _allowedStances.addAll(stances);
     initStanceMoves();
   }
@@ -69,7 +70,9 @@ class _StancesViewState extends State<StancesView> {
     final res = await DBProvider.instance.getStanceMovesForCharacter(widget.characterName);
     for (var row in res) {
       final inputsStr = (row['inputs'] ?? '') as String;
-      final stanceStr = (row['stance'] ?? _allowedStances.first) as String;
+      final stanceStr = row['stance'] is String
+          ? row['stance'] as String
+          : (_allowedStances.isNotEmpty ? _allowedStances.first : '');
       final remarkStr = row['remark'] is String ? row['remark'] as String : null;
       List<String> moveList = inputsStr.split('/');
       setState(() {
@@ -528,29 +531,28 @@ class _StancesViewState extends State<StancesView> {
               color: Colors.white12,
             ), // indique visuellement qu'il s'agit d'un champ
           ),
-          child: Expanded(
-            child: TextField(
-              controller: controller,
-              keyboardType: const TextInputType.numberWithOptions(
-                signed: true,
-                decimal: false,
-              ),
-              inputFormatters: [
-                // autorise un signe "-" initial puis des chiffres (accepte temporairement entrées intermédiaires)
-                FilteringTextInputFormatter.allow(RegExp(r'-?\d*')),
-              ],
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontWeight: FontWeight.w600,
-              ),
-              decoration: InputDecoration(
-                hintText: label,
-                hintStyle: TextStyle(color: Colors.white24),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: 8),
-              ),
+          // Removed Expanded: TextField must be direct child (Container gives constraints)
+          child: TextField(
+            controller: controller,
+            keyboardType: const TextInputType.numberWithOptions(
+              signed: true,
+              decimal: false,
+            ),
+            inputFormatters: [
+              // autorise un signe "-" initial puis des chiffres (accepte temporairement entrées intermédiaires)
+              FilteringTextInputFormatter.allow(RegExp(r'-?\d*')),
+            ],
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontWeight: FontWeight.w600,
+            ),
+            decoration: InputDecoration(
+              hintText: label,
+              hintStyle: const TextStyle(color: Colors.white24),
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(vertical: 8),
             ),
           ),
         ),
@@ -583,9 +585,9 @@ class _StancesViewState extends State<StancesView> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.02),
+                      color: Colors.white.withOpacity(0.02),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
+                      border: Border.all(color: Colors.white.withOpacity(0.03)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -607,9 +609,9 @@ class _StancesViewState extends State<StancesView> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.02),
+                      color: Colors.white.withOpacity(0.02),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
+                      border: Border.all(color: Colors.white.withOpacity(0.03)),
                     ),
                     child: InputGrid(
                       inputs: inputs,

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/input_data.dart';
 import '../models/page_type_model.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class Helper{
 
@@ -168,7 +167,37 @@ class Helper{
   "comboId": 15,
   "createdAt": 1780705566216
   }
-  ]
+  ],
+    "stance_moves": [
+      {
+        "id": 1,
+        "characterName": "jin",
+        "stanceName": "ZEN",
+        "inputs": "1+2",
+        "createdAt": 1780705600000
+      },
+      {
+        "id": 2,
+        "characterName": "jin",
+        "stanceName": "ZEN",
+        "inputs": "1+2/1",
+        "createdAt": 1780705610000
+      },
+      {
+        "id": 3,
+        "characterName": "anna",
+        "stanceName": "HMC",
+        "inputs": "f/1+2",
+        "createdAt": 1780705620000
+      },
+      {
+        "id": 4,
+        "characterName": "anna",
+        "stanceName": "HMC",
+        "inputs": "f/1+2/2",
+        "createdAt": 1780705630000
+      }
+    ]
   };
 
   final Set<String> characterNamesList = {

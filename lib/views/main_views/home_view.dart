@@ -87,389 +87,387 @@ class _HomeViewState extends State<HomeView> {
       body: Container(
         decoration: BoxDecoration(gradient: bgGradient),
         child: SafeArea(
-          child: Expanded(
-            child: Row(
-              children: [
-                // Menu vertical gauche (animé)
-                AnimatedContainer(
-                  duration: _animDuration,
-                  width: _isSidebarOpen ? 220 : 72,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 20,
-                    horizontal: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.03),
-                    border: Border(
-                      right: BorderSide(
-                        color: Colors.white.withOpacity(0.03),
-                      ),
+          child: Row(
+            children: [
+              // Menu vertical gauche (animé)
+              AnimatedContainer(
+                duration: _animDuration,
+                width: _isSidebarOpen ? 220 : 72,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 20,
+                  horizontal: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.03),
+                  border: Border(
+                    right: BorderSide(
+                      color: Colors.white.withOpacity(0.03),
                     ),
                   ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header du menu : affiche "MENU" seulement si ouvert,
+                    // et ajoute un bouton de bascule collé au menu.
+                    if (_isSidebarOpen)
+                      Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0,
+                              vertical: 6,
+                            ),
+                            child: Text(
+                              'MENU',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.6),
+                                fontSize: 12,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            onPressed: _toggleSidebar,
+                            icon: Icon(
+                              Icons.chevron_left,
+                              color: accent.withOpacity(0.9),
+                            ),
+                            tooltip: 'Close menu',
+                          ),
+                        ],
+                      )
+                    else
+                      // Mode réduit : bouton centré (icône seule)
+                      Center(
+                        child: IconButton(
+                          onPressed: _toggleSidebar,
+                          icon: Icon(
+                            Icons.chevron_right,
+                            color: accent.withOpacity(0.9),
+                          ),
+                          tooltip: 'Open menu',
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    // Boutons du menu (s'adaptent au mode réduit)
+                    _SidebarButton(
+                      label: 'NEW CHARACTER',
+                      icon: Icons.add,
+                      accent: accent,
+                      onPressed: () {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (_) => const CharacterGalleryView(),
+                          ),
+                        );
+                      },
+                      collapsed: !_isSidebarOpen,
+                    ),
+                    const SizedBox(height: 8),
+                    _SidebarButton(
+                      label: 'DATABASE',
+                      icon: Icons.storage,
+                      accent: accent,
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const DBExplorerView(),
+                          ),
+                        );
+                      },
+                      collapsed: !_isSidebarOpen,
+                    ),
+                    const SizedBox(height: 8),
+                    _SidebarButton(
+                      label: 'OPTIONS',
+                      icon: Icons.settings,
+                      accent: accent,
+                      onPressed: () {},
+                      collapsed: !_isSidebarOpen,
+                    ),
+                    // espaces pour futur contenu
+                    const Spacer(),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        'v0.1',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.4),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Contenu principal
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Header du menu : affiche "MENU" seulement si ouvert,
-                      // et ajoute un bouton de bascule collé au menu.
-                      if (_isSidebarOpen)
-                        Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8.0,
-                                vertical: 6,
-                              ),
-                              child: Text(
-                                'MENU',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.6),
-                                  fontSize: 12,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                            ),
-                            const Spacer(),
-                            IconButton(
-                              onPressed: _toggleSidebar,
-                              icon: Icon(
-                                Icons.chevron_left,
-                                color: accent.withOpacity(0.9),
-                              ),
-                              tooltip: 'Close menu',
-                            ),
-                          ],
-                        )
-                      else
-                        // Mode réduit : bouton centré (icône seule)
-                        Center(
-                          child: IconButton(
-                            onPressed: _toggleSidebar,
-                            icon: Icon(
-                              Icons.chevron_right,
-                              color: accent.withOpacity(0.9),
-                            ),
-                            tooltip: 'Open menu',
-                          ),
+                      // (optionnel) petit fil d'ariane ou sous-titre
+                      Text(
+                        'MY CHARACTERS',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.45),
+                          fontSize: 12,
+                          letterSpacing: 1.4,
                         ),
-                      const SizedBox(height: 8),
-                      // Boutons du menu (s'adaptent au mode réduit)
-                      _SidebarButton(
-                        label: 'NEW CHARACTER',
-                        icon: Icons.add,
-                        accent: accent,
-                        onPressed: () {
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (_) => const CharacterGalleryView(),
+                      ),
+                      const SizedBox(height: 12),
+                      // Zone centrale -> remplacer le placeholder par la grille de la DB
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.02),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.03),
                             ),
-                          );
-                        },
-                        collapsed: !_isSidebarOpen,
-                      ),
-                      const SizedBox(height: 8),
-                      _SidebarButton(
-                        label: 'DATABASE',
-                        icon: Icons.storage,
-                        accent: accent,
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const DBExplorerView(),
-                            ),
-                          );
-                        },
-                        collapsed: !_isSidebarOpen,
-                      ),
-                      const SizedBox(height: 8),
-                      _SidebarButton(
-                        label: 'OPTIONS',
-                        icon: Icons.settings,
-                        accent: accent,
-                        onPressed: () {},
-                        collapsed: !_isSidebarOpen,
-                      ),
-                      // espaces pour futur contenu
-                      const Spacer(),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          'v0.1',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.4),
-                            fontSize: 11,
                           ),
+                          padding: const EdgeInsets.all(12),
+                          child: _loadingCharacters
+                              ? const Center(
+                                  child: CircularProgressIndicator(),
+                                )
+                              : _myCharacters.isEmpty
+                              ? Center(
+                                  child: Text(
+                                    'Aucun personnage',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                )
+                              : LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final cols = _columnsForWidth(
+                                      constraints.maxWidth,
+                                    );
+                                    return GridView.builder(
+                                      itemCount: _myCharacters.length,
+                                      gridDelegate:
+                                          SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: cols,
+                                            crossAxisSpacing: 12,
+                                            mainAxisSpacing: 12,
+                                            childAspectRatio: 0.78,
+                                          ),
+                                      itemBuilder: (context, index) {
+                                        final c = _myCharacters[index];
+                                        final assetPath =
+                                            _assetPathForCharacter(c);
+                                        final name = Helper().getBeautifulName(c.name);
+                                        return MouseRegion(
+                                          cursor:
+                                              SystemMouseCursors.click,
+                                          onEnter: (_) => setState(
+                                            () => _hoveredIndex = index,
+                                          ),
+                                          onExit: (_) => setState(
+                                            () => _hoveredIndex = -1,
+                                          ),
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      MyCharacterView(
+                                                        characterName:
+                                                            c.name,
+                                                      ),
+                                                ),
+                                              );
+                                            },
+                                            child: AnimatedContainer(
+                                              duration: const Duration(
+                                                milliseconds: 160,
+                                              ),
+                                              curve: Curves.easeOut,
+                                              transform:
+                                                  _hoveredIndex == index
+                                                  ? (Matrix4.identity()
+                                                      ..scale(1.03))
+                                                  : Matrix4.identity(),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white
+                                                    .withOpacity(0.03),
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      10,
+                                                    ),
+                                                border: Border.all(
+                                                  color: Colors.white
+                                                      .withOpacity(0.03),
+                                                ),
+                                                boxShadow:
+                                                    _hoveredIndex == index
+                                                    ? [
+                                                        BoxShadow(
+                                                          color: Colors
+                                                              .black
+                                                              .withOpacity(
+                                                                0.35,
+                                                              ),
+                                                          blurRadius: 12,
+                                                          offset:
+                                                              const Offset(
+                                                                0,
+                                                                6,
+                                                              ),
+                                                        ),
+                                                      ]
+                                                    : null,
+                                              ),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment
+                                                        .stretch,
+                                                children: [
+                                                  Expanded(
+                                                    child: Stack(
+                                                      children: [
+                                                        ClipRRect(
+                                                          borderRadius: const BorderRadius.vertical(
+                                                            top: Radius.circular(10),
+                                                          ),
+                                                          child: Image.asset(
+                                                            assetPath,
+                                                            fit: BoxFit.cover,
+                                                            errorBuilder: (
+                                                              context,
+                                                              error,
+                                                              stackTrace,
+                                                            ) {
+                                                              return Container(
+                                                                color: Colors.white12,
+                                                                child: Center(
+                                                                  child: Text(
+                                                                    name,
+                                                                    style: TextStyle(
+                                                                      color:
+                                                                          Colors.white70,
+                                                                      fontSize:
+                                                                          28,
+                                                                      fontWeight:
+                                                                          FontWeight.w700,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              );
+                                                            },
+                                                          ),
+                                                        ),
+                                                        // Bouton delete en haut à droite
+                                                        Positioned(
+                                                          top: 8,
+                                                          right: 8,
+                                                          child: Material(
+                                                            color: Colors.transparent,
+                                                            child: IconButton(
+                                                              iconSize: 20,
+                                                              mouseCursor: MouseCursor.uncontrolled,
+                                                              padding: EdgeInsets.zero,
+                                                              constraints: const BoxConstraints(),
+                                                              icon: const CircleAvatar(
+                                                                radius: 14,
+                                                                backgroundColor: Colors.black54,
+                                                                child: Icon(Icons.delete, color: Colors.redAccent, size: 16),
+                                                              ),
+                                                              tooltip: 'Delete',
+                                                              onPressed: () async {
+                                                                final confirm = await showDialog<bool>(
+                                                                  context: context,
+                                                                  builder: (ctx) => AlertDialog(
+                                                                    title: const Text('Delete character?'),
+                                                                    content: Text('Are you sure you want to delete "$name" and all its data? This action cannot be undone.'),
+                                                                    actions: [
+                                                                      TextButton(
+                                                                        onPressed: () => Navigator.of(ctx).pop(false),
+                                                                        child: const Text('Cancel'),
+                                                                      ),
+                                                                      TextButton(
+                                                                        onPressed: () => Navigator.of(ctx).pop(true),
+                                                                        child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                );
+                                                                if (confirm != true) return;
+                                                                try {
+                                                                  await DBProvider.instance.deleteAllCharacterData(c.name);
+                                                                  setState(() {
+                                                                    _myCharacters.removeAt(index);
+                                                                  });
+                                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                                    SnackBar(
+                                                                      content: Text('Character "$name" deleted'),
+                                                                      duration: const Duration(seconds: 2),
+                                                                    ),
+                                                                  );
+                                                                } catch (e) {
+                                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                                    const SnackBar(
+                                                                      content: Text('Error deleting character'),
+                                                                      backgroundColor: Colors.red,
+                                                                      duration: Duration(seconds: 2),
+                                                                    ),
+                                                                  );
+                                                                }
+                                                              },
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    decoration: BoxDecoration(
+                                                      color: const Color.fromRGBO(3, 36, 101, 1),
+                                                      borderRadius: const BorderRadius.only(
+                                                        bottomLeft: Radius.circular(10),
+                                                        bottomRight: Radius.circular(10),
+                                                      ),
+                                                      border: Border.all(
+                                                        color: Colors.white.withOpacity(0.03),
+                                                      ),
+                                                    ),
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.symmetric(
+                                                        vertical: 8,
+                                                        horizontal: 8,
+                                                      ),
+                                                      child: Text(
+                                                        name,
+                                                        textAlign: TextAlign.center,
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontWeight: FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
                         ),
                       ),
                     ],
                   ),
                 ),
-
-                // Contenu principal
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // (optionnel) petit fil d'ariane ou sous-titre
-                        Text(
-                          'MY CHARACTERS',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.45),
-                            fontSize: 12,
-                            letterSpacing: 1.4,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        // Zone centrale -> remplacer le placeholder par la grille de la DB
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.02),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.03),
-                              ),
-                            ),
-                            padding: const EdgeInsets.all(12),
-                            child: _loadingCharacters
-                                ? const Center(
-                                    child: CircularProgressIndicator(),
-                                  )
-                                : _myCharacters.isEmpty
-                                ? Center(
-                                    child: Text(
-                                      'Aucun personnage',
-                                      style: TextStyle(
-                                        color: Colors.white70,
-                                      ),
-                                    ),
-                                  )
-                                : LayoutBuilder(
-                                    builder: (context, constraints) {
-                                      final cols = _columnsForWidth(
-                                        constraints.maxWidth,
-                                      );
-                                      return GridView.builder(
-                                        itemCount: _myCharacters.length,
-                                        gridDelegate:
-                                            SliverGridDelegateWithFixedCrossAxisCount(
-                                              crossAxisCount: cols,
-                                              crossAxisSpacing: 12,
-                                              mainAxisSpacing: 12,
-                                              childAspectRatio: 0.78,
-                                            ),
-                                        itemBuilder: (context, index) {
-                                          final c = _myCharacters[index];
-                                          final assetPath =
-                                              _assetPathForCharacter(c);
-                                          final name = Helper().getBeautifulName(c.name);
-                                          return MouseRegion(
-                                            cursor:
-                                                SystemMouseCursors.click,
-                                            onEnter: (_) => setState(
-                                              () => _hoveredIndex = index,
-                                            ),
-                                            onExit: (_) => setState(
-                                              () => _hoveredIndex = -1,
-                                            ),
-                                            child: GestureDetector(
-                                              onTap: () {
-                                                Navigator.of(context).push(
-                                                  MaterialPageRoute(
-                                                    builder: (_) =>
-                                                        MyCharacterView(
-                                                          characterName:
-                                                              c.name,
-                                                        ),
-                                                  ),
-                                                );
-                                              },
-                                              child: AnimatedContainer(
-                                                duration: const Duration(
-                                                  milliseconds: 160,
-                                                ),
-                                                curve: Curves.easeOut,
-                                                transform:
-                                                    _hoveredIndex == index
-                                                    ? (Matrix4.identity()
-                                                        ..scale(1.03))
-                                                    : Matrix4.identity(),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white
-                                                      .withOpacity(0.03),
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                        10,
-                                                      ),
-                                                  border: Border.all(
-                                                    color: Colors.white
-                                                        .withOpacity(0.03),
-                                                  ),
-                                                  boxShadow:
-                                                      _hoveredIndex == index
-                                                      ? [
-                                                          BoxShadow(
-                                                            color: Colors
-                                                                .black
-                                                                .withOpacity(
-                                                                  0.35,
-                                                                ),
-                                                            blurRadius: 12,
-                                                            offset:
-                                                                const Offset(
-                                                                  0,
-                                                                  6,
-                                                                ),
-                                                          ),
-                                                        ]
-                                                      : null,
-                                                ),
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment
-                                                          .stretch,
-                                                  children: [
-                                                    Expanded(
-                                                      child: Stack(
-                                                        children: [
-                                                          ClipRRect(
-                                                            borderRadius: const BorderRadius.vertical(
-                                                              top: Radius.circular(10),
-                                                            ),
-                                                            child: Image.asset(
-                                                              assetPath,
-                                                              fit: BoxFit.cover,
-                                                              errorBuilder: (
-                                                                context,
-                                                                error,
-                                                                stackTrace,
-                                                              ) {
-                                                                return Container(
-                                                                  color: Colors.white12,
-                                                                  child: Center(
-                                                                    child: Text(
-                                                                      name,
-                                                                      style: TextStyle(
-                                                                        color:
-                                                                            Colors.white70,
-                                                                        fontSize:
-                                                                            28,
-                                                                        fontWeight:
-                                                                            FontWeight.w700,
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                );
-                                                              },
-                                                            ),
-                                                          ),
-                                                          // Bouton delete en haut à droite
-                                                          Positioned(
-                                                            top: 8,
-                                                            right: 8,
-                                                            child: Material(
-                                                              color: Colors.transparent,
-                                                              child: IconButton(
-                                                                iconSize: 20,
-                                                                mouseCursor: MouseCursor.uncontrolled,
-                                                                padding: EdgeInsets.zero,
-                                                                constraints: const BoxConstraints(),
-                                                                icon: const CircleAvatar(
-                                                                  radius: 14,
-                                                                  backgroundColor: Colors.black54,
-                                                                  child: Icon(Icons.delete, color: Colors.redAccent, size: 16),
-                                                                ),
-                                                                tooltip: 'Delete',
-                                                                onPressed: () async {
-                                                                  final confirm = await showDialog<bool>(
-                                                                    context: context,
-                                                                    builder: (ctx) => AlertDialog(
-                                                                      title: const Text('Delete character?'),
-                                                                      content: Text('Are you sure you want to delete "$name" and all its data? This action cannot be undone.'),
-                                                                      actions: [
-                                                                        TextButton(
-                                                                          onPressed: () => Navigator.of(ctx).pop(false),
-                                                                          child: const Text('Cancel'),
-                                                                        ),
-                                                                        TextButton(
-                                                                          onPressed: () => Navigator.of(ctx).pop(true),
-                                                                          child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                                                                        ),
-                                                                      ],
-                                                                    ),
-                                                                  );
-                                                                  if (confirm != true) return;
-                                                                  try {
-                                                                    await DBProvider.instance.deleteAllCharacterData(c.name);
-                                                                    setState(() {
-                                                                      _myCharacters.removeAt(index);
-                                                                    });
-                                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                                      SnackBar(
-                                                                        content: Text('Character "$name" deleted'),
-                                                                        duration: const Duration(seconds: 2),
-                                                                      ),
-                                                                    );
-                                                                  } catch (e) {
-                                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                                      const SnackBar(
-                                                                        content: Text('Error deleting character'),
-                                                                        backgroundColor: Colors.red,
-                                                                        duration: Duration(seconds: 2),
-                                                                      ),
-                                                                    );
-                                                                  }
-                                                                },
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    Container(
-                                                      decoration: BoxDecoration(
-                                                        color: const Color.fromRGBO(3, 36, 101, 1),
-                                                        borderRadius: const BorderRadius.only(
-                                                          bottomLeft: Radius.circular(10),
-                                                          bottomRight: Radius.circular(10),
-                                                        ),
-                                                        border: Border.all(
-                                                          color: Colors.white.withOpacity(0.03),
-                                                        ),
-                                                      ),
-                                                      child: Padding(
-                                                        padding: const EdgeInsets.symmetric(
-                                                          vertical: 8,
-                                                          horizontal: 8,
-                                                        ),
-                                                        child: Text(
-                                                          name,
-                                                          textAlign: TextAlign.center,
-                                                          style: const TextStyle(
-                                                            color: Colors.white,
-                                                            fontWeight: FontWeight.w600,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    },
-                                  ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

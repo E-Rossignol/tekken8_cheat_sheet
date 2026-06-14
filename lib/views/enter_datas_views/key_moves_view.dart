@@ -7,6 +7,7 @@ import 'package:tekken_cheat_sheet/models/input_data.dart';
 import 'package:tekken_cheat_sheet/widgets/input_grid.dart';
 import '../../models/page_type_model.dart';
 import '../../services/db_provider.dart';
+import 'dart:math' as math; // ajouté
 
 class KeyMovesView extends StatefulWidget {
   final String characterName;
@@ -222,166 +223,194 @@ class _KeyMovesViewState extends State<KeyMovesView> {
 
   // buildCurrentString inchangé (légères adaptations pour utiliser InputData du model)
   Widget buildCurrentString() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Ligne principale: current string (expand) + actions (à droite)
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: const Color.fromRGBO(5, 11, 32, 1),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              // zone qui contient la série d'icônes ; bascule dynamique entre 1 ligne (si ça tient)
-              // et 2 lignes (Wrap) si la largeur totale dépasse la largeur disponible.
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final entries = currentInputs.asMap().entries.toList();
-                    // préparer widgets et calculer largeur nécessaire
-                    double totalWidth = 0.0;
-                    final List<Widget> iconWidgets = entries.map((entry) {
-                      final data = inputs.firstWhere(
-                        (e) => e.code == entry.value,
-                        orElse: () => InputData(entry.value, "-"),
-                      );
-                      final double w = 40.0;
-                      totalWidth += w + 8; // icône + espacement droit estimé
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: SizedBox(
-                          width: w,
-                          height: 40,
-                          child: data.assetPath == "-"
-                              ? Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.lightBlueAccent,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      data.code,
-                                      style: const TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              : Image.asset(
-                                  data.assetPath,
-                                  fit: BoxFit.contain,
-                                ),
-                        ),
-                      );
-                    }).toList();
+    // Encapsule toute la ligne dans un LayoutBuilder pour connaître la largeur disponible
+    return LayoutBuilder(
+      builder: (context, outerConstraints) {
+        final availableWidth = outerConstraints.maxWidth;
+        // définir une largeur maximale raisonnable pour la zone d'actions (ex: 22% ou 140px)
+        final maxActionsWidth = math.min(140.0, availableWidth * 0.22);
 
-                    // si ça tient sur une seule ligne -> conserver le comportement horizontal (scroll si besoin)
-                    if (totalWidth <= constraints.maxWidth) {
-                      return SizedBox(
-                        height: 56,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: iconWidgets,
-                          ),
-                        ),
-                      );
-                    }
-
-                    // sinon : afficher sur deux lignes via Wrap ; limiter la hauteur à deux lignes et permettre le scroll vertical si nécessaire
-                    const double twoLineHeight = 40 * 2 + 12; // 2*iconHeight + runSpacing/padding
-                    return SizedBox(
-                      height: twoLineHeight,
-                      child: SingleChildScrollView(
-                        // vertical scroll si plus de deux lignes
-                        child: Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: iconWidgets,
-                        ),
-                      ),
-                    );
-                  },
-                ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Ligne principale: current string (expand) + actions (à droite)
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color.fromRGBO(5, 11, 32, 1),
+                borderRadius: BorderRadius.circular(16),
               ),
-
-              // Actions : save / backspace / clear
-              const SizedBox(width: 8),
-              Row(
+              child: Row(
                 children: [
-                  Tooltip(
-                    message: 'Save',
-                    child: IconButton(
-                      onPressed: saveString,
-                      icon: const Icon(Icons.save, color: Colors.greenAccent),
+                  // zone qui contient la série d'icônes ; bascule dynamique entre 1 ligne (si ça tient)
+                  // et 2 lignes (Wrap) si la largeur totale dépasse la largeur disponible.
+                  Flexible(
+                    flex: 1,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final entries = currentInputs.asMap().entries.toList();
+                        // préparer widgets et calculer largeur nécessaire
+                        double totalWidth = 0.0;
+                        final List<Widget> iconWidgets = entries.map((entry) {
+                          final data = inputs.firstWhere(
+                            (e) => e.code == entry.value,
+                            orElse: () => InputData(entry.value, "-"),
+                          );
+                          final double w = 40.0;
+                          totalWidth += w + 8; // icône + espacement droit estimé
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: SizedBox(
+                              width: w,
+                              height: 40,
+                              child: data.assetPath == "-"
+                                  ? Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.lightBlueAccent,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          data.code,
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : Image.asset(
+                                      data.assetPath,
+                                      fit: BoxFit.contain,
+                                    ),
+                            ),
+                          );
+                        }).toList();
+
+                        // si ça tient sur une seule ligne -> conserver le comportement horizontal (scroll si besoin)
+                        if (totalWidth <= constraints.maxWidth) {
+                          return SizedBox(
+                            height: 56,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: iconWidgets,
+                              ),
+                            ),
+                          );
+                        }
+
+                        // sinon : afficher sur deux lignes via Wrap ; limiter la hauteur à deux lignes et permettre le scroll vertical si nécessaire
+                        const double twoLineHeight = 40 * 2 + 12; // 2*iconHeight + runSpacing/padding
+                        return SizedBox(
+                          height: twoLineHeight,
+                          child: SingleChildScrollView(
+                            // vertical scroll si plus de deux lignes
+                            child: Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: iconWidgets,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                  Tooltip(
-                    message: 'Remove last',
-                    child: IconButton(
-                      onPressed: removeLastInput,
-                      icon: const Icon(
-                        Icons.backspace,
-                        color: Colors.orangeAccent,
+
+                  // petit espacement entre zone d'icônes et actions
+                  const SizedBox(width: 8),
+
+                  // CONSTRAINED ACTIONS: empêche les boutons de pousser la Row hors de l'espace dispo
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: maxActionsWidth),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Tooltip(
+                            message: 'Save',
+                            child: IconButton(
+                              onPressed: saveString,
+                              iconSize: 20,
+                              padding: const EdgeInsets.all(6),
+                              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                              icon: const Icon(Icons.save, color: Colors.greenAccent),
+                            ),
+                          ),
+                          Tooltip(
+                            message: 'Remove last',
+                            child: IconButton(
+                              onPressed: removeLastInput,
+                              iconSize: 20,
+                              padding: const EdgeInsets.all(6),
+                              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                              icon: const Icon(
+                                Icons.backspace,
+                                color: Colors.orangeAccent,
+                              ),
+                            ),
+                          ),
+                          Tooltip(
+                            message: 'Clear',
+                            child: IconButton(
+                              onPressed: clearInputs,
+                              iconSize: 20,
+                              padding: const EdgeInsets.all(6),
+                              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                              icon: const Icon(Icons.delete, color: Colors.redAccent),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-                  Tooltip(
-                    message: 'Clear',
-                    child: IconButton(
-                      onPressed: clearInputs,
-                      icon: const Icon(Icons.delete, color: Colors.redAccent),
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 12),
-
-        // Remark field (sous le current input)
-        Container(
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: const Color.fromRGBO(5, 11, 32, 1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: TextField(
-            controller: _remarkController,
-            style: const TextStyle(color: Colors.white70),
-            decoration: const InputDecoration(
-              hintText: 'Remark (optional)',
-              border: InputBorder.none,
-              isDense: true,
             ),
-          ),
-        ),
 
-        const SizedBox(height: 12),
+            const SizedBox(height: 12),
 
-        // Champs numériques empilés (Frames, On hit, On block)
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _numberField('Frames', _framesController),
-            const SizedBox(height: 8),
-            _numberField('On hit', _onHitController),
-            const SizedBox(height: 8),
-            _numberField('On block', _onBlockController),
+            // Remark field (sous le current input)
+            Container(
+              height: 44,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: const Color.fromRGBO(5, 11, 32, 1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: TextField(
+                controller: _remarkController,
+                style: const TextStyle(color: Colors.white70),
+                decoration: const InputDecoration(
+                  hintText: 'Remark (optional)',
+                  border: InputBorder.none,
+                  isDense: true,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Champs numériques empilés (Frames, On hit, On block)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _numberField('Frames', _framesController),
+                const SizedBox(height: 8),
+                _numberField('On hit', _onHitController),
+                const SizedBox(height: 8),
+                _numberField('On block', _onBlockController),
+              ],
+            ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -402,29 +431,28 @@ class _KeyMovesViewState extends State<KeyMovesView> {
               color: Colors.white12,
             ), // indique visuellement qu'il s'agit d'un champ
           ),
-          child: Expanded(
-            child: TextField(
-              controller: controller,
-              keyboardType: const TextInputType.numberWithOptions(
-                signed: true,
-                decimal: false,
-              ),
-              inputFormatters: [
-                // autorise un signe "-" initial puis des chiffres (accepte temporairement entrées intermédiaires)
-                FilteringTextInputFormatter.allow(RegExp(r'-?\d*')),
-              ],
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontWeight: FontWeight.w600,
-              ),
-              decoration: InputDecoration(
-                hintText: label,
-                hintStyle: TextStyle(color: Colors.white24),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: 8),
-              ),
+          // Expanded removed: TextField must not be wrapped with Expanded here
+          child: TextField(
+            controller: controller,
+            keyboardType: const TextInputType.numberWithOptions(
+              signed: true,
+              decimal: false,
+            ),
+            inputFormatters: [
+              // autorise un signe "-" initial puis des chiffres (accepte temporairement entrées intermédiaires)
+              FilteringTextInputFormatter.allow(RegExp(r'-?\d*')),
+            ],
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontWeight: FontWeight.w600,
+            ),
+            decoration: const InputDecoration(
+              hintText: '', // label shown above, keep hint empty
+              hintStyle: TextStyle(color: Colors.white24),
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(vertical: 10),
             ),
           ),
         ),

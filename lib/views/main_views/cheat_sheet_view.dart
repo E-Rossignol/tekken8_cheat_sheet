@@ -6,7 +6,6 @@ import 'package:tekken_cheat_sheet/views/enter_datas_views/punishes_view.dart';
 import 'package:tekken_cheat_sheet/views/enter_datas_views/stances_view.dart';
 import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
 import 'package:tekken_cheat_sheet/widgets/my_icons.dart';
-import '../../constants/helper.dart';
 import '../../services/db_provider.dart';
 
 enum _Panel { keyMoves, punishes, combo, stances }

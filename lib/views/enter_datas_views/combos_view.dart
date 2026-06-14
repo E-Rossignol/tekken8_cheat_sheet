@@ -476,9 +476,10 @@ class _CombosViewState extends State<CombosView> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.02),
+                      // corrected: withOpacity instead of withValues
+                      color: Colors.white.withOpacity(0.02),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
+                      border: Border.all(color: Colors.white.withOpacity(0.03)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -498,9 +499,10 @@ class _CombosViewState extends State<CombosView> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.02),
+                      // corrected: withOpacity instead of withValues
+                      color: Colors.white.withOpacity(0.02),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
+                      border: Border.all(color: Colors.white.withOpacity(0.03)),
                     ),
                     child: InputGrid(
                       inputs: inputs,
@@ -515,16 +517,14 @@ class _CombosViewState extends State<CombosView> {
                 // RIGHT PANEL (saved moves) themed
                 SizedBox(
                   width: 380,
-                  child: Expanded(
-                    child: ComboPanel(
-                      combos: savedCombos,
-                      inputs: inputs,
-                      accent: accent,
-                      characterName: widget.characterName,
-                      onDeleteCombo: (i) async => await _deleteSavedString(i),
-                      onDeleteLauncher: (comboIndex, launcherId) async => await _deleteLauncher(comboIndex, launcherId),
-                      onAddLauncher: (comboId) async => await _showAddLauncherDialog(comboId),
-                    ),
+                  child: ComboPanel(
+                    combos: savedCombos,
+                    inputs: inputs,
+                    accent: accent,
+                    characterName: widget.characterName,
+                    onDeleteCombo: (i) async => await _deleteSavedString(i),
+                    onDeleteLauncher: (comboIndex, launcherId) async => await _deleteLauncher(comboIndex, launcherId),
+                    onAddLauncher: (comboId) async => await _showAddLauncherDialog(comboId),
                   ),
                 ),
               ],

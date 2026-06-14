@@ -44,8 +44,8 @@ You can also find a demo video here: (link to demo video showcasing the app feat
 3. Run (desktop)
    flutter run -d windows   # or -d macos / -d linux
 
-4. Run (mobile)
-   flutter run -d chrome    # or your device id
+4. Install and run
+   you can also directly run the app using the "deliverables" folder and following the instructions in the README there.
 
 ## Developer utilities (DB)
 Two helper methods exist in `DBProvider` to help with testing and fixtures:
