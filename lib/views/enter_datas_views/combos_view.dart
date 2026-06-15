@@ -7,7 +7,10 @@ import 'package:tekken_cheat_sheet/models/input_data.dart';
 import 'package:tekken_cheat_sheet/widgets/input_grid.dart';
 import '../../services/db_provider.dart';
 
+/// CombosView allows creating combos and linking launchers to them.
+/// Combo persists once; launchers reference a combo by foreign key.
 class CombosView extends StatefulWidget {
+  /// Character scope used to filter combos and launchers.
   final String characterName;
 
   const CombosView({super.key, required this.characterName});
@@ -17,26 +20,27 @@ class CombosView extends StatefulWidget {
 }
 
 class _CombosViewState extends State<CombosView> {
+  /// Currently composed input tokens for the combo being authored.
   final List<String> currentInputs = [];
 
+  /// Master input definitions (icons + codes), extended per-character with stance tokens.
   List<InputData> inputs = Helper().inputs;
 
-  /// savedCombos : chaque élément = { id: int, inputs: String, launchers: List<Map{id,inputs}}
+  /// Saved combos fetched from DB; each item is a Map {id, inputs, launchers}.
   final List<Map<String, dynamic>> savedCombos = [];
 
-  // stances calculées en initState pour éviter doublons sur rebuild
+  /// Local stance list for the character (appended to inputs as tokens).
   List<String> stances = [];
 
-  // controllers pour les champs numériques demandés
   final TextEditingController _framesController = TextEditingController();
   final TextEditingController _onHitController = TextEditingController();
   final TextEditingController _onBlockController = TextEditingController();
   final TextEditingController _remarkController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
 
-    // calculer les stances et les ajouter une seule fois aux inputs
     stances = Helper().stancesList
         .where(
           (s) =>
@@ -48,12 +52,13 @@ class _CombosViewState extends State<CombosView> {
     initSavedMoves();
   }
 
+  /// Load combos (with their launchers) from DB for this character.
+  /// @return Future<void>
   Future<void> initSavedMoves() async {
     final db = DBProvider.instance;
     final res = await db.getCombosForCharacter(widget.characterName);
     setState(() {
       savedCombos.clear();
-      // each row already contains 'id','inputs','launchers'
       savedCombos.addAll(res);
     });
   }
@@ -67,12 +72,15 @@ class _CombosViewState extends State<CombosView> {
     super.dispose();
   }
 
+  /// Append an input token to the current combo composition.
+  /// @param input token code
   void addInput(String input) {
     setState(() {
       currentInputs.add(input);
     });
   }
 
+  /// Remove last token from current composition.
   void removeLastInput() {
     if (currentInputs.isEmpty) return;
     setState(() {
@@ -80,44 +88,60 @@ class _CombosViewState extends State<CombosView> {
     });
   }
 
+  /// Clear current composition.
   void clearInputs() {
     setState(() {
       currentInputs.clear();
     });
   }
 
-  // remplace saveString pour écrire directement en base avant d'ajouter à savedStrings
+  /// Save composed combo to DB and prompt to add a launcher.
+  /// @return Future<void>
   Future<void> saveString() async {
     if (currentInputs.isEmpty) return;
-
     final db = DBProvider.instance;
     final comboJoined = currentInputs.join('/');
 
     try {
       final newId = await db.insertCombo(widget.characterName, comboJoined);
       if (newId > 0) {
-        // ajouter en mémoire
         setState(() {
-          savedCombos.add({'id': newId, 'inputs': comboJoined, 'launchers': <Map>[]});
+          savedCombos.add({
+            'id': newId,
+            'inputs': comboJoined,
+            'launchers': <Map>[],
+          });
           currentInputs.clear();
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Combo saved'), duration: Duration(seconds: 2)),
+          const SnackBar(
+            content: Text('Combo saved'),
+            duration: Duration(seconds: 2),
+          ),
         );
-        // proposer d'ajouter immédiatement des launchers
+        // immediately propose to add a launcher for convenience
         _showAddLauncherDialog(newId);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error saving combo'), duration: Duration(seconds: 2)),
+          const SnackBar(
+            content: Text('Error saving combo'),
+            duration: Duration(seconds: 2),
+          ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error saving combo'), duration: Duration(seconds: 2)),
+        const SnackBar(
+          content: Text('Error saving combo'),
+          duration: Duration(seconds: 2),
+        ),
       );
     }
   }
 
+  /// Confirm and delete a saved combo.
+  /// @param index index in savedCombos
+  /// @return Future<void>
   Future<void> _deleteSavedString(int index) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -139,130 +163,229 @@ class _CombosViewState extends State<CombosView> {
       ),
     );
     if (ok == true) {
-      // suppression d'un combo complet
       final combo = savedCombos[index];
-      final okDel = await DBProvider.instance.deleteCombo(widget.characterName, combo['inputs']);
+      final okDel = await DBProvider.instance.deleteCombo(
+        widget.characterName,
+        combo['inputs'],
+      );
       if (okDel) {
         setState(() {
           savedCombos.removeAt(index);
         });
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Combo deleted'), duration: Duration(seconds: 2)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Combo deleted'),
+            duration: Duration(seconds: 2),
+          ),
+        );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error deleting combo'), duration: Duration(seconds: 2)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error deleting combo'),
+            duration: Duration(seconds: 2),
+          ),
+        );
       }
     }
   }
 
-  // Dialog pour ajouter un launcher à un combo existant
+  /// Dialog to compose a launcher and attach it to comboId.
+  /// @param comboId id of the combo to attach the launcher to
+  /// @return Future<void>
   Future<void> _showAddLauncherDialog(int comboId) async {
     List<String> tmp = [];
     await showDialog<void>(
       context: context,
       builder: (ctx) {
-        return StatefulBuilder(builder: (ctx2, setState2) {
-          Widget buildCurrent() {
-            return SizedBox(
-              height: 64,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: tmp.map((code) {
-                    final data = inputs.firstWhere((e) => e.code == code, orElse: () => InputData(code, '-'));
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: SizedBox(width: 40, height: 40, child: data.assetPath == '-' ? Center(child: Text(data.code, style: const TextStyle(color: Colors.white))) : Image.asset(data.assetPath)),
-                    );
-                  }).toList(),
+        return StatefulBuilder(
+          builder: (ctx2, setState2) {
+            Widget buildCurrent() {
+              return SizedBox(
+                height: 64,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: tmp.map((code) {
+                      final data = inputs.firstWhere(
+                        (e) => e.code == code,
+                        orElse: () => InputData(code, '-'),
+                      );
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: data.assetPath == '-'
+                              ? Center(
+                                  child: Text(
+                                    data.code,
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                )
+                              : Image.asset(data.assetPath),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              );
+            }
+
+            return Theme(
+              data: Theme.of(context).copyWith(
+                textTheme: Theme.of(
+                  context,
+                ).textTheme.apply(bodyColor: Colors.white),
+                dialogTheme: DialogThemeData(
+                  backgroundColor: const Color(0xFF0E1220),
+                ),
+              ),
+              child: AlertDialog(
+                backgroundColor: const Color(0xFF0E1220),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                titleTextStyle: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+                contentTextStyle: const TextStyle(color: Colors.white70),
+                title: const Text('Add launcher'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    buildCurrent(),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: 260,
+                      height: 200,
+                      child: InputGrid(
+                        inputs: inputs,
+                        onInputTap: (code) {
+                          setState2(() => tmp.add(code));
+                        },
+                        accent: const Color.fromRGBO(93, 208, 252, 1),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        TextButton(
+                          onPressed: () => setState2(
+                            () => tmp.isNotEmpty ? tmp.removeLast() : null,
+                          ),
+                          child: const Text(
+                            'Back',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        TextButton(
+                          onPressed: () => setState2(() => tmp.clear()),
+                          child: const Text(
+                            'Clear',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        ),
+                        const Spacer(),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color.fromRGBO(
+                              93,
+                              208,
+                              252,
+                              1,
+                            ),
+                          ),
+                          onPressed: tmp.isEmpty
+                              ? null
+                              : () async {
+                                  final insertId = await DBProvider.instance
+                                      .insertLauncher(
+                                        widget.characterName,
+                                        tmp.join('/'),
+                                        comboId,
+                                      );
+                                  if (insertId > 0) {
+                                    final idx = savedCombos.indexWhere(
+                                      (c) => c['id'] == comboId,
+                                    );
+                                    if (idx >= 0) {
+                                      setState(() {
+                                        (savedCombos[idx]['launchers'] as List)
+                                            .add({
+                                              'id': insertId,
+                                              'inputs': tmp.join('/'),
+                                            });
+                                      });
+                                    }
+                                    Navigator.of(ctx2).pop();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Launcher added'),
+                                        duration: Duration(seconds: 2),
+                                      ),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Error adding launcher'),
+                                        duration: Duration(seconds: 2),
+                                      ),
+                                    );
+                                  }
+                                },
+                          child: const Text('Save launcher'),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             );
-          }
-
-          // dialogue sombre thématisé
-          return Theme(
-            data: Theme.of(context).copyWith(
-              textTheme: Theme.of(context).textTheme.apply(bodyColor: Colors.white), dialogTheme: DialogThemeData(backgroundColor: const Color(0xFF0E1220)),
-            ),
-            child: AlertDialog(
-              backgroundColor: const Color(0xFF0E1220),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              titleTextStyle: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
-              contentTextStyle: const TextStyle(color: Colors.white70),
-              title: const Text('Add launcher'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  buildCurrent(),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: 260,
-                    height: 200,
-                    child: InputGrid(
-                      inputs: inputs,
-                      onInputTap: (code) {
-                        setState2(() => tmp.add(code));
-                      },
-                      accent: const Color.fromRGBO(93, 208, 252, 1),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      TextButton(onPressed: () => setState2(() => tmp.isNotEmpty ? tmp.removeLast() : null), child: const Text('Back', style: TextStyle(color: Colors.white70))),
-                      const SizedBox(width: 8),
-                      TextButton(onPressed: () => setState2(() => tmp.clear()), child: const Text('Clear', style: TextStyle(color: Colors.white70))),
-                      const Spacer(),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: const Color.fromRGBO(93, 208, 252, 1)),
-                        onPressed: tmp.isEmpty
-                            ? null
-                            : () async {
-                                final insertId = await DBProvider.instance.insertLauncher(widget.characterName, tmp.join('/'), comboId);
-                                if (insertId > 0) {
-                                  // mettre à jour l'état local : ajouter launcher à la combo
-                                  final idx = savedCombos.indexWhere((c) => c['id'] == comboId);
-                                  if (idx >= 0) {
-                                    setState(() {
-                                      (savedCombos[idx]['launchers'] as List).add({'id': insertId, 'inputs': tmp.join('/')});
-                                    });
-                                  }
-                                  Navigator.of(ctx2).pop();
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Launcher added'), duration: Duration(seconds: 2)));
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error adding launcher'), duration: Duration(seconds: 2)));
-                                }
-                              },
-                        child: const Text('Save launcher'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          );
-        });
+          },
+        );
       },
     );
   }
 
+  /// Delete a launcher by id and update local state.
+  /// @param comboIndex index of parent combo in savedCombos
+  /// @param launcherId id of the launcher row to remove
+  /// @return Future<void>
   Future<void> _deleteLauncher(int comboIndex, int launcherId) async {
-    final ok = await DBProvider.instance.deleteLauncher(widget.characterName, launcherId);
+    final ok = await DBProvider.instance.deleteLauncher(
+      widget.characterName,
+      launcherId,
+    );
     if (ok) {
       setState(() {
-        savedCombos[comboIndex]['launchers'] = (savedCombos[comboIndex]['launchers'] as List).where((l) => l['id'] != launcherId).toList();
+        savedCombos[comboIndex]['launchers'] =
+            (savedCombos[comboIndex]['launchers'] as List)
+                .where((l) => l['id'] != launcherId)
+                .toList();
       });
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Launcher deleted'), duration: Duration(seconds: 2)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Launcher deleted'),
+          duration: Duration(seconds: 2),
+        ),
+      );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error deleting launcher'), duration: Duration(seconds: 2)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error deleting launcher'),
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 
-  // buildCurrentString inchangé (légères adaptations pour utiliser InputData du model)
   Widget buildCurrentString() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Ligne principale: current string (expand) + actions (à droite)
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
@@ -271,13 +394,10 @@ class _CombosViewState extends State<CombosView> {
           ),
           child: Row(
             children: [
-              // zone qui contient la série d'icônes ; bascule dynamique entre 1 ligne (si ça tient)
-              // et 2 lignes (Wrap) si la largeur totale dépasse la largeur disponible.
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final entries = currentInputs.asMap().entries.toList();
-                    // préparer widgets et calculer largeur nécessaire
                     double totalWidth = 0.0;
                     final List<Widget> iconWidgets = entries.map((entry) {
                       final data = inputs.firstWhere(
@@ -285,7 +405,7 @@ class _CombosViewState extends State<CombosView> {
                         orElse: () => InputData(entry.value, "-"),
                       );
                       final double w = 40.0;
-                      totalWidth += w + 8; // icône + espacement droit estimé
+                      totalWidth += w + 8;
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: SizedBox(
@@ -319,7 +439,6 @@ class _CombosViewState extends State<CombosView> {
                       );
                     }).toList();
 
-                    // si ça tient sur une seule ligne -> conserver le comportement horizontal (scroll si besoin)
                     if (totalWidth <= constraints.maxWidth) {
                       return SizedBox(
                         height: 56,
@@ -333,12 +452,10 @@ class _CombosViewState extends State<CombosView> {
                       );
                     }
 
-                    // sinon : afficher sur deux lignes via Wrap ; limiter la hauteur à deux lignes et permettre le scroll vertical si nécessaire
-                    const double twoLineHeight = 40 * 2 + 12; // 2*iconHeight + runSpacing/padding
+                    const double twoLineHeight = 40 * 2 + 12;
                     return SizedBox(
                       height: twoLineHeight,
                       child: SingleChildScrollView(
-                        // vertical scroll si plus de deux lignes
                         child: Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -350,7 +467,6 @@ class _CombosViewState extends State<CombosView> {
                 ),
               ),
 
-              // Actions : save / backspace / clear
               const SizedBox(width: 8),
               Row(
                 children: [
@@ -387,7 +503,6 @@ class _CombosViewState extends State<CombosView> {
     );
   }
 
-  // Nouveau : construit une ligne (une seule ligne visuelle) contenant les icônes du string
   Widget buildComboCard(int index, double iconSize, double spacing) {
     final combo = savedCombos[index];
     final string = (combo['inputs'] ?? '') as String;
@@ -402,50 +517,71 @@ class _CombosViewState extends State<CombosView> {
       ),
       child: Row(
         children: [
-          // zone des icônes - essaie d'occuper tout l'espace restant
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // combo inputs
                 Wrap(
                   spacing: spacing,
                   runSpacing: 8,
                   children: string.split('/').map((code) {
-                    final data = inputs.firstWhere((e) => e.code == code, orElse: () => InputData(code, '-'));
+                    final data = inputs.firstWhere(
+                      (e) => e.code == code,
+                      orElse: () => InputData(code, '-'),
+                    );
                     return SizedBox(
                       width: iconSize,
                       height: iconSize,
-                      child: data.assetPath == '-' ? Center(child: Text(data.code, style: const TextStyle(color: Colors.white70))) : Image.asset(data.assetPath),
+                      child: data.assetPath == '-'
+                          ? Center(
+                              child: Text(
+                                data.code,
+                                style: const TextStyle(color: Colors.white70),
+                              ),
+                            )
+                          : Image.asset(data.assetPath),
                     );
                   }).toList(),
                 ),
                 const SizedBox(height: 8),
-                // launchers list as chips
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: launchers.map((l) {
-                    return Chip(
-                      backgroundColor: Colors.white10,
-                      label: Text((l['inputs'] as String).replaceAll('/', ' • '), style: const TextStyle(color: Colors.white70)),
-                      deleteIcon: const Icon(Icons.close, size: 18, color: Colors.redAccent),
-                      onDeleted: () => _deleteLauncher(index, l['id'] as int),
-                    );
-                  }).toList()
-                    ..add(
-                      Chip(
-                        label: const Text('+ Add', style: TextStyle(color: Colors.white)),
-                        backgroundColor: Colors.transparent,
-                      )
-                    ),
+                  children:
+                      launchers.map((l) {
+                        return Chip(
+                          backgroundColor: Colors.white10,
+                          label: Text(
+                            (l['inputs'] as String).replaceAll('/', ' • '),
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                          deleteIcon: const Icon(
+                            Icons.close,
+                            size: 18,
+                            color: Colors.redAccent,
+                          ),
+                          onDeleted: () =>
+                              _deleteLauncher(index, l['id'] as int),
+                        );
+                      }).toList()..add(
+                        Chip(
+                          label: const Text(
+                            '+ Add',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          backgroundColor: Colors.transparent,
+                        ),
+                      ),
                 ),
               ],
             ),
           ),
-          // bouton supprimer combo
           const SizedBox(width: 4),
-          IconButton(icon: const Icon(Icons.delete, color: Colors.redAccent), tooltip: 'Delete combo', onPressed: () => _deleteSavedString(index)),
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.redAccent),
+            tooltip: 'Delete combo',
+            onPressed: () => _deleteSavedString(index),
+          ),
         ],
       ),
     );
@@ -453,7 +589,6 @@ class _CombosViewState extends State<CombosView> {
 
   @override
   Widget build(BuildContext context) {
-    // reuse HomeView palette
     final bgGradient = const LinearGradient(
       colors: [Color.fromRGBO(5, 11, 32, 1), Color.fromRGBO(3, 36, 101, 1)],
       begin: Alignment.topLeft,
@@ -461,7 +596,6 @@ class _CombosViewState extends State<CombosView> {
     );
     final accent = const Color.fromRGBO(93, 208, 252, 1);
     return Scaffold(
-      // appbar style cohérent avec HomeView
       appBar: customAppBar(PageType.combos, widget.characterName, context),
       backgroundColor: Color.fromRGBO(5, 11, 32, 1),
       body: Container(
@@ -476,30 +610,24 @@ class _CombosViewState extends State<CombosView> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      // corrected: withOpacity instead of withValues
                       color: Colors.white.withOpacity(0.02),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.white.withOpacity(0.03)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Current string + actions + remark + numeric fields
-                        buildCurrentString(),
-                      ],
+                      children: [buildCurrentString()],
                     ),
                   ),
                 ),
 
                 const SizedBox(width: 20),
 
-                // GRID D'INPUTS (à droite du contenu principal) - themed
                 SizedBox(
                   width: 260,
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      // corrected: withOpacity instead of withValues
                       color: Colors.white.withOpacity(0.02),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.white.withOpacity(0.03)),
@@ -514,7 +642,6 @@ class _CombosViewState extends State<CombosView> {
 
                 const SizedBox(width: 20),
 
-                // RIGHT PANEL (saved moves) themed
                 SizedBox(
                   width: 380,
                   child: ComboPanel(
@@ -523,8 +650,10 @@ class _CombosViewState extends State<CombosView> {
                     accent: accent,
                     characterName: widget.characterName,
                     onDeleteCombo: (i) async => await _deleteSavedString(i),
-                    onDeleteLauncher: (comboIndex, launcherId) async => await _deleteLauncher(comboIndex, launcherId),
-                    onAddLauncher: (comboId) async => await _showAddLauncherDialog(comboId),
+                    onDeleteLauncher: (comboIndex, launcherId) async =>
+                        await _deleteLauncher(comboIndex, launcherId),
+                    onAddLauncher: (comboId) async =>
+                        await _showAddLauncherDialog(comboId),
                   ),
                 ),
               ],

@@ -1,4 +1,4 @@
-import   'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tekken_cheat_sheet/models/page_type_model.dart';
 import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
@@ -6,9 +6,12 @@ import '../../constants/helper.dart';
 import 'package:tekken_cheat_sheet/models/input_data.dart';
 import 'package:tekken_cheat_sheet/widgets/input_grid.dart';
 import '../../services/db_provider.dart';
-import '../../widgets/key_moves_punish_saved_panel.dart';
+import '../../widgets/key_moves_punish_stance_saved_panel.dart';
 
+/// Screen to record stance-specific moves for a character.
+/// Shows an input grid, current composition area, metadata fields and a saved moves panel.
 class StancesView extends StatefulWidget {
+  /// Character identifier used to scope DB queries and display.
   final String characterName;
 
   const StancesView({super.key, required this.characterName});
@@ -18,62 +21,75 @@ class StancesView extends StatefulWidget {
 }
 
 class _StancesViewState extends State<StancesView> {
-  /// String actuellement en cours de création
+  /// Currently composed inputs (codes) in order, used to render current string.
   final List<String> currentInputs = [];
 
-  /// Historique sauvegardé (inputs)
+  /// Saved moves for this character, each entry is a list of input codes.
   final List<List<String>> savedStrings = [];
 
-  /// Stance associée à chaque savedStrings (même index)
+  /// For each savedStrings entry, the stance name associated to the saved move.
   List<String> savedStances = [];
 
-  /// Remark associée à chaque savedStrings (même index)
-  List<String?> savedRemarks = []; // nouveau : peut être null
+  /// For each savedStrings entry, optional remark text.
+  List<String?> savedRemarks = [];
 
-  // stances calculées en initState pour éviter doublons sur rebuild
+  /// Local list of stance names available for this character (populates dropdown).
   List<String> stances = [];
 
-  // Sélection courante de stance (valeur par défaut)
+  /// Currently selected stance in the UI for new saves.
   String _selectedStance = "";
 
+  /// Master list of InputData mapping codes to assets; extended with stance tokens.
   List<InputData> inputs = Helper().inputs;
 
-  // Valeurs autorisées pour Stance (définies ici pour validation)
-  List<String> _allowedStances = [];
+  /// Allowed stance values (same as stances but kept explicit for readability).
+  final List<String> _allowedStances = [];
 
+  /// Controller for frames numeric field (optional metadata).
   final TextEditingController _framesController = TextEditingController();
+
+  /// Controller for onHit numeric field (optional metadata).
   final TextEditingController _onHitController = TextEditingController();
+
+  /// Controller for onBlock numeric field (optional metadata).
   final TextEditingController _onBlockController = TextEditingController();
+
+  /// Controller for optional remark text.
   final TextEditingController _remarkController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-
-    // calculer les stances et les ajouter une seule fois aux inputs
     stances = Helper().stancesList
         .where(
           (s) =>
-      s['characterName'] == widget.characterName.replaceAll(' ', '-').toLowerCase(),
-    )
+              s['characterName'] ==
+              widget.characterName.replaceAll(' ', '-').toLowerCase(),
+        )
         .map((s) => s['name'] as String)
         .toList();
     inputs.addAll(stances.map((s) => InputData(s, "-")));
-    // safe initialization: avoid index error if no stances are defined
     _selectedStance = stances.isNotEmpty ? stances[0] : '';
     _allowedStances.addAll(stances);
     initStanceMoves();
   }
 
+  /// Load stance moves for the character from DB and populate local lists.
+  /// @return Future<void> when loading completes.
   Future<void> initStanceMoves() async {
-    // charge les stance moves depuis le provider (inputs + stance + remark)
-    final res = await DBProvider.instance.getStanceMovesForCharacter(widget.characterName);
+    final res = await DBProvider.instance.getStanceMovesForCharacter(
+      widget.characterName,
+    );
     for (var row in res) {
+      // inputs stored as slash-separated string in DB -> split to list for UI rendering
       final inputsStr = (row['inputs'] ?? '') as String;
+      // stance may be missing in older rows; fallback to first allowed stance if available
       final stanceStr = row['stance'] is String
           ? row['stance'] as String
           : (_allowedStances.isNotEmpty ? _allowedStances.first : '');
-      final remarkStr = row['remark'] is String ? row['remark'] as String : null;
+      final remarkStr = row['remark'] is String
+          ? row['remark'] as String
+          : null;
       List<String> moveList = inputsStr.split('/');
       setState(() {
         savedStrings.add(moveList);
@@ -81,8 +97,6 @@ class _StancesViewState extends State<StancesView> {
         savedRemarks.add(remarkStr);
       });
     }
-
-    // NOTE: on ne force pas d'unicité ni on ne modifie la sélection courante ici.
   }
 
   @override
@@ -94,12 +108,15 @@ class _StancesViewState extends State<StancesView> {
     super.dispose();
   }
 
+  /// Add a single input code to the current composition.
+  /// @param input code string to append.
   void addInput(String input) {
     setState(() {
       currentInputs.add(input);
     });
   }
 
+  /// Remove the last input from the current composition.
   void removeLastInput() {
     if (currentInputs.isEmpty) return;
     setState(() {
@@ -107,18 +124,19 @@ class _StancesViewState extends State<StancesView> {
     });
   }
 
+  /// Clear all inputs in the current composition.
   void clearInputs() {
     setState(() {
       currentInputs.clear();
     });
   }
 
-  // remplace saveString pour écrire directement en base avant d'ajouter à savedStrings/savedStances
+  /// Persist the composed move together with the selected stance and optional metadata.
+  /// @return Future<void> completes after DB operation and UI update.
   Future<void> saveString() async {
     if (currentInputs.isEmpty) return;
-
-    // validation : la stance doit être une valeur autorisée
     if (!_allowedStances.contains(_selectedStance)) {
+      // UX: inform user why save failed
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Invalid stance value'),
@@ -129,14 +147,16 @@ class _StancesViewState extends State<StancesView> {
       return;
     }
 
+    // prepare metadata to persist
     final moveJoined = currentInputs.join('/');
-    // parse optional numeric fields
     final frames = int.tryParse(_framesController.text.trim());
     final onHit = int.tryParse(_onHitController.text.trim());
     final onBlock = int.tryParse(_onBlockController.text.trim());
-    final remark = _remarkController.text.trim().isEmpty ? null : _remarkController.text.trim();
+    final remark = _remarkController.text.trim().isEmpty
+        ? null
+        : _remarkController.text.trim();
     try {
-      // Utiliser la méthode dédiée pour les stance moves (maintenant prend remark)
+      // insert into DB and return row id / -1 on duplicate
       final int res = await DBProvider.instance.insertStanceMove(
         widget.characterName,
         moveJoined,
@@ -171,6 +191,7 @@ class _StancesViewState extends State<StancesView> {
         ),
       );
     } catch (e) {
+      // log / notify on unexpected error
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Error saving stance move'),
@@ -181,6 +202,9 @@ class _StancesViewState extends State<StancesView> {
     }
   }
 
+  /// Prompt user for confirmation then delete the saved stance move from DB and UI.
+  /// @param index position in savedStrings to delete
+  /// @return Future<void>
   Future<void> _deleteSavedString(int index) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -205,7 +229,11 @@ class _StancesViewState extends State<StancesView> {
       final inputsStr = savedStrings[index].join('/');
       final stanceForRow = savedStances[index];
       try {
-        final res = await DBProvider.instance.deleteStanceMove(widget.characterName, inputsStr, stanceForRow);
+        final res = await DBProvider.instance.deleteStanceMove(
+          widget.characterName,
+          inputsStr,
+          stanceForRow,
+        );
         if (res) {
           setState(() {
             savedStrings.removeAt(index);
@@ -238,12 +266,12 @@ class _StancesViewState extends State<StancesView> {
     }
   }
 
-  // buildCurrentString adapté : current string + actions + dropdown stance + remark
+  /// Builds the UI block that displays the current composed move and action buttons.
+  /// @return Widget the composed-area widget.
   Widget buildCurrentString() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Ligne principale: current string (expand) + actions (à droite)
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
@@ -252,7 +280,6 @@ class _StancesViewState extends State<StancesView> {
           ),
           child: Row(
             children: [
-              // zone qui contient la série d'icônes ; utilise SingleChildScrollView horizontal si trop longue
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -260,7 +287,7 @@ class _StancesViewState extends State<StancesView> {
                     double totalWidth = 0.0;
                     final List<Widget> iconWidgets = entries.map((entry) {
                       final data = inputs.firstWhere(
-                            (e) => e.code == entry.value,
+                        (e) => e.code == entry.value,
                         orElse: () => InputData(entry.value, "-"),
                       );
                       final double w = 40.0;
@@ -272,28 +299,28 @@ class _StancesViewState extends State<StancesView> {
                           height: 40,
                           child: data.assetPath == "-"
                               ? Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.lightBlueAccent,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text(
-                                data.code,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          )
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.lightBlueAccent,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      data.code,
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                )
                               : Image.asset(
-                            data.assetPath,
-                            fit: BoxFit.contain,
-                          ),
+                                  data.assetPath,
+                                  fit: BoxFit.contain,
+                                ),
                         ),
                       );
                     }).toList();
@@ -325,8 +352,6 @@ class _StancesViewState extends State<StancesView> {
                   },
                 ),
               ),
-
-              // Actions : save / backspace / clear
               const SizedBox(width: 8),
               Row(
                 children: [
@@ -362,7 +387,6 @@ class _StancesViewState extends State<StancesView> {
 
         const SizedBox(height: 12),
 
-        // Remark field (same style as in key_moves_view)
         Container(
           height: 44,
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -383,13 +407,9 @@ class _StancesViewState extends State<StancesView> {
 
         const SizedBox(height: 12),
 
-        // Stance selector (Dropdown) - now works with String values and allows duplicates
         Row(
           children: [
-            const Text(
-              'Stance:',
-              style: TextStyle(color: Colors.white70),
-            ),
+            const Text('Stance:', style: TextStyle(color: Colors.white70)),
             const SizedBox(width: 12),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -439,7 +459,10 @@ class _StancesViewState extends State<StancesView> {
     );
   }
 
-  // Nouveau : construit une carte contenant la ligne + (optionnellement) la remark en dessous
+  /// Render one saved row showing inputs, stance badge and optional remark.
+  /// @param index index of saved move
+  /// @param iconSize size used for input icons
+  /// @param spacing spacing between icons
   Widget buildSavedRow(int index, double iconSize, double spacing) {
     final string = savedStrings[index];
     final stance = savedStances[index];
@@ -453,7 +476,6 @@ class _StancesViewState extends State<StancesView> {
       ),
       child: Row(
         children: [
-          // zone des icônes - essaie d'occuper tout l'espace restant
           Expanded(
             child: Row(
               children: string.asMap().entries.map((entry) {
@@ -471,7 +493,6 @@ class _StancesViewState extends State<StancesView> {
               }).toList(),
             ),
           ),
-          // badge stance
           Container(
             margin: const EdgeInsets.only(right: 8),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -481,10 +502,12 @@ class _StancesViewState extends State<StancesView> {
             ),
             child: Text(
               stance,
-              style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
-          // bouton supprimer
           const SizedBox(width: 4),
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.redAccent),
@@ -514,7 +537,10 @@ class _StancesViewState extends State<StancesView> {
     );
   }
 
-  // helper pour un champ numérique avec label (léger ajustement visuel)
+  /// Numeric small field used for frames/onHit/onBlock inputs.
+  /// @param label visual hint shown in the field
+  /// @param controller controller bound to the TextField
+  /// @return Widget field widget
   Widget _numberField(String label, TextEditingController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -527,11 +553,8 @@ class _StancesViewState extends State<StancesView> {
           decoration: BoxDecoration(
             color: const Color(0xFF1E1E26),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: Colors.white12,
-            ), // indique visuellement qu'il s'agit d'un champ
+            border: Border.all(color: Colors.white12),
           ),
-          // Removed Expanded: TextField must be direct child (Container gives constraints)
           child: TextField(
             controller: controller,
             keyboardType: const TextInputType.numberWithOptions(
@@ -539,7 +562,6 @@ class _StancesViewState extends State<StancesView> {
               decimal: false,
             ),
             inputFormatters: [
-              // autorise un signe "-" initial puis des chiffres (accepte temporairement entrées intermédiaires)
               FilteringTextInputFormatter.allow(RegExp(r'-?\d*')),
             ],
             textAlign: TextAlign.center,
@@ -562,7 +584,6 @@ class _StancesViewState extends State<StancesView> {
 
   @override
   Widget build(BuildContext context) {
-    // reuse HomeView palette
     final bgGradient = const LinearGradient(
       colors: [Color.fromRGBO(5, 11, 32, 1), Color.fromRGBO(3, 36, 101, 1)],
       begin: Alignment.topLeft,
@@ -570,7 +591,6 @@ class _StancesViewState extends State<StancesView> {
     );
     final accent = const Color.fromRGBO(93, 208, 252, 1);
     return Scaffold(
-      // appbar style cohérent avec HomeView
       appBar: customAppBar(PageType.stanceMoves, widget.characterName, context),
       backgroundColor: const Color.fromRGBO(5, 11, 32, 1),
       body: Container(
@@ -592,10 +612,8 @@ class _StancesViewState extends State<StancesView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Current string + actions + frames selector
                         buildCurrentString(),
                         const SizedBox(height: 12),
-                        // ici vous pouvez ajouter autres contrôles spécifiques si besoin
                       ],
                     ),
                   ),
@@ -603,7 +621,6 @@ class _StancesViewState extends State<StancesView> {
 
                 const SizedBox(width: 20),
 
-                // GRID D'INPUTS (à droite du contenu principal) - themed
                 SizedBox(
                   width: 260,
                   child: Container(
@@ -625,7 +642,7 @@ class _StancesViewState extends State<StancesView> {
 
                 SizedBox(
                   width: 380,
-                  child: KeyMovesPunishSavedPanel(
+                  child: KeyMovesPunishStanceSavedPanel(
                     characterName: widget.characterName,
                     savedStrings: savedStrings,
                     inputs: inputs,

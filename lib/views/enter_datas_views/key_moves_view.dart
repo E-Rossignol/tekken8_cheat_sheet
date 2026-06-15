@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
-import 'package:tekken_cheat_sheet/widgets/key_moves_punish_saved_panel.dart';
+import 'package:tekken_cheat_sheet/widgets/key_moves_punish_stance_saved_panel.dart';
 import '../../constants/helper.dart';
 import 'package:tekken_cheat_sheet/models/input_data.dart';
 import 'package:tekken_cheat_sheet/widgets/input_grid.dart';
 import '../../models/page_type_model.dart';
 import '../../services/db_provider.dart';
-import 'dart:math' as math; // ajouté
+import 'dart:math' as math;
 
+/// KeyMovesView: record and manage key moves for a character.
+/// Each saved move stores optional frames/onHit/onBlock/remark metadata.
 class KeyMovesView extends StatefulWidget {
+  /// Character for which key moves are managed.
   final String characterName;
 
   const KeyMovesView({super.key, required this.characterName});
@@ -19,32 +22,38 @@ class KeyMovesView extends StatefulWidget {
 }
 
 class _KeyMovesViewState extends State<KeyMovesView> {
-  /// String actuellement en cours de création
+  /// Current composition of inputs.
   final List<String> currentInputs = [];
 
-  /// Historique sauvegardé
+  /// Saved moves as lists of input codes.
   final List<List<String>> savedStrings = [];
 
-  /// Metadata optionnelle associée à chaque saved string
+  /// Optional frames metadata for each saved move.
   final List<int?> savedFrames = [];
+
+  /// Optional onHit metadata for each saved move.
   final List<int?> savedOnHit = [];
+
+  /// Optional onBlock metadata for each saved move.
   final List<int?> savedOnBlock = [];
+
+  /// Optional remark metadata for each saved move.
   final List<String?> savedRemarks = [];
+
+  /// Master inputs list (icons + codes).
   List<InputData> inputs = Helper().inputs;
 
-  // stances calculées en initState pour éviter doublons sur rebuild
+  /// Local stance tokens appended to inputs.
   List<String> stances = [];
 
-  // controllers pour les champs numériques demandés
   final TextEditingController _framesController = TextEditingController();
   final TextEditingController _onHitController = TextEditingController();
   final TextEditingController _onBlockController = TextEditingController();
   final TextEditingController _remarkController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
-
-    // calculer les stances et les ajouter une seule fois aux inputs
     stances = Helper().stancesList
         .where(
           (s) =>
@@ -56,15 +65,22 @@ class _KeyMovesViewState extends State<KeyMovesView> {
     initSavedMoves();
   }
 
+  /// Load key moves for the character; convert DB row types safely.
+  /// @return Future<void>
   Future<void> initSavedMoves() async {
     final db = DBProvider.instance;
-    // getKeyMovesForCharacter now returns List<Map<String,dynamic>> with optional metadata
     final res = await db.getKeyMovesForCharacter(widget.characterName);
     for (var row in res) {
       final inputsStr = (row['inputs'] ?? '') as String;
-      final frames = (row['frames'] is int) ? row['frames'] as int : (row['frames'] == null ? null : int.tryParse('${row['frames']}'));
-      final onHit = (row['onHit'] is int) ? row['onHit'] as int : (row['onHit'] == null ? null : int.tryParse('${row['onHit']}'));
-      final onBlock = (row['onBlock'] is int) ? row['onBlock'] as int : (row['onBlock'] == null ? null : int.tryParse('${row['onBlock']}'));
+      final frames = (row['frames'] is int)
+          ? row['frames'] as int
+          : (row['frames'] == null ? null : int.tryParse('${row['frames']}'));
+      final onHit = (row['onHit'] is int)
+          ? row['onHit'] as int
+          : (row['onHit'] == null ? null : int.tryParse('${row['onHit']}'));
+      final onBlock = (row['onBlock'] is int)
+          ? row['onBlock'] as int
+          : (row['onBlock'] == null ? null : int.tryParse('${row['onBlock']}'));
       final remark = row['remark'] is String ? row['remark'] as String : null;
       List<String> moveList = inputsStr.split('/');
       setState(() {
@@ -86,12 +102,15 @@ class _KeyMovesViewState extends State<KeyMovesView> {
     super.dispose();
   }
 
+  /// Append an input code to the current composition.
+  /// @param input token code
   void addInput(String input) {
     setState(() {
       currentInputs.add(input);
     });
   }
 
+  /// Remove last token from composition.
   void removeLastInput() {
     if (currentInputs.isEmpty) return;
     setState(() {
@@ -99,24 +118,26 @@ class _KeyMovesViewState extends State<KeyMovesView> {
     });
   }
 
+  /// Clear the current composition list.
   void clearInputs() {
     setState(() {
       currentInputs.clear();
     });
   }
 
-  // remplace saveString pour écrire directement en base avant d'ajouter à savedStrings
+  /// Insert a key move and its optional metadata into DB.
+  /// Returns: Future<void> completing after DB write and UI update.
   Future<void> saveString() async {
     if (currentInputs.isEmpty) return;
-
     final db = DBProvider.instance;
     final moveJoined = currentInputs.join('/');
 
-    // parse optional numeric fields
     final frames = int.tryParse(_framesController.text.trim());
     final onHit = int.tryParse(_onHitController.text.trim());
     final onBlock = int.tryParse(_onBlockController.text.trim());
-    final remark = _remarkController.text.trim().isEmpty ? null : _remarkController.text.trim();
+    final remark = _remarkController.text.trim().isEmpty
+        ? null
+        : _remarkController.text.trim();
 
     try {
       final res = await db.insertKeyMove(
@@ -128,7 +149,6 @@ class _KeyMovesViewState extends State<KeyMovesView> {
         remark: remark,
       );
       if (res > 0) {
-        // insertion OK : ajouter en mémoire et vider currentInputs + champs optionnels
         setState(() {
           savedStrings.add(List<String>.from(currentInputs));
           savedFrames.add(frames);
@@ -147,15 +167,14 @@ class _KeyMovesViewState extends State<KeyMovesView> {
             duration: Duration(seconds: 2),
           ),
         );
-      } else if(res == -1) {
+      } else if (res == -1) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Move already exists'),
             duration: Duration(seconds: 2),
           ),
         );
-      }
-      else {
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Error saving move'),
@@ -173,6 +192,9 @@ class _KeyMovesViewState extends State<KeyMovesView> {
     }
   }
 
+  /// Confirm and remove a saved move from DB and UI.
+  /// @param index index in savedStrings
+  /// @return Future<void>
   Future<void> _deleteSavedString(int index) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -194,21 +216,23 @@ class _KeyMovesViewState extends State<KeyMovesView> {
       ),
     );
     if (ok == true) {
-      var res = await DBProvider.instance.deleteKeyMove(widget.characterName, savedStrings[index].join('/'));
-      if (res){
+      var res = await DBProvider.instance.deleteKeyMove(
+        widget.characterName,
+        savedStrings[index].join('/'),
+      );
+      if (res) {
         setState(() {
           savedStrings.removeAt(index);
-          // remove metadata at same index if présent
           if (savedFrames.length > index) savedFrames.removeAt(index);
           if (savedOnHit.length > index) savedOnHit.removeAt(index);
           if (savedOnBlock.length > index) savedOnBlock.removeAt(index);
           if (savedRemarks.length > index) savedRemarks.removeAt(index);
         });
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Move deleted'),
-              duration: Duration(seconds: 2),
-            ),
+          const SnackBar(
+            content: Text('Move deleted'),
+            duration: Duration(seconds: 2),
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -221,19 +245,17 @@ class _KeyMovesViewState extends State<KeyMovesView> {
     }
   }
 
-  // buildCurrentString inchangé (légères adaptations pour utiliser InputData du model)
+  /// The current-string layout uses a LayoutBuilder to avoid overflow:
+  /// compute available width and constrain action area, letting input icons wrap if needed.
   Widget buildCurrentString() {
-    // Encapsule toute la ligne dans un LayoutBuilder pour connaître la largeur disponible
     return LayoutBuilder(
       builder: (context, outerConstraints) {
         final availableWidth = outerConstraints.maxWidth;
-        // définir une largeur maximale raisonnable pour la zone d'actions (ex: 22% ou 140px)
         final maxActionsWidth = math.min(140.0, availableWidth * 0.22);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Ligne principale: current string (expand) + actions (à droite)
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
@@ -242,14 +264,11 @@ class _KeyMovesViewState extends State<KeyMovesView> {
               ),
               child: Row(
                 children: [
-                  // zone qui contient la série d'icônes ; bascule dynamique entre 1 ligne (si ça tient)
-                  // et 2 lignes (Wrap) si la largeur totale dépasse la largeur disponible.
                   Flexible(
                     flex: 1,
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         final entries = currentInputs.asMap().entries.toList();
-                        // préparer widgets et calculer largeur nécessaire
                         double totalWidth = 0.0;
                         final List<Widget> iconWidgets = entries.map((entry) {
                           final data = inputs.firstWhere(
@@ -257,7 +276,7 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                             orElse: () => InputData(entry.value, "-"),
                           );
                           final double w = 40.0;
-                          totalWidth += w + 8; // icône + espacement droit estimé
+                          totalWidth += w + 8;
                           return Padding(
                             padding: const EdgeInsets.only(right: 8),
                             child: SizedBox(
@@ -291,7 +310,6 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                           );
                         }).toList();
 
-                        // si ça tient sur une seule ligne -> conserver le comportement horizontal (scroll si besoin)
                         if (totalWidth <= constraints.maxWidth) {
                           return SizedBox(
                             height: 56,
@@ -305,12 +323,10 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                           );
                         }
 
-                        // sinon : afficher sur deux lignes via Wrap ; limiter la hauteur à deux lignes et permettre le scroll vertical si nécessaire
-                        const double twoLineHeight = 40 * 2 + 12; // 2*iconHeight + runSpacing/padding
+                        const double twoLineHeight = 40 * 2 + 12;
                         return SizedBox(
                           height: twoLineHeight,
                           child: SingleChildScrollView(
-                            // vertical scroll si plus de deux lignes
                             child: Wrap(
                               spacing: 8,
                               runSpacing: 8,
@@ -322,10 +338,8 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                     ),
                   ),
 
-                  // petit espacement entre zone d'icônes et actions
                   const SizedBox(width: 8),
 
-                  // CONSTRAINED ACTIONS: empêche les boutons de pousser la Row hors de l'espace dispo
                   ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: maxActionsWidth),
                     child: SingleChildScrollView(
@@ -339,8 +353,14 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                               onPressed: saveString,
                               iconSize: 20,
                               padding: const EdgeInsets.all(6),
-                              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                              icon: const Icon(Icons.save, color: Colors.greenAccent),
+                              constraints: const BoxConstraints(
+                                minWidth: 36,
+                                minHeight: 36,
+                              ),
+                              icon: const Icon(
+                                Icons.save,
+                                color: Colors.greenAccent,
+                              ),
                             ),
                           ),
                           Tooltip(
@@ -349,7 +369,10 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                               onPressed: removeLastInput,
                               iconSize: 20,
                               padding: const EdgeInsets.all(6),
-                              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                              constraints: const BoxConstraints(
+                                minWidth: 36,
+                                minHeight: 36,
+                              ),
                               icon: const Icon(
                                 Icons.backspace,
                                 color: Colors.orangeAccent,
@@ -362,8 +385,14 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                               onPressed: clearInputs,
                               iconSize: 20,
                               padding: const EdgeInsets.all(6),
-                              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                              icon: const Icon(Icons.delete, color: Colors.redAccent),
+                              constraints: const BoxConstraints(
+                                minWidth: 36,
+                                minHeight: 36,
+                              ),
+                              icon: const Icon(
+                                Icons.delete,
+                                color: Colors.redAccent,
+                              ),
                             ),
                           ),
                         ],
@@ -376,7 +405,6 @@ class _KeyMovesViewState extends State<KeyMovesView> {
 
             const SizedBox(height: 12),
 
-            // Remark field (sous le current input)
             Container(
               height: 44,
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -397,7 +425,6 @@ class _KeyMovesViewState extends State<KeyMovesView> {
 
             const SizedBox(height: 12),
 
-            // Champs numériques empilés (Frames, On hit, On block)
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -414,7 +441,6 @@ class _KeyMovesViewState extends State<KeyMovesView> {
     );
   }
 
-  // helper pour un champ numérique avec label (léger ajustement visuel)
   Widget _numberField(String label, TextEditingController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -427,11 +453,8 @@ class _KeyMovesViewState extends State<KeyMovesView> {
           decoration: BoxDecoration(
             color: const Color(0xFF1E1E26),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: Colors.white12,
-            ), // indique visuellement qu'il s'agit d'un champ
+            border: Border.all(color: Colors.white12),
           ),
-          // Expanded removed: TextField must not be wrapped with Expanded here
           child: TextField(
             controller: controller,
             keyboardType: const TextInputType.numberWithOptions(
@@ -439,7 +462,6 @@ class _KeyMovesViewState extends State<KeyMovesView> {
               decimal: false,
             ),
             inputFormatters: [
-              // autorise un signe "-" initial puis des chiffres (accepte temporairement entrées intermédiaires)
               FilteringTextInputFormatter.allow(RegExp(r'-?\d*')),
             ],
             textAlign: TextAlign.center,
@@ -447,8 +469,8 @@ class _KeyMovesViewState extends State<KeyMovesView> {
               color: Colors.white70,
               fontWeight: FontWeight.w600,
             ),
-            decoration: const InputDecoration(
-              hintText: '', // label shown above, keep hint empty
+            decoration: InputDecoration(
+              hintText: label,
               hintStyle: TextStyle(color: Colors.white24),
               border: InputBorder.none,
               isDense: true,
@@ -460,7 +482,6 @@ class _KeyMovesViewState extends State<KeyMovesView> {
     );
   }
 
-  // Nouveau : construit une ligne (une seule ligne visuelle) contenant les icônes du string
   Widget buildSavedRow(int index, double iconSize, double spacing) {
     final string = savedStrings[index];
     return Container(
@@ -472,7 +493,6 @@ class _KeyMovesViewState extends State<KeyMovesView> {
       ),
       child: Row(
         children: [
-          // zone des icônes - essaie d'occuper tout l'espace restant
           Expanded(
             child: Row(
               children: string.asMap().entries.map((entry) {
@@ -490,7 +510,6 @@ class _KeyMovesViewState extends State<KeyMovesView> {
               }).toList(),
             ),
           ),
-          // bouton supprimer
           const SizedBox(width: 4),
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.redAccent),
@@ -504,7 +523,6 @@ class _KeyMovesViewState extends State<KeyMovesView> {
 
   @override
   Widget build(BuildContext context) {
-    // reuse HomeView palette
     final bgGradient = const LinearGradient(
       colors: [Color.fromRGBO(5, 11, 32, 1), Color.fromRGBO(3, 36, 101, 1)],
       begin: Alignment.topLeft,
@@ -512,7 +530,6 @@ class _KeyMovesViewState extends State<KeyMovesView> {
     );
     final accent = const Color.fromRGBO(93, 208, 252, 1);
     return Scaffold(
-      // appbar style cohérent avec HomeView
       appBar: customAppBar(PageType.keyMoves, widget.characterName, context),
       backgroundColor: Color.fromRGBO(5, 11, 32, 1),
       body: Container(
@@ -529,21 +546,19 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.02),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.03),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Current string + actions + remark + numeric fields
-                        buildCurrentString(),
-                      ],
+                      children: [buildCurrentString()],
                     ),
                   ),
                 ),
 
                 const SizedBox(width: 20),
 
-                // GRID D'INPUTS (à droite du contenu principal) - themed
                 SizedBox(
                   width: 260,
                   child: Container(
@@ -551,7 +566,9 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.02),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.03),
+                      ),
                     ),
                     child: InputGrid(
                       inputs: inputs,
@@ -563,10 +580,9 @@ class _KeyMovesViewState extends State<KeyMovesView> {
 
                 const SizedBox(width: 20),
 
-                // RIGHT PANEL (saved moves) themed
                 SizedBox(
                   width: 380,
-                  child: KeyMovesPunishSavedPanel(
+                  child: KeyMovesPunishStanceSavedPanel(
                     characterName: widget.characterName,
                     savedStrings: savedStrings,
                     inputs: inputs,

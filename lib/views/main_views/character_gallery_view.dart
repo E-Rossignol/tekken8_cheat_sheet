@@ -5,6 +5,8 @@ import 'package:tekken_cheat_sheet/services/db_provider.dart';
 import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
 import 'my_character_view.dart';
 
+/// Character gallery presenting all available character portraits that are not yet added.
+/// Allows creating new characters by selecting a portrait.
 class CharacterGalleryView extends StatefulWidget {
   const CharacterGalleryView({super.key});
 
@@ -13,8 +15,13 @@ class CharacterGalleryView extends StatefulWidget {
 }
 
 class _CharacterGalleryViewState extends State<CharacterGalleryView> {
+  /// List of asset paths for portraits not yet present in the user's characters.
   List<String> _images = [];
+
+  /// Loading flag while asset list is built.
   bool _loading = true;
+
+  /// Index currently hovered by the mouse pointer for hover effects.
   int _hoveredIndex = -1;
 
   @override
@@ -23,9 +30,13 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
     _loadAssetImages();
   }
 
+  /// Build list of portrait asset paths excluding already added characters.
+  /// @return Future<void>
   Future<void> _loadAssetImages() async {
     final existingCharacters = await DBProvider.instance.getAllMyCharacters();
-    final existingNames = existingCharacters.map((c) => c['name'].toLowerCase()).toSet();
+    final existingNames = existingCharacters
+        .map((c) => c['name'].toLowerCase())
+        .toSet();
     List<String> images = [];
     for (var name in Helper().characterNamesList) {
       if (existingNames.contains(name)) continue;
@@ -37,13 +48,23 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
     });
   }
 
+  /// Extract a human-friendly display name from an asset path.
+  /// @param path asset path string
+  /// @return String display name
   String _displayNameFromPath(String path) {
     final file = path.split('/').last;
-    final name = file.replaceAll(RegExp(r'\.(png|jpg|jpeg)$', caseSensitive: false), '').replaceAll("-portrait", "");
+    final name = file
+        .replaceAll(RegExp(r'\.(png|jpg|jpeg)$', caseSensitive: false), '')
+        .replaceAll("-portrait", "");
     final parts = name.split(RegExp(r'[-_]'));
-    return parts.map((p) => p.isEmpty ? '' : '${p[0].toUpperCase()}${p.substring(1)}').join(' ');
+    return parts
+        .map((p) => p.isEmpty ? '' : '${p[0].toUpperCase()}${p.substring(1)}')
+        .join(' ');
   }
 
+  /// Compute number of columns for the grid given container width.
+  /// @param width available width in px
+  /// @return int number of columns
   int _columnsForWidth(double width) {
     if (width > 1400) return 10;
     if (width > 1000) return 9;
@@ -60,18 +81,28 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color.fromRGBO(5, 11, 32, 1), Color.fromRGBO(3, 36, 101, 1)],
+            colors: [
+              Color.fromRGBO(5, 11, 32, 1),
+              Color.fromRGBO(3, 36, 101, 1),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
-        padding: const EdgeInsets.only(top: kToolbarHeight + 16, left: 16, right: 16, bottom: 16),
+        padding: const EdgeInsets.only(
+          top: kToolbarHeight + 16,
+          left: 16,
+          right: 16,
+          bottom: 16,
+        ),
         child: _loading
             ? const Center(child: CircularProgressIndicator())
             : GridView.builder(
                 itemCount: _images.length,
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: _columnsForWidth(MediaQuery.of(context).size.width),
+                  crossAxisCount: _columnsForWidth(
+                    MediaQuery.of(context).size.width,
+                  ),
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
                   childAspectRatio: 0.78,
@@ -86,19 +117,33 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
                     child: GestureDetector(
                       onTap: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => MyCharacterView(characterName: displayName.toLowerCase())),
+                          MaterialPageRoute(
+                            builder: (_) => MyCharacterView(
+                              characterName: displayName.toLowerCase(),
+                            ),
+                          ),
                         );
                       },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 160),
                         curve: Curves.easeOut,
-                        transform: _hoveredIndex == index ? (Matrix4.identity()..scale(1.03)) : Matrix4.identity(),
+                        transform: _hoveredIndex == index
+                            ? (Matrix4.identity()..scale(1.03))
+                            : Matrix4.identity(),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.03),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.03),
+                          ),
                           boxShadow: _hoveredIndex == index
-                              ? [BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 6))]
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.35),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ]
                               : null,
                         ),
                         child: Stack(
@@ -108,22 +153,35 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
                               children: [
                                 Expanded(
                                   child: ClipRRect(
-                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                                    borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(10),
+                                    ),
                                     child: Image.asset(path, fit: BoxFit.cover),
                                   ),
                                 ),
                                 Container(
                                   decoration: BoxDecoration(
                                     color: const Color.fromRGBO(3, 36, 101, 1),
-                                    borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
-                                    border: Border.all(color: Colors.white.withOpacity(0.03)),
+                                    borderRadius: const BorderRadius.only(
+                                      bottomLeft: Radius.circular(10),
+                                      bottomRight: Radius.circular(10),
+                                    ),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.03),
+                                    ),
                                   ),
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                      horizontal: 8,
+                                    ),
                                     child: Text(
                                       displayName,
                                       textAlign: TextAlign.center,
-                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -141,7 +199,11 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
                                     child: Column(
                                       mainAxisSize: MainAxisSize.min,
                                       children: const [
-                                        Icon(Icons.add_circle, color: Colors.white70, size: 36),
+                                        Icon(
+                                          Icons.add_circle,
+                                          color: Colors.white70,
+                                          size: 36,
+                                        ),
                                       ],
                                     ),
                                   ),

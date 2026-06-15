@@ -5,9 +5,12 @@ import '../../constants/helper.dart';
 import 'package:tekken_cheat_sheet/models/input_data.dart';
 import 'package:tekken_cheat_sheet/widgets/input_grid.dart';
 import '../../services/db_provider.dart';
-import '../../widgets/key_moves_punish_saved_panel.dart';
+import '../../widgets/key_moves_punish_stance_saved_panel.dart';
 
+/// PunishesView: manage punish strings associated with a frame value.
+/// There is UI logic to keep one punish per frame value.
 class PunishesView extends StatefulWidget {
+  /// Character scope for punish entries.
   final String characterName;
 
   const PunishesView({super.key, required this.characterName});
@@ -17,58 +20,63 @@ class PunishesView extends StatefulWidget {
 }
 
 class _PunishesViewState extends State<PunishesView> {
-  /// String actuellement en cours de création
+  /// Current composition inputs for a punish.
   final List<String> currentInputs = [];
 
-  /// Historique sauvegardé (inputs)
+  /// Saved punishes as lists of input codes.
   final List<List<String>> savedStrings = [];
 
-  /// Frames associés à chaque savedStrings (même index)
+  /// Saved frames value associated to each savedStrings entry.
   final List<int> savedFrames = [];
 
-  // stances calculées en initState pour éviter doublons sur rebuild
+  /// Local list of stance tokens added to inputs for display (not used for punishes).
   List<String> stances = [];
 
-  // Sélection courante de frames (valeur par défaut)
+  /// Selected frames value for the next saved punish.
   int _selectedFrames = 10;
 
+  /// Master input definitions and tokens.
   List<InputData> inputs = Helper().inputs;
 
-  // Valeurs autorisées pour Frames (définies ici pour validation)
+  /// Allowed frames values for quick selection.
   static const List<int> _allowedFrames = [10, 11, 12, 13, 14, 15, 16];
 
   @override
   void initState() {
     super.initState();
-
-    // calculer les stances et les ajouter une seule fois aux inputs
     stances = Helper().stancesList
         .where(
           (s) =>
-      s['characterName'] == widget.characterName.replaceAll(' ', '-'),
-    )
+              s['characterName'] == widget.characterName.replaceAll(' ', '-'),
+        )
         .map((s) => s['name'] as String)
         .toList();
     inputs.addAll(stances.map((s) => InputData(s, "-")));
     initPunishes();
   }
 
+  /// Load punishes for the character and compute a sensible default frames selection.
+  /// @return Future<void>
   Future<void> initPunishes() async {
     final db = DBProvider.instance;
-    // charge les punishes (inputs + frames) pour ce personnage
     final res = await db.getPunishesForCharacter(widget.characterName);
     for (var row in res) {
       final inputsStr = (row['inputs'] ?? '') as String;
-      final frames = (row['frames'] is int) ? row['frames'] as int : int.tryParse('${row['frames']}') ?? 10;
+      final frames = (row['frames'] is int)
+          ? row['frames'] as int
+          : int.tryParse('${row['frames']}') ?? 10;
       List<String> moveList = inputsStr.split('/');
       setState(() {
         savedStrings.add(moveList);
         savedFrames.add(frames);
       });
     }
-    // si la frame sélectionnée par défaut est déjà utilisée, choisir la première disponible
+    // compute an available frame value to preselect for new punish entries
     final used = savedFrames.toSet();
-    final firstAvailable = _allowedFrames.firstWhere((v) => !used.contains(v), orElse: () => _allowedFrames.first);
+    final firstAvailable = _allowedFrames.firstWhere(
+      (v) => !used.contains(v),
+      orElse: () => _allowedFrames.first,
+    );
     if (used.contains(_selectedFrames) && firstAvailable != _selectedFrames) {
       setState(() {
         _selectedFrames = firstAvailable;
@@ -81,12 +89,14 @@ class _PunishesViewState extends State<PunishesView> {
     super.dispose();
   }
 
+  /// Append an input code to the current composition.
   void addInput(String input) {
     setState(() {
       currentInputs.add(input);
     });
   }
 
+  /// Remove the last composed input token.
   void removeLastInput() {
     if (currentInputs.isEmpty) return;
     setState(() {
@@ -94,18 +104,19 @@ class _PunishesViewState extends State<PunishesView> {
     });
   }
 
+  /// Clear the current composition list.
   void clearInputs() {
     setState(() {
       currentInputs.clear();
     });
   }
 
-  // remplace saveString pour écrire directement en base avant d'ajouter à savedStrings/savedFrames
+  /// Save selected punish immediately to DB and update UI.
+  /// This enforces the one-per-frames constraint in the UI.
+  /// @return Future<void>
   Future<void> saveString() async {
     if (currentInputs.isEmpty) return;
 
-    // validation : n'autorise la sauvegarde que si la valeur de frames sélectionnée
-    // fait partie des frames autorisées (sécurité supplémentaire).
     if (!_allowedFrames.contains(_selectedFrames)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -117,11 +128,12 @@ class _PunishesViewState extends State<PunishesView> {
       return;
     }
 
-    // validation : n'autorise pas de créer un nouveau string pour une frame déjà présente
     if (savedFrames.contains(_selectedFrames)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Cette valeur de frames est déjà utilisée. Supprimez d\'abord l\'ancien punish pour la réutiliser.'),
+          content: Text(
+            'Cette valeur de frames est déjà utilisée. Supprimez d\'abord l\'ancien punish pour la réutiliser.',
+          ),
           backgroundColor: Colors.orange,
           duration: Duration(seconds: 3),
         ),
@@ -134,9 +146,6 @@ class _PunishesViewState extends State<PunishesView> {
 
     try {
       await db.insertPunish(widget.characterName, moveJoined, _selectedFrames);
-      // insertPunish ne renvoie pas explicitement int dans l'implémentation actuelle,
-      // mais si insertPunish est asynchrone void, on peut considérer le try comme succès.
-      // Ici on vérifie simplement l'absence d'exception pour succès.
       setState(() {
         savedStrings.add(List<String>.from(currentInputs));
         savedFrames.add(_selectedFrames);
@@ -159,6 +168,9 @@ class _PunishesViewState extends State<PunishesView> {
     }
   }
 
+  /// Confirm then delete a saved punish.
+  /// @param index index in savedStrings to delete
+  /// @return Future<void>
   Future<void> _deleteSavedString(int index) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -183,7 +195,11 @@ class _PunishesViewState extends State<PunishesView> {
       final inputsStr = savedStrings[index].join('/');
       final frames = savedFrames[index];
       try {
-        final res = await DBProvider.instance.deletePunish(widget.characterName, inputsStr, frames);
+        final res = await DBProvider.instance.deletePunish(
+          widget.characterName,
+          inputsStr,
+          frames,
+        );
         if (res) {
           setState(() {
             savedStrings.removeAt(index);
@@ -215,12 +231,10 @@ class _PunishesViewState extends State<PunishesView> {
     }
   }
 
-  // buildCurrentString adapté : current string + actions + dropdown frames (plus pas de remark / onHit / onBlock)
   Widget buildCurrentString() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Ligne principale: current string (expand) + actions (à droite)
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
@@ -229,7 +243,6 @@ class _PunishesViewState extends State<PunishesView> {
           ),
           child: Row(
             children: [
-              // zone qui contient la série d'icônes ; utilise SingleChildScrollView horizontal si trop longue
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -303,7 +316,6 @@ class _PunishesViewState extends State<PunishesView> {
                 ),
               ),
 
-              // Actions : save / backspace / clear
               const SizedBox(width: 8),
               Row(
                 children: [
@@ -339,13 +351,9 @@ class _PunishesViewState extends State<PunishesView> {
 
         const SizedBox(height: 12),
 
-        // Frames selector (Dropdown)
         Row(
           children: [
-            const Text(
-              'Frames:',
-              style: TextStyle(color: Colors.white70),
-            ),
+            const Text('Frames:', style: TextStyle(color: Colors.white70)),
             const SizedBox(width: 12),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -362,26 +370,26 @@ class _PunishesViewState extends State<PunishesView> {
                     final used = savedFrames.contains(v);
                     return DropdownMenuItem<int>(
                       value: v,
-                      // disabled visuel et tooltip explicatif si déjà utilisé
                       enabled: !used,
                       child: Tooltip(
-                        message: used
-                            ? 'Delete other punish first'
-                            : '',
+                        message: used ? 'Delete other punish first' : '',
                         child: Text(
                           '$v',
-                          style: TextStyle(color: used ? Colors.white24 : Colors.white70),
+                          style: TextStyle(
+                            color: used ? Colors.white24 : Colors.white70,
+                          ),
                         ),
                       ),
                     );
                   }).toList(),
                   onChanged: (v) {
                     if (v == null) return;
-                    // empêche la sélection d'une valeur déjà utilisée (sécurité côté UI)
                     if (savedFrames.contains(v)) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('This value of frames is already used. Delete the existing punish first to reuse it.'),
+                          content: Text(
+                            'This value of frames is already used. Delete the existing punish first to reuse it.',
+                          ),
                           backgroundColor: Colors.orange,
                           duration: Duration(seconds: 3),
                         ),
@@ -401,7 +409,6 @@ class _PunishesViewState extends State<PunishesView> {
     );
   }
 
-  // Nouveau : construit une ligne (une seule ligne visuelle) contenant les icônes du string
   Widget buildSavedRow(int index, double iconSize, double spacing) {
     final string = savedStrings[index];
     final frames = savedFrames[index];
@@ -414,7 +421,6 @@ class _PunishesViewState extends State<PunishesView> {
       ),
       child: Row(
         children: [
-          // zone des icônes - essaie d'occuper tout l'espace restant
           Expanded(
             child: Row(
               children: string.asMap().entries.map((entry) {
@@ -432,15 +438,16 @@ class _PunishesViewState extends State<PunishesView> {
               }).toList(),
             ),
           ),
-          // affichage frames
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: Text(
               '$frames',
-              style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-          // bouton supprimer
           const SizedBox(width: 4),
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.redAccent),
@@ -454,7 +461,6 @@ class _PunishesViewState extends State<PunishesView> {
 
   @override
   Widget build(BuildContext context) {
-    // reuse HomeView palette
     final bgGradient = const LinearGradient(
       colors: [Color.fromRGBO(5, 11, 32, 1), Color.fromRGBO(3, 36, 101, 1)],
       begin: Alignment.topLeft,
@@ -462,7 +468,6 @@ class _PunishesViewState extends State<PunishesView> {
     );
     final accent = const Color.fromRGBO(93, 208, 252, 1);
     return Scaffold(
-      // appbar style cohérent avec HomeView
       appBar: customAppBar(PageType.punish, widget.characterName, context),
       backgroundColor: const Color.fromRGBO(5, 11, 32, 1),
       body: Container(
@@ -479,15 +484,15 @@ class _PunishesViewState extends State<PunishesView> {
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.02),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.03),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Current string + actions + frames selector
                         buildCurrentString(),
                         const SizedBox(height: 12),
-                        // ici vous pouvez ajouter autres contrôles spécifiques si besoin
                       ],
                     ),
                   ),
@@ -495,7 +500,6 @@ class _PunishesViewState extends State<PunishesView> {
 
                 const SizedBox(width: 20),
 
-                // GRID D'INPUTS (à droite du contenu principal) - themed
                 SizedBox(
                   width: 260,
                   child: Container(
@@ -503,7 +507,9 @@ class _PunishesViewState extends State<PunishesView> {
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.02),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.03),
+                      ),
                     ),
                     child: InputGrid(
                       inputs: inputs,
@@ -517,7 +523,7 @@ class _PunishesViewState extends State<PunishesView> {
 
                 SizedBox(
                   width: 380,
-                  child: KeyMovesPunishSavedPanel(
+                  child: KeyMovesPunishStanceSavedPanel(
                     characterName: widget.characterName,
                     savedStrings: savedStrings,
                     inputs: inputs,

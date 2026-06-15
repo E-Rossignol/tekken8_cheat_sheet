@@ -2,14 +2,14 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 ; Non-commercial use only
 
-#define MyAppName "Tekken Cheat Sheet"
-#define MyAppVersion "1.0"
+#define MyAppName "TekkenCheatSheet"
+#define MyAppVersion "1.1"
 #define MyAppExeName "tekken_cheat_sheet.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{98CAE0BB-3AE9-48DC-8D63-F0F752532C85}
+AppId={{FA0F6C68-DF3D-4A59-ACB3-330B52547374}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
@@ -26,7 +26,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
 ; Uncomment the following line to run in non administrative install mode (install for current user only).
 ;PrivilegesRequired=lowest
-OutputDir=C:\Personal_Projects\updated_flutter\tekken_cheat_sheet\installers
+OutputDir=C:\Personal_Projects\updated_flutter\tekken_cheat_sheet\deliverables\installers
 OutputBaseFilename=tekken_cheat_sheet
 SetupIconFile=C:\Personal_Projects\updated_flutter\tekken_cheat_sheet\assets\images\logo.ico
 SolidCompression=yes

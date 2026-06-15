@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/models/input_data.dart';
 
+/// Grid of input tokens (icons and textual tokens) used to compose moves.
+/// Each tile triggers onInputTap with the token code.
 class InputGrid extends StatelessWidget {
+  /// List of InputData mapping codes to asset paths.
   final List<InputData> inputs;
+
+  /// Callback called when a token is tapped (code provided).
   final void Function(String) onInputTap;
+
+  /// Accent color used for textual tokens background.
   final Color accent;
 
   const InputGrid({
@@ -19,8 +26,6 @@ class InputGrid extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 6),
-        // Expanded attendu par le parent ; si parent ne fournit pas de contrainte,
-        // GridView sera contenu par son parent. Ici on fournit Expanded dans l'usage.
         Expanded(
           child: GridView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -48,7 +53,11 @@ class InputGrid extends StatelessWidget {
                     ),
                     child: Text(
                       item.code,
-                      style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),

@@ -3,13 +3,27 @@ import 'package:tekken_cheat_sheet/constants/helper.dart';
 import 'package:tekken_cheat_sheet/models/input_data.dart';
 import 'package:tekken_cheat_sheet/views/main_views/cheat_sheet_view.dart';
 
+/// Panel displaying saved combos and their launchers with actions to add/delete launchers or combos.
 class ComboPanel extends StatefulWidget {
+  /// List of combos, each map is expected to contain {id, inputs, launchers}.
   final List<Map<String, dynamic>> combos;
+
+  /// Master inputs list mapping code->asset for icon rendering.
   final List<InputData> inputs;
+
+  /// Accent color used for action icons and highlights.
   final Color accent;
+
+  /// Character name scope for navigation to cheat sheet view.
   final String characterName;
+
+  /// Callback invoked to delete a combo by its index in the combos list.
   final Future<void> Function(int index) onDeleteCombo;
+
+  /// Callback invoked to delete a launcher given parent combo index and launcher id.
   final Future<void> Function(int comboIndex, int launcherId) onDeleteLauncher;
+
+  /// Callback invoked to add a launcher for a given combo id.
   final Future<void> Function(int comboId) onAddLauncher;
 
   const ComboPanel({
@@ -28,6 +42,7 @@ class ComboPanel extends StatefulWidget {
 }
 
 class _ComboPanelState extends State<ComboPanel> {
+  /// Background color used for empty state and cards.
   Color bg = const Color(0xFF0E1220);
 
   @override

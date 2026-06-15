@@ -6,6 +6,7 @@ import '../models/page_type_model.dart';
 import '../views/main_views/home_view.dart';
 import '../views/main_views/my_character_view.dart';
 
+/// Returns a customized AppBar used across the app with helper actions (help, import demo DB, close app).
 PreferredSizeWidget customAppBar(
   PageType pageType,
   String? characterName,

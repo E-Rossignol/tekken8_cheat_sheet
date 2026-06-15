@@ -3,50 +3,60 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
-import 'dart:convert'; // ajouté pour sérialisation JSON
-import '../constants/helper.dart'; // ajouté pour utiliser defaultDB
+import 'dart:convert';
+import '../constants/helper.dart';
 
+/// DBProvider is a singleton access layer to the SQLite database.
+/// Use DBProvider.instance for all DB operations.
 class DBProvider {
   DBProvider._();
+
   static final DBProvider instance = DBProvider._();
 
+  /// Cached Database instance.
   Database? _db;
 
+  /// Get or open the database connection.
+  /// @return Future<Database> opened database handle
   Future<Database> get database async {
     if (_db != null) return _db!;
     _db = await _initDB();
     return _db!;
   }
 
+  /// Force initialization of DB (open connection).
+  /// @return Future<Database>
   Future<Database> initDb() async {
     _db = await _initDB();
     return _db!;
   }
 
+  /// Internal initializer for the DB file and platform-specific setup.
+  /// @return Future<Database>
   Future<Database> _initDB() async {
     final documentsDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentsDirectory.path, 'tekken_cheat_sheet.db');
 
-    // Initialize sqflite FFI on desktop platforms so databaseFactory is set.
-    // This prevents the "databaseFactory not initialized" error when running on Windows/Linux/MacOS.
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
     }
 
-
     return await openDatabase(
       path,
       version: 1,
       onConfigure: (db) async {
-        // Activer les contraintes de clé étrangère pour respecter les relations
         await db.execute('PRAGMA foreign_keys = ON');
       },
       onCreate: _onCreate,
     );
   }
 
+  /// Create DB schema on first run.
+  /// @param db Database handle
+  /// @param version schema version
   FutureOr<void> _onCreate(Database db, int version) async {
+    // create my_characters table
     await db.execute('''
       CREATE TABLE my_characters(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -54,6 +64,7 @@ class DBProvider {
         createdAt INTEGER
       )
     ''');
+    // key_moves includes optional metadata columns
     await db.execute('''
       CREATE TABLE key_moves(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -108,10 +119,10 @@ class DBProvider {
     ''');
   }
 
-  /// Ferme la base si ouverte puis supprime le fichier de base de données.
-  /// Utile pour forcer la recréation complète (onCreate) lors du prochain initDb().
+  /// Delete DB file from device (used for testing / reset).
+  /// @param characterName name of character to remove (not used)
+  /// @return Future<void>
   Future<void> deleteDatabaseFile() async {
-    // Assure la fermeture de la connexion en mémoire
     if (_db != null) {
       await _db!.close();
       _db = null;
@@ -125,35 +136,57 @@ class DBProvider {
         await file.delete();
       }
     } catch (e) {
-      // ignore / log si besoin
+      print('Error deleting database file: $e');
     }
   }
 
-
-
+  /// Insert a character row if needed.
+  /// @param name character name
+  /// @return Future<int> inserted row id
   Future<int> insertMyCharacter(String name) async {
     final db = await database;
     Map<String, dynamic> character = {
       'name': name,
       'createdAt': DateTime.now().millisecondsSinceEpoch,
     };
-    return await db.insert('my_characters', character, conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert(
+      'my_characters',
+      character,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
+  /// Return all saved characters ordered by creation.
+  /// @return Future<List<Map<String,dynamic>>> list of rows
   Future<List<Map<String, dynamic>>> getAllMyCharacters() async {
     final db = await database;
     return await db.query('my_characters', orderBy: 'createdAt DESC');
   }
 
+  /// Delete all data related to a character (characters, moves, combos, launchers).
+  /// @param characterName
+  /// @return Future<void>
   Future<void> deleteAllCharacterData(String characterName) async {
     final db = await database;
-    await db.execute('DELETE FROM my_characters WHERE name = ?', [characterName]);
-    await db.execute('DELETE FROM key_moves WHERE characterName = ?', [characterName]);
-    await db.execute('DELETE FROM punishes WHERE characterName = ?', [characterName]);
-    await db.execute('DELETE FROM launchers WHERE characterName = ?', [characterName]);
-    await db.execute('DELETE FROM combos WHERE characterName = ?', [characterName]);
+    await db.execute('DELETE FROM my_characters WHERE name = ?', [
+      characterName,
+    ]);
+    await db.execute('DELETE FROM key_moves WHERE characterName = ?', [
+      characterName,
+    ]);
+    await db.execute('DELETE FROM punishes WHERE characterName = ?', [
+      characterName,
+    ]);
+    await db.execute('DELETE FROM launchers WHERE characterName = ?', [
+      characterName,
+    ]);
+    await db.execute('DELETE FROM combos WHERE characterName = ?', [
+      characterName,
+    ]);
   }
 
+  /// Close DB connection.
+  /// @return Future<void>
   Future<void> close() async {
     if (_db != null) {
       await _db!.close();
@@ -161,7 +194,14 @@ class DBProvider {
     }
   }
 
-  // modifié : accepte champs optionnels et retourne id inséré
+  /// Insert a key move with optional metadata; prevents duplicates.
+  /// @param characterName
+  /// @param input slash-separated inputs
+  /// @param frames optional frames
+  /// @param onHit optional onHit
+  /// @param onBlock optional onBlock
+  /// @param remark optional remark
+  /// @return Future<int> row id or -1 if duplicate
   Future<int> insertKeyMove(
     String characterName,
     String input, {
@@ -171,6 +211,7 @@ class DBProvider {
     String? remark,
   }) async {
     final db = await database;
+    // ensure character exists to keep referential consistency for later queries
     List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
     if (!existingChars.any((c) => c['name'] == characterName)) {
       await insertMyCharacter(characterName);
@@ -184,21 +225,29 @@ class DBProvider {
       'remark': remark,
       'createdAt': DateTime.now().millisecondsSinceEpoch,
     };
+    // Prevent duplicates based on character + inputs
     final List<Map<String, dynamic>> existingMove = await db.query(
       'key_moves',
       where: 'characterName = ? AND inputs = ?',
       whereArgs: [characterName, input],
     );
     if (existingMove.isNotEmpty) {
-      return -1; // Indique que le move existe déjà, pas d'insertion
-    }
-    else {
-      return await db.insert('key_moves', move, conflictAlgorithm: ConflictAlgorithm.replace);
+      return -1;
+    } else {
+      return await db.insert(
+        'key_moves',
+        move,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     }
   }
 
-  // modifié : retourne les colonnes utiles (inputs + métadonnées)
-  Future<List<Map<String, dynamic>>> getKeyMovesForCharacter(String characterName) async {
+  /// Fetch key moves for a character.
+  /// @param characterName
+  /// @return Future<List<Map<String,dynamic>>> each map contains inputs/frames/onHit/onBlock/remark
+  Future<List<Map<String, dynamic>>> getKeyMovesForCharacter(
+    String characterName,
+  ) async {
     final db = await database;
     final res = await db.query(
       'key_moves',
@@ -206,16 +255,23 @@ class DBProvider {
       whereArgs: [characterName],
       orderBy: 'createdAt ASC',
     );
-    // renvoyer maps structurés pour faciliter le parsing côté UI
-    return res.map((row) => {
-      'inputs': row['inputs'],
-      'frames': row['frames'],
-      'onHit': row['onHit'],
-      'onBlock': row['onBlock'],
-      'remark': row['remark'],
-    }).toList();
+    return res
+        .map(
+          (row) => {
+            'inputs': row['inputs'],
+            'frames': row['frames'],
+            'onHit': row['onHit'],
+            'onBlock': row['onBlock'],
+            'remark': row['remark'],
+          },
+        )
+        .toList();
   }
 
+  /// Delete a key move row.
+  /// @param characterName
+  /// @param string inputs string
+  /// @return Future<bool> true if deleted
   Future<bool> deleteKeyMove(String characterName, String string) async {
     final db = await database;
     var res = await db.delete(
@@ -226,14 +282,23 @@ class DBProvider {
     return res > 0;
   }
 
-  Future<void> insertPunish(String characterName, String input, int frames) async {
+  /// Insert or update a punish (unique by character + frames).
+  /// @param characterName
+  /// @param input inputs string
+  /// @param frames frames value
+  /// @return Future<void>
+  Future<void> insertPunish(
+    String characterName,
+    String input,
+    int frames,
+  ) async {
     final db = await database;
     List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
     if (!existingChars.any((c) => c['name'] == characterName)) {
       await insertMyCharacter(characterName);
     }
     Map<String, dynamic> punish = {
-      'characterName': characterName ,
+      'characterName': characterName,
       'inputs': input,
       'frames': frames,
       'createdAt': DateTime.now().millisecondsSinceEpoch,
@@ -250,13 +315,21 @@ class DBProvider {
         where: 'characterName = ? AND frames = ?',
         whereArgs: [characterName, frames],
       );
-    }
-    else {
-      await db.insert('punishes', punish, conflictAlgorithm: ConflictAlgorithm.replace);
+    } else {
+      await db.insert(
+        'punishes',
+        punish,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     }
   }
 
-  Future<List<Map<String, dynamic>>> getPunishesForCharacter(String characterName) async {
+  /// Get punish rows for a character sorted by frames.
+  /// @param characterName
+  /// @return Future<List<Map<String,dynamic>>> each map contains inputs and frames
+  Future<List<Map<String, dynamic>>> getPunishesForCharacter(
+    String characterName,
+  ) async {
     final db = await database;
     final res = await db.query(
       'punishes',
@@ -264,15 +337,25 @@ class DBProvider {
       whereArgs: [characterName],
       orderBy: 'frames DESC',
     );
-    List<Map<String, dynamic>> formattedRes = res.map((row) => {
-      'inputs': row['inputs'],
-      'frames': row['frames'],
-    }).toList();
-    formattedRes.sort((a, b) => (a['frames'] as int).compareTo(b['frames'] as int));
+    List<Map<String, dynamic>> formattedRes = res
+        .map((row) => {'inputs': row['inputs'], 'frames': row['frames']})
+        .toList();
+    formattedRes.sort(
+      (a, b) => (a['frames'] as int).compareTo(b['frames'] as int),
+    );
     return formattedRes;
   }
 
-  Future<bool> deletePunish(String characterName, String string, int frames) async {
+  /// Delete a punish row.
+  /// @param characterName
+  /// @param string inputs string
+  /// @param frames frames value
+  /// @return Future<bool>
+  Future<bool> deletePunish(
+    String characterName,
+    String string,
+    int frames,
+  ) async {
     final db = await database;
     var res = await db.delete(
       'punishes',
@@ -282,7 +365,10 @@ class DBProvider {
     return res > 0;
   }
 
-
+  /// Insert a combo row.
+  /// @param characterName
+  /// @param input inputs string
+  /// @return Future<int> inserted row id
   Future<int> insertCombo(String characterName, String input) async {
     final db = await database;
     List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
@@ -290,14 +376,27 @@ class DBProvider {
       await insertMyCharacter(characterName);
     }
     Map<String, dynamic> combo = {
-      'characterName': characterName ,
+      'characterName': characterName,
       'inputs': input,
       'createdAt': DateTime.now().millisecondsSinceEpoch,
     };
-    return await db.insert('combos', combo, conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert(
+      'combos',
+      combo,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
-  Future<int> insertLauncher(String characterName, String input, int comboId) async {
+  /// Insert a launcher tied to a combo (foreign key comboId).
+  /// @param characterName
+  /// @param input inputs string
+  /// @param comboId parent combo id
+  /// @return Future<int> inserted row id
+  Future<int> insertLauncher(
+    String characterName,
+    String input,
+    int comboId,
+  ) async {
     final db = await database;
     List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
     if (!existingChars.any((c) => c['name'] == characterName)) {
@@ -309,10 +408,21 @@ class DBProvider {
       'comboId': comboId,
       'createdAt': DateTime.now().millisecondsSinceEpoch,
     };
-    return await db.insert('launchers', launcher, conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert(
+      'launchers',
+      launcher,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
-  Future<Map<String, dynamic>?> getComboWithLaunchers(String characterName, int comboId) async {
+  /// Get a combo with its launchers.
+  /// @param characterName
+  /// @param comboId
+  /// @return Future<Map<String,dynamic>?> combo data with 'launchers' list
+  Future<Map<String, dynamic>?> getComboWithLaunchers(
+    String characterName,
+    int comboId,
+  ) async {
     final db = await database;
     final comboRes = await db.query(
       'combos',
@@ -328,14 +438,18 @@ class DBProvider {
       whereArgs: [comboId],
       orderBy: 'createdAt ASC',
     );
-    combo['launchers'] = launchersRes.map((l) => {
-      'id': l['id'],
-      'inputs': l['inputs'],
-    }).toList();
+    combo['launchers'] = launchersRes
+        .map((l) => {'id': l['id'], 'inputs': l['inputs']})
+        .toList();
     return combo;
   }
 
-  Future<List<Map<String, dynamic>>> getCombosForCharacter(String characterName) async {
+  /// Get all combos for a character together with their launchers.
+  /// @param characterName
+  /// @return Future<List<Map<String,dynamic>>> each entry contains id, inputs, launchers
+  Future<List<Map<String, dynamic>>> getCombosForCharacter(
+    String characterName,
+  ) async {
     final db = await database;
     final res = await db.query(
       'combos',
@@ -355,15 +469,18 @@ class DBProvider {
       formattedRes.add({
         'id': comboId,
         'inputs': row['inputs'],
-        'launchers': launchersRes.map((l) => {
-          'id': l['id'],
-          'inputs': l['inputs'],
-        }).toList(),
+        'launchers': launchersRes
+            .map((l) => {'id': l['id'], 'inputs': l['inputs']})
+            .toList(),
       });
     }
     return formattedRes;
   }
 
+  /// Delete a combo row (launchers cascade if FK enforced).
+  /// @param characterName
+  /// @param inputs string
+  /// @return Future<bool>
   Future<bool> deleteCombo(String characterName, String inputs) async {
     final db = await database;
     final res = await db.delete(
@@ -371,10 +488,13 @@ class DBProvider {
       where: 'characterName = ? AND inputs = ?',
       whereArgs: [characterName, inputs],
     );
-    // foreign key ON DELETE CASCADE supprimera les launchers liés
     return res > 0;
   }
 
+  /// Delete a launcher by id for a character.
+  /// @param characterName
+  /// @param launcherId
+  /// @return Future<bool>
   Future<bool> deleteLauncher(String characterName, int launcherId) async {
     final db = await database;
     final res = await db.delete(
@@ -385,16 +505,24 @@ class DBProvider {
     return res > 0;
   }
 
-  // modifié : accepte champs optionnels et retourne id inséré
+  /// Insert a stance move with stance metadata.
+  /// @param characterName
+  /// @param input inputs string
+  /// @param stance stance name
+  /// @param remark optional remark
+  /// @param frames optional frames
+  /// @param onHit optional onHit
+  /// @param onBlock optional onBlock
+  /// @return Future<int> row id or -1 if duplicate
   Future<int> insertStanceMove(
-      String characterName,
-      String input,
-      String stance,{
-        String? remark,
-        int? frames,
-        int? onHit,
-        int? onBlock,
-      }) async {
+    String characterName,
+    String input,
+    String stance, {
+    String? remark,
+    int? frames,
+    int? onHit,
+    int? onBlock,
+  }) async {
     final db = await database;
     List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
     if (!existingChars.any((c) => c['name'] == characterName)) {
@@ -416,15 +544,22 @@ class DBProvider {
       whereArgs: [characterName, input, stance],
     );
     if (existingMove.isNotEmpty) {
-      return -1; // Indique que le move existe déjà, pas d'insertion
-    }
-    else {
-      return await db.insert('stance_moves', move, conflictAlgorithm: ConflictAlgorithm.replace);
+      return -1;
+    } else {
+      return await db.insert(
+        'stance_moves',
+        move,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     }
   }
 
-  // modifié : retourne les colonnes utiles (inputs + métadonnées)
-  Future<List<Map<String, dynamic>>> getStanceMovesForCharacter(String characterName) async {
+  /// Get stance moves for a character.
+  /// @param characterName
+  /// @return Future<List<Map<String,dynamic>>> each map contains inputs, stance and optional metadata
+  Future<List<Map<String, dynamic>>> getStanceMovesForCharacter(
+    String characterName,
+  ) async {
     final db = await database;
     final res = await db.query(
       'stance_moves',
@@ -432,18 +567,30 @@ class DBProvider {
       whereArgs: [characterName],
       orderBy: 'createdAt ASC',
     );
-    // renvoyer maps structurés pour faciliter le parsing côté UI
-    return res.map((row) => {
-      'inputs': row['inputs'],
-      'stance': row['stance'],
-      'frames': row['frames'],
-      'onHit': row['onHit'],
-      'onBlock': row['onBlock'],
-      'remark': row['remark'],
-    }).toList();
+    return res
+        .map(
+          (row) => {
+            'inputs': row['inputs'],
+            'stance': row['stance'],
+            'frames': row['frames'],
+            'onHit': row['onHit'],
+            'onBlock': row['onBlock'],
+            'remark': row['remark'],
+          },
+        )
+        .toList();
   }
 
-  Future<bool> deleteStanceMove(String characterName, String string, String stance) async {
+  /// Delete a stance move by inputs + stance.
+  /// @param characterName
+  /// @param string inputs string
+  /// @param stance stance name
+  /// @return Future<bool>
+  Future<bool> deleteStanceMove(
+    String characterName,
+    String string,
+    String stance,
+  ) async {
     final db = await database;
     var res = await db.delete(
       'stance_moves',
@@ -453,22 +600,28 @@ class DBProvider {
     return res > 0;
   }
 
-  // --- Début des nouvelles méthodes pour réinsérer toutes les données depuis un JSON / Map ---
-
-  /// Parse un JSON (format produit par exportAllTablesToConsole) et l'insère en base.
-  /// Si clearFirst=true, vide d'abord les tables (ordre respectant les contraintes FK).
-  Future<void> importAllTablesFromJson(String jsonString, {bool clearFirst = true}) async {
-    final Map<String, dynamic> data = jsonDecode(jsonString) as Map<String, dynamic>;
+  /// Parse JSON and import all tables (delegates to importAllTablesFromMap).
+  /// @param jsonString JSON string matching export format
+  /// @param clearFirst whether to clear DB tables before inserting
+  Future<void> importAllTablesFromJson(
+    String jsonString, {
+    bool clearFirst = true,
+  }) async {
+    final Map<String, dynamic> data =
+        jsonDecode(jsonString) as Map<String, dynamic>;
     await importAllTablesFromMap(data, clearFirst: clearFirst);
   }
 
-  /// Insère en base le contenu de la Map contenant les listes pour chaque table.
-  /// La Map attend les clés : my_characters, key_moves, punishes, combos, launchers
-  Future<void> importAllTablesFromMap(Map<String, dynamic> all, {bool clearFirst = true}) async {
+  /// Import data from a Map into DB within a transaction.
+  /// @param all map keyed by table name pointing to list of rows
+  /// @param clearFirst whether to clear tables before inserting
+  Future<void> importAllTablesFromMap(
+    Map<String, dynamic> all, {
+    bool clearFirst = true,
+  }) async {
     final db = await database;
 
     await db.transaction((txn) async {
-      // Vider les tables dans l'ordre sécurisé (launchers -> combos -> key_moves -> punishes -> my_characters)
       if (clearFirst) {
         try {
           await txn.delete('launchers');
@@ -477,12 +630,10 @@ class DBProvider {
           await txn.delete('punishes');
           await txn.delete('my_characters');
         } catch (e) {
-          // Ignore / log si besoin
           print('Warning while clearing tables: $e');
         }
       }
 
-      // Helper pour insérer une liste d'items (si absente, saute)
       Future<void> insertList(String table, dynamic listObj) async {
         if (listObj == null) return;
         if (listObj is! List) return;
@@ -490,7 +641,12 @@ class DBProvider {
           if (raw is Map) {
             final Map<String, dynamic> row = Map<String, dynamic>.from(raw);
             try {
-              await txn.insert(table, row, conflictAlgorithm: ConflictAlgorithm.replace);
+              // conflictAlgorithm.replace lets us insert rows with explicit ids safely
+              await txn.insert(
+                table,
+                row,
+                conflictAlgorithm: ConflictAlgorithm.replace,
+              );
             } catch (e) {
               print('Error inserting into $table: $e');
             }
@@ -498,38 +654,49 @@ class DBProvider {
         }
       }
 
-      // Insérer dans l'ordre : my_characters, combos, key_moves, punishes, launchers
       await insertList('my_characters', all['my_characters']);
       await insertList('combos', all['combos']);
       await insertList('key_moves', all['key_moves']);
       await insertList('punishes', all['punishes']);
       await insertList('launchers', all['launchers']);
 
-      // Tenter de mettre à jour sqlite_sequence pour conserver des autoincrement cohérents
+      // update sqlite_sequence to keep AUTOINCREMENT values coherent with inserted ids
       try {
-        for (final table in ['my_characters', 'key_moves', 'punishes', 'combos', 'launchers']) {
-          final maxRes = await txn.rawQuery('SELECT MAX(id) as maxId FROM $table');
-          final maxId = (maxRes.isNotEmpty && maxRes.first['maxId'] != null) ? (maxRes.first['maxId'] as int) : 0;
-          // sqlite_sequence n'existe pas forcément (par ex. si DB vide dans certains contextes)
-          await txn.rawUpdate('UPDATE sqlite_sequence SET seq = ? WHERE name = ?', [maxId, table]);
+        for (final table in [
+          'my_characters',
+          'key_moves',
+          'punishes',
+          'combos',
+          'launchers',
+        ]) {
+          final maxRes = await txn.rawQuery(
+            'SELECT MAX(id) as maxId FROM $table',
+          );
+          final maxId = (maxRes.isNotEmpty && maxRes.first['maxId'] != null)
+              ? (maxRes.first['maxId'] as int)
+              : 0;
+          await txn.rawUpdate(
+            'UPDATE sqlite_sequence SET seq = ? WHERE name = ?',
+            [maxId, table],
+          );
         }
       } catch (e) {
-        // Pas critique : si sqlite_sequence absent ou requête échoue, on ignore
-        // utile à debug :
-        // print('Could not update sqlite_sequence: $e');
+        print('Warning while updating sqlite_sequence: $e');
       }
     });
   }
 
-  /// Insère en base le dump présent dans Helper().defaultDB.
-  /// Appeler DBProvider.instance.importDefaultDB() sans argument.
+  /// Import the embedded default DB stored in Helper().defaultDB.
+  /// @param clearFirst whether to clear tables before inserting
   Future<void> importDefaultDB({bool clearFirst = true}) async {
     final helper = Helper();
     final dynamic raw = helper.defaultDB;
     if (raw == null || raw is! Map<String, dynamic>) {
-      // tente de normaliser si c'est Map<dynamic,dynamic>
       if (raw is Map) {
-        await importAllTablesFromMap(Map<String, dynamic>.from(raw), clearFirst: clearFirst);
+        await importAllTablesFromMap(
+          Map<String, dynamic>.from(raw),
+          clearFirst: clearFirst,
+        );
       } else {
         print('importDefaultDB: defaultDB vide ou malformé');
       }
@@ -537,7 +704,4 @@ class DBProvider {
     }
     await importAllTablesFromMap(raw, clearFirst: clearFirst);
   }
-
-  // --- Fin des nouvelles méthodes ---
-
 }

@@ -10,8 +10,13 @@ import '../../services/db_provider.dart';
 
 enum _Panel { keyMoves, punishes, combo, stances }
 
+/// Dashboard showing key moves, punishes, combos and stance moves for a character.
+/// Left panel selects the dataset to display; right area renders modern card list.
 class CheatSheetView extends StatefulWidget {
+  /// Character this view is about.
   final String characterName;
+
+  /// Initial panel index to display (0=keyMoves,1=punishes,2=combo,3=stances).
   final int index;
 
   const CheatSheetView({
@@ -25,11 +30,22 @@ class CheatSheetView extends StatefulWidget {
 }
 
 class _CheatSheetViewState extends State<CheatSheetView> {
+  /// Currently selected panel enum.
   _Panel _selected = _Panel.keyMoves;
+
+  /// Loaded key moves rows.
   List<Map<String, dynamic>> _keyMoves = [];
+
+  /// Loaded punishes rows.
   List<Map<String, dynamic>> _punishes = [];
+
+  /// Loaded combos rows.
   List<Map<String, dynamic>> _combos = [];
+
+  /// Loaded stance moves rows.
   List<Map<String, dynamic>> _stances = [];
+
+  /// Loading indicator while fetching all tables.
   bool _loading = true;
 
   @override
@@ -38,6 +54,8 @@ class _CheatSheetViewState extends State<CheatSheetView> {
     _loadAll();
   }
 
+  /// Load all relevant tables for the current character (key moves, punishes, combos, stances).
+  /// @return Future<void>
   Future<void> _loadAll() async {
     setState(() => _loading = true);
     try {
@@ -76,13 +94,21 @@ class _CheatSheetViewState extends State<CheatSheetView> {
     }
   }
 
+  /// Left panel builder containing modern buttons for switching data sets.
+  /// @param ctx BuildContext
+  /// @return Widget left panel
   Widget _leftPanel(BuildContext ctx) {
     Color bg = const Color(0xFF0C1530);
     final highlight = const LinearGradient(
       colors: [Color(0xFF5ED0FC), Color(0xFF2BA6F6)],
     );
 
-    Widget btn(String title, VoidCallback? onIconClick, _Panel panel, BuildContext ctx) {
+    Widget btn(
+      String title,
+      VoidCallback? onIconClick,
+      _Panel panel,
+      BuildContext ctx,
+    ) {
       final bool active = _selected == panel;
       return InkWell(
         onTap: () => setState(() => _selected = panel),
@@ -111,11 +137,12 @@ class _CheatSheetViewState extends State<CheatSheetView> {
             children: [
               IconButton(
                 icon: Icon(
-                  Icons.mode_edit_outline_outlined, color: Colors.white, size: 18
+                  Icons.mode_edit_outline_outlined,
+                  color: Colors.white,
+                  size: 18,
                 ),
                 color: active ? Colors.black : Colors.white70,
                 onPressed: onIconClick,
-
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -187,22 +214,45 @@ class _CheatSheetViewState extends State<CheatSheetView> {
     );
   }
 
+  /// Navigation helper to open KeyMoves editor.
   void onKeyMovesEdit() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => KeyMovesView(characterName: widget.characterName)));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => KeyMovesView(characterName: widget.characterName),
+      ),
+    );
   }
 
+  /// Navigation helper to open Punishes editor.
   void onPunishEdit() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => PunishesView(characterName: widget.characterName)));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PunishesView(characterName: widget.characterName),
+      ),
+    );
   }
 
+  /// Navigation helper to open Combos editor.
   void onComboEdit() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => CombosView(characterName: widget.characterName)));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CombosView(characterName: widget.characterName),
+      ),
+    );
   }
 
+  /// Navigation helper to open Stances editor.
   void onStancesEdit() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => StancesView(characterName: widget.characterName)));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => StancesView(characterName: widget.characterName),
+      ),
+    );
   }
 
+  /// Convert slash-separated inputs string to asset paths for chips.
+  /// @param inputs slash-separated string
+  /// @return List<String> asset paths
   List<String> _pathFromInputs(String inputs) {
     final parts = inputs.split('/');
     var res = <String>[];
@@ -212,11 +262,15 @@ class _CheatSheetViewState extends State<CheatSheetView> {
     return res;
   }
 
+  /// Render a horizontal collection of input icons for a given inputs string.
+  /// @param inputs slash-separated string
+  /// @param size icon size in px
+  /// @return Widget row/wrap of icons
   Widget _chipsForInputs(String inputs, {double size = 30}) {
     final parts = _pathFromInputs(inputs);
     return Wrap(
-      spacing: size/5,
-      runSpacing: size/5,
+      spacing: size / 5,
+      runSpacing: size / 5,
       children: parts.map((p) {
         return Image.asset(
           p,
@@ -224,7 +278,7 @@ class _CheatSheetViewState extends State<CheatSheetView> {
           height: size,
           errorBuilder: (_, __, ___) => Container(
             height: size,
-            width:size,
+            width: size,
             decoration: BoxDecoration(
               color: Colors.blueGrey,
               borderRadius: BorderRadius.circular(6),
@@ -233,7 +287,11 @@ class _CheatSheetViewState extends State<CheatSheetView> {
               child: Text(
                 textAlign: TextAlign.center,
                 p.split('/').last.split('.').first.toUpperCase(),
-                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -242,6 +300,8 @@ class _CheatSheetViewState extends State<CheatSheetView> {
     );
   }
 
+  /// Render a card for a key move row including inputs, remark and metadata chips.
+  /// @param row DB row map
   Widget _keyMoveCard(Map<String, dynamic> row) {
     final inputs = (row['inputs'] ?? '') as String;
     final frames = row['frames']?.toString();
@@ -275,14 +335,19 @@ class _CheatSheetViewState extends State<CheatSheetView> {
             const SizedBox(height: 12),
             Row(
               children: [
-                if (frames != null) _metaChip('Frames', frames, FrameIcon(size: Size(30,20))),
+                if (frames != null)
+                  _metaChip('Frames', frames, FrameIcon(size: Size(30, 20))),
                 if (onHit != null) ...[
                   const SizedBox(width: 8),
-                  _metaChip('On hit', onHit, OnHitIcon(size: Size(30,20))),
+                  _metaChip('On hit', onHit, OnHitIcon(size: Size(30, 20))),
                 ],
                 if (onBlock != null) ...[
                   const SizedBox(width: 8),
-                  _metaChip('On block', onBlock, OnBlockIcon(size: Size(30,20))),
+                  _metaChip(
+                    'On block',
+                    onBlock,
+                    OnBlockIcon(size: Size(30, 20)),
+                  ),
                 ],
                 const Spacer(),
                 // remark previously shown as tooltip; removed because remark is now rendered below inputs
@@ -294,6 +359,8 @@ class _CheatSheetViewState extends State<CheatSheetView> {
     );
   }
 
+  /// Render a punish card showing inputs and frames.
+  /// @param row DB row map
   Widget _punishCard(Map<String, dynamic> row) {
     final inputs = (row['inputs'] ?? '') as String;
     final frames = row['frames']?.toString() ?? '';
@@ -310,17 +377,19 @@ class _CheatSheetViewState extends State<CheatSheetView> {
           children: [
             Expanded(child: _chipsForInputs(inputs)),
             const SizedBox(width: 12),
-            _metaChip('Frames', frames, FrameIcon(size: Size(30,20))),
+            _metaChip('Frames', frames, FrameIcon(size: Size(30, 20))),
           ],
         ),
       ),
     );
   }
 
-  // Affichage d'un combo avec tous ses launchers (joli + moderne)
+  /// Render a combo card including its launchers as chips.
+  /// @param row DB row map
   Widget _comboCard(Map<String, dynamic> row) {
     final inputs = (row['inputs'] ?? '') as String;
-    final launchers = (row['launchers'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final launchers =
+        (row['launchers'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     return Card(
       color: const Color(0xFF0E1220),
       elevation: 2,
@@ -339,12 +408,21 @@ class _CheatSheetViewState extends State<CheatSheetView> {
                 Expanded(child: _chipsForInputs(inputs)),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 6,
+                    horizontal: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white10,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Text('Combo', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w700)),
+                  child: const Text(
+                    'Combo',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -352,12 +430,18 @@ class _CheatSheetViewState extends State<CheatSheetView> {
             // launchers list : chips lisibles
             if (launchers.isEmpty)
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 10,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white10,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text('No launchers', style: TextStyle(color: Colors.white54)),
+                child: const Text(
+                  'No launchers',
+                  style: TextStyle(color: Colors.white54),
+                ),
               )
             else
               Wrap(
@@ -365,17 +449,26 @@ class _CheatSheetViewState extends State<CheatSheetView> {
                 runSpacing: 8,
                 children: launchers.map((l) {
                   return Container(
-                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 6,
+                      horizontal: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white10,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: Colors.white.withOpacity(0.03)),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 6, offset: const Offset(0, 3))],
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        LauncherIcon(size: Size(50,50)),
+                        LauncherIcon(size: Size(50, 50)),
                         _chipsForInputs(l['inputs'] as String, size: 25),
                       ],
                     ),
@@ -388,6 +481,8 @@ class _CheatSheetViewState extends State<CheatSheetView> {
     );
   }
 
+  /// Render a stance move card showing stance, inputs and remark.
+  /// @param row DB row map
   Widget _stanceCard(Map<String, dynamic> row) {
     final stanceNames = row['stance']?.toString() ?? '';
     final inputs = (row['inputs'] ?? '') as String;
@@ -409,7 +504,11 @@ class _CheatSheetViewState extends State<CheatSheetView> {
           children: [
             Row(
               children: [
-                _metaChip('Stance', stanceNames, StanceIcon(size: Size(30,20))),
+                _metaChip(
+                  'Stance',
+                  stanceNames,
+                  StanceIcon(size: Size(30, 20)),
+                ),
                 const SizedBox(width: 12),
                 Expanded(child: _chipsForInputs(inputs)),
               ],
@@ -426,14 +525,19 @@ class _CheatSheetViewState extends State<CheatSheetView> {
             const SizedBox(height: 12),
             Row(
               children: [
-                if (frames != null) _metaChip('Frames', frames, FrameIcon(size: Size(30,20))),
+                if (frames != null)
+                  _metaChip('Frames', frames, FrameIcon(size: Size(30, 20))),
                 if (onHit != null) ...[
                   const SizedBox(width: 8),
-                  _metaChip('On hit', onHit, OnHitIcon(size: Size(30,20))),
+                  _metaChip('On hit', onHit, OnHitIcon(size: Size(30, 20))),
                 ],
                 if (onBlock != null) ...[
                   const SizedBox(width: 8),
-                  _metaChip('On block', onBlock, OnBlockIcon(size: Size(30,20))),
+                  _metaChip(
+                    'On block',
+                    onBlock,
+                    OnBlockIcon(size: Size(30, 20)),
+                  ),
                 ],
                 const Spacer(),
                 // remark previously shown as tooltip; removed because remark is now rendered below inputs
@@ -445,6 +549,10 @@ class _CheatSheetViewState extends State<CheatSheetView> {
     );
   }
 
+  /// Small metadata chip widget used by cards.
+  /// @param label metadata label
+  /// @param value metadata value
+  /// @param icon widget icon to display
   Widget _metaChip(String label, String value, Widget icon) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -478,6 +586,8 @@ class _CheatSheetViewState extends State<CheatSheetView> {
     );
   }
 
+  /// Build right-side content depending on selected panel.
+  /// @return Widget right content
   Widget _rightContent() {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
@@ -532,11 +642,13 @@ class _CheatSheetViewState extends State<CheatSheetView> {
           itemBuilder: (_, i) => _comboCard(_combos[i]),
         ),
       );
-    }
-    else if (_selected == _Panel.stances) {
+    } else if (_selected == _Panel.stances) {
       if (_stances.isEmpty) {
         return const Center(
-          child: Text('No stance moves', style: TextStyle(color: Colors.white54)),
+          child: Text(
+            'No stance moves',
+            style: TextStyle(color: Colors.white54),
+          ),
         );
       }
       return RefreshIndicator.adaptive(
@@ -548,8 +660,7 @@ class _CheatSheetViewState extends State<CheatSheetView> {
           itemBuilder: (_, i) => _stanceCard(_stances[i]),
         ),
       );
-    }
-    else {
+    } else {
       return const SizedBox.shrink();
     }
   }

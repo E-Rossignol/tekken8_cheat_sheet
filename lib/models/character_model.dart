@@ -1,7 +1,15 @@
+/// Represents a saved character row in my_characters table.
 class Character {
+  /// Character unique display name (used as key in this app).
   final String name;
+
+  /// Optional path to portrait image.
   final String? imagePath;
+
+  /// Optional user notes.
   final String? notes;
+
+  /// Creation timestamp.
   final DateTime createdAt;
 
   Character({
@@ -11,6 +19,8 @@ class Character {
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
+  /// Convert to Map for DB insertion.
+  /// @return Map<String,dynamic>
   Map<String, dynamic> toMap() {
     return {
       'name': name,
@@ -20,15 +30,22 @@ class Character {
     };
   }
 
+  /// Factory to build a Character from a DB map.
+  /// @param map DB row map
+  /// @return Character
   factory Character.fromMap(Map<String, dynamic> map) {
     return Character(
       name: map['name'] as String? ?? '',
       imagePath: map['imagePath'] as String?,
       notes: map['notes'] as String?,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int? ?? 0),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(
+        map['createdAt'] as int? ?? 0,
+      ),
     );
   }
 
+  /// Return a copy with optional field overrides.
+  /// @return Character
   Character copyWith({
     int? id,
     String? name,
@@ -44,4 +61,3 @@ class Character {
     );
   }
 }
-

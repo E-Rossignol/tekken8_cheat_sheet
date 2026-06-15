@@ -187,7 +187,8 @@ class _MyCharacterViewState extends State<MyCharacterView> {
                                           color: Colors.transparent,
                                           child: IconButton(
                                             iconSize: 20,
-                                            mouseCursor: MouseCursor.uncontrolled,
+                                            mouseCursor:
+                                                MouseCursor.uncontrolled,
                                             padding: EdgeInsets.zero,
                                             constraints: const BoxConstraints(),
                                             icon: const CircleAvatar(
@@ -216,7 +217,9 @@ class _MyCharacterViewState extends State<MyCharacterView> {
                                                           Navigator.of(
                                                             ctx,
                                                           ).pop(false),
-                                                      child: const Text('Cancel'),
+                                                      child: const Text(
+                                                        'Cancel',
+                                                      ),
                                                     ),
                                                     TextButton(
                                                       onPressed: () =>
