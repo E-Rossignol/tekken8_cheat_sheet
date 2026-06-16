@@ -17,10 +17,10 @@ A lightweight, polished Flutter application for Tekken 8 players to save, browse
 - One-click import of predefined default DB data (Helper().defaultDB).
 - Export current DB state to JSON printable in console.
 
-## Screenshot
-(Replace with screenshots demonstrating the app UI, dark theme and DB browser.)
+## Demonstration
+@TODO: SCREENSHOTS of key views (character list, move detail, punish table, combo management, DB browser) showcasing the UI and features.
 
-You can also find a demo video here: (link to demo video showcasing the app features and UI).
+You can also find a demo video here: @TODO.
 
 ## Tech Stack
 - Flutter (stable)
@@ -44,22 +44,15 @@ You can also find a demo video here: (link to demo video showcasing the app feat
 3. Run (desktop)
    flutter run -d windows   # or -d macos / -d linux
 
-4. Install and run
-   you can also directly run the app using the "deliverables" folder and following the instructions in the README there.
+
+You can also directly run the app in the "./deliverables/" folder and following the instructions in the README.md file there.
+
 
 ## Developer utilities (DB)
-Two helper methods exist in `DBProvider` to help with testing and fixtures:
-
-- exportAllTablesToConsole()
-  - Prints a full JSON dump of all tables (`my_characters`, `key_moves`, `punishes`, `combos`, `launchers`) to the console. Useful to copy/paste as a fixture.
+An helper methods exist in `DBProvider` to help with testing and fixtures:
 
 - importDefaultDB()
   - Loads the hard-coded fixture from `Helper().defaultDB` and writes it into the database. Call `DBProvider.instance.importDefaultDB()` to populate the DB with default test data (optionally clears tables first).
-
-There is also a general-purpose import method:
-- importAllTablesFromMap(Map<String, dynamic> data, {bool clearFirst = true})
-  - Inserts data from a map (same shape as the export).
-
 Use these utilities for reproducible test data or CI fixtures.
 
 ## Project Structure (important files)
@@ -101,8 +94,7 @@ This section is targeted to quickly show the concrete technical skills and pract
   - Use of transactions and foreign keys to ensure data consistency.
 
 How to validate these skills quickly
-- Run the app, open DB Browser view: inspect relationships (combos → launchers) and verify chips/launchers display.
-- Use `DBProvider.instance.exportAllTablesToConsole()` to get a JSON dump and `DBProvider.instance.importDefaultDB()` to reset to seed data.
+- Run the app, open DB Browser view (using the HomeView button "Database" on the left side of the screen): inspect relationships (combos → launchers) and verify chips/launchers display.
 - Inspect `lib/services/db_provider.dart` to see schema creation, FK handling and import logic.
 - Review `lib/views/` and `lib/widgets/` to evaluate component design, responsive layout and animations.
 
@@ -111,9 +103,6 @@ How to validate these skills quickly
 - Fork the repo, create a feature branch and send a PR with clear description and screenshots.
 - Keep formatting consistent (dartfmt) and provide unit/UI tests where relevant.
 
-## License
-Specify your preferred license (e.g. MIT) here.
-
 ## Contact
-Your Name — your.email@example.com  
-Project repository: <your-repo-url>
+Erwan Rossignol — erwan@hotmail.ch  
+Project repository: https://github.com/E-Rossignol/tekken8_cheat_sheet.git

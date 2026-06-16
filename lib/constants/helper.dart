@@ -476,7 +476,12 @@ class Helper {
           'HOW TO USE THIS PAGE',
           style: TextStyle(color: Colors.white70),
         ),
-        content: const Text('TODO', style: TextStyle(color: Colors.white70)),
+        content: const Text(
+          'Here you can browse your saved characters in a responsive grid. '
+          '\nUse the left sidebar to create a new character (NEW CHARACTER), open the database explorer (DATABASE) or access options (not implemented); collapse or expand the sidebar with the chevron. '
+          '\nClick a character tile to open its detail view, or tap the trash icon on a tile to delete that character after confirmation.',
+          style: TextStyle(color: Colors.white70),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -497,7 +502,6 @@ class Helper {
           style: TextStyle(color: Colors.white70),
         ),
         content: const Text(
-          ''
           'Choose the character you want to view and manage. You can always come back to this page to switch characters or access the home page.',
           style: TextStyle(color: Colors.white70),
         ),
@@ -520,7 +524,12 @@ class Helper {
           'HOW TO USE THIS PAGE',
           style: TextStyle(color: Colors.white70),
         ),
-        content: const Text('TODO', style: TextStyle(color: Colors.white70)),
+        content: const Text(
+            'Here you’ll find the portrait, quick actions and a hub to manage data. '
+                '\nTap CHEAT SHEET to open the Cheat Sheet. '
+                '\nUse the list cards to open Key Moves, Punishes, Combos or Stances editors. '
+                '\nClick the trash icon on the portrait to delete the character (confirmation shown).',
+            style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -567,7 +576,11 @@ class Helper {
           'HOW TO USE THIS PAGE',
           style: TextStyle(color: Colors.white70),
         ),
-        content: const Text('TODO', style: TextStyle(color: Colors.white70)),
+        content: const Text(
+            'Here you can compose punish strings using the input grid, choose a frames value from the dropdown and press Save to store the punish for that frame advantage. '
+                '\nThe current composition area shows icons and wraps or scrolls when needed. '
+                '\nSaved punishes appear in the panel with their frame value and can be deleted with the trash icon after confirmation.',
+            style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -589,9 +602,9 @@ class Helper {
         ),
         content: const Text(
           ''
-          '-> On this page, you can enter and save your favourite combos.\n'
-          '-> On the left side, you can record and save your favourite combos.\n'
-          '-> On the right side, you can manage your saved combos and link them to launchers for quick access.\n'
+          'On this page, you can enter and save your favourite combos.\n'
+          'On the left side, you can record and save your favourite combos.\n'
+          'On the right side, you can manage your saved combos and link them to launchers for quick access.\n'
           '          - Each combo displays its inputs as icons. Below, you can see and manage its launchers.\n'
           '          - To add a launcher, click the "+ Add launcher" button and select from your saved launchers.\n'
           '          - To delete a launcher, click the red "X" on its chip.\n'
@@ -617,7 +630,12 @@ class Helper {
           'HOW TO USE THIS PAGE',
           style: TextStyle(color: Colors.white70),
         ),
-        content: const Text('TODO', style: TextStyle(color: Colors.white70)),
+        content: const Text(
+            'Here you can compose and save stance-specific moves. '
+                '\nUse the input grid to build the input sequence, pick the stance from the dropdown and optionally add frames/on-hit/on-block/remark metadata. '
+                '\nThe left panel shows the current composition with Save, Remove-last and Clear actions. '
+                '\nSaved stance moves appear in the list with a stance badge and optional remark; delete an entry with the trash icon after confirmation.',
+            style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),

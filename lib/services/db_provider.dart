@@ -686,4 +686,88 @@ class DBProvider {
     }
     await importAllTablesFromMap(raw, clearFirst: clearFirst);
   }
+
+  /// Export all tables into a Map.
+  /// @return Future<Map<String,dynamic>> map ready to be json-encoded and re-imported
+  Future<Map<String, dynamic>> exportAllTablesAsMap() async {
+    final db = await database;
+    final Map<String, dynamic> res = {};
+
+    final myChars = await db.query('my_characters', orderBy: 'id ASC');
+    final keyMoves = await db.query('key_moves', orderBy: 'id ASC');
+    final punishes = await db.query('punishes', orderBy: 'id ASC');
+    final combos = await db.query('combos', orderBy: 'id ASC');
+    final launchers = await db.query('launchers', orderBy: 'id ASC');
+    final stanceMoves = await db.query('stance_moves', orderBy: 'id ASC');
+
+    res['my_characters'] = myChars.map((r) {
+      return {
+        'id': r['id'],
+        'name': r['name'],
+        'createdAt': r['createdAt'],
+      };
+    }).toList();
+
+    res['key_moves'] = keyMoves.map((r) {
+      return {
+        'id': r['id'],
+        'characterName': r['characterName'],
+        'inputs': r['inputs'],
+        'frames': r['frames'],
+        'onHit': r['onHit'],
+        'onBlock': r['onBlock'],
+        'remark': r['remark'],
+        'createdAt': r['createdAt'],
+      };
+    }).toList();
+
+    res['punishes'] = punishes.map((r) {
+      return {
+        'id': r['id'],
+        'characterName': r['characterName'],
+        'inputs': r['inputs'],
+        'frames': r['frames'],
+        'createdAt': r['createdAt'],
+      };
+    }).toList();
+
+    res['combos'] = combos.map((r) {
+      return {
+        'id': r['id'],
+        'characterName': r['characterName'],
+        'inputs': r['inputs'],
+        'createdAt': r['createdAt'],
+      };
+    }).toList();
+
+    res['launchers'] = launchers.map((r) {
+      return {
+        'id': r['id'],
+        'characterName': r['characterName'],
+        'inputs': r['inputs'],
+        'comboId': r['comboId'],
+        'createdAt': r['createdAt'],
+      };
+    }).toList();
+
+    // Helper.defaultDB uses "stanceName" key; map DB column 'stance' to that name
+    res['stance_moves'] = stanceMoves.map((r) {
+      return {
+        'id': r['id'],
+        'characterName': r['characterName'],
+        'stanceName': r['stance'],
+        'inputs': r['inputs'],
+        'createdAt': r['createdAt'],
+      };
+    }).toList();
+
+    return res;
+  }
+
+  /// Export all tables as a pretty JSON string ready to be copy/pasted.
+  /// @return Future<String> pretty-printed JSON
+  Future<String> exportAllTablesAsJsonString() async {
+    final map = await exportAllTablesAsMap();
+    return const JsonEncoder.withIndent('  ').convert(map);
+  }
 }
