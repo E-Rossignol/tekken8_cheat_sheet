@@ -169,8 +169,9 @@ class _DBExplorerViewState extends State<DBExplorerView> {
 
     setState(() {
       _tables = tables;
-      if (_selectedTable == null && _tables.isNotEmpty)
+      if (_selectedTable == null && _tables.isNotEmpty) {
         _selectedTable = _tables.first;
+      }
     });
 
     if (_selectedTable != null) {

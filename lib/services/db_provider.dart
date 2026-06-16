@@ -131,12 +131,8 @@ class DBProvider {
     final documentsDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentsDirectory.path, 'tekken_cheat_sheet.db');
     final file = File(path);
-    try {
-      if (await file.exists()) {
-        await file.delete();
-      }
-    } catch (e) {
-      print('Error deleting database file: $e');
+    if (await file.exists()) {
+      await file.delete();
     }
   }
 
@@ -623,15 +619,11 @@ class DBProvider {
 
     await db.transaction((txn) async {
       if (clearFirst) {
-        try {
-          await txn.delete('launchers');
-          await txn.delete('combos');
-          await txn.delete('key_moves');
-          await txn.delete('punishes');
-          await txn.delete('my_characters');
-        } catch (e) {
-          print('Warning while clearing tables: $e');
-        }
+        await txn.delete('launchers');
+        await txn.delete('combos');
+        await txn.delete('key_moves');
+        await txn.delete('punishes');
+        await txn.delete('my_characters');
       }
 
       Future<void> insertList(String table, dynamic listObj) async {
@@ -640,16 +632,12 @@ class DBProvider {
         for (var raw in listObj) {
           if (raw is Map) {
             final Map<String, dynamic> row = Map<String, dynamic>.from(raw);
-            try {
-              // conflictAlgorithm.replace lets us insert rows with explicit ids safely
-              await txn.insert(
-                table,
-                row,
-                conflictAlgorithm: ConflictAlgorithm.replace,
-              );
-            } catch (e) {
-              print('Error inserting into $table: $e');
-            }
+            // conflictAlgorithm.replace lets us insert rows with explicit ids safely
+            await txn.insert(
+              table,
+              row,
+              conflictAlgorithm: ConflictAlgorithm.replace,
+            );
           }
         }
       }
@@ -661,27 +649,23 @@ class DBProvider {
       await insertList('launchers', all['launchers']);
 
       // update sqlite_sequence to keep AUTOINCREMENT values coherent with inserted ids
-      try {
-        for (final table in [
-          'my_characters',
-          'key_moves',
-          'punishes',
-          'combos',
-          'launchers',
-        ]) {
-          final maxRes = await txn.rawQuery(
-            'SELECT MAX(id) as maxId FROM $table',
-          );
-          final maxId = (maxRes.isNotEmpty && maxRes.first['maxId'] != null)
-              ? (maxRes.first['maxId'] as int)
-              : 0;
-          await txn.rawUpdate(
-            'UPDATE sqlite_sequence SET seq = ? WHERE name = ?',
-            [maxId, table],
-          );
-        }
-      } catch (e) {
-        print('Warning while updating sqlite_sequence: $e');
+      for (final table in [
+        'my_characters',
+        'key_moves',
+        'punishes',
+        'combos',
+        'launchers',
+      ]) {
+        final maxRes = await txn.rawQuery(
+          'SELECT MAX(id) as maxId FROM $table',
+        );
+        final maxId = (maxRes.isNotEmpty && maxRes.first['maxId'] != null)
+            ? (maxRes.first['maxId'] as int)
+            : 0;
+        await txn.rawUpdate(
+          'UPDATE sqlite_sequence SET seq = ? WHERE name = ?',
+          [maxId, table],
+        );
       }
     });
   }
@@ -697,8 +681,6 @@ class DBProvider {
           Map<String, dynamic>.from(raw),
           clearFirst: clearFirst,
         );
-      } else {
-        print('importDefaultDB: defaultDB vide ou malformé');
       }
       return;
     }

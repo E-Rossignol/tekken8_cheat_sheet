@@ -1,4 +1,5 @@
 /// Small image widgets wrapping icon assets used across the UI.
+library;
 import 'package:flutter/material.dart';
 
 class KeyMovesIcon extends StatelessWidget {

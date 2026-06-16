@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/constants/helper.dart';
-import 'package:tekken_cheat_sheet/views/enter_datas_views/combos_view.dart';
-import 'package:tekken_cheat_sheet/views/enter_datas_views/punishes_view.dart';
-import 'package:tekken_cheat_sheet/views/enter_datas_views/stances_view.dart';
+import 'package:tekken_cheat_sheet/views/data_input_views/combos_view.dart';
+import 'package:tekken_cheat_sheet/views/data_input_views/punishes_view.dart';
+import 'package:tekken_cheat_sheet/views/data_input_views/stances_view.dart';
 import '../../models/page_type_model.dart';
 import '../../services/db_provider.dart';
 import '../../widgets/custom_appbar.dart';
 import '../../widgets/my_icons.dart';
-import '../enter_datas_views/key_moves_view.dart';
+import '../data_input_views/key_moves_view.dart';
 import 'cheat_sheet_view.dart';
 import 'home_view.dart'; // <--- nouvel import
 

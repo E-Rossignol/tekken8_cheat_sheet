@@ -451,8 +451,9 @@ class _HomeViewState extends State<HomeView> {
                                                                   ),
                                                                 );
                                                                 if (confirm !=
-                                                                    true)
+                                                                    true) {
                                                                   return;
+                                                                }
                                                                 try {
                                                                   await DBProvider
                                                                       .instance

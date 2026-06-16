@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/models/page_type_model.dart';
-import 'package:tekken_cheat_sheet/views/enter_datas_views/combos_view.dart';
-import 'package:tekken_cheat_sheet/views/enter_datas_views/key_moves_view.dart';
-import 'package:tekken_cheat_sheet/views/enter_datas_views/punishes_view.dart';
-import 'package:tekken_cheat_sheet/views/enter_datas_views/stances_view.dart';
+import 'package:tekken_cheat_sheet/views/data_input_views/combos_view.dart';
+import 'package:tekken_cheat_sheet/views/data_input_views/key_moves_view.dart';
+import 'package:tekken_cheat_sheet/views/data_input_views/punishes_view.dart';
+import 'package:tekken_cheat_sheet/views/data_input_views/stances_view.dart';
 import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
 import 'package:tekken_cheat_sheet/widgets/my_icons.dart';
 import '../../services/db_provider.dart';
@@ -268,35 +268,45 @@ class _CheatSheetViewState extends State<CheatSheetView> {
   /// @return Widget row/wrap of icons
   Widget _chipsForInputs(String inputs, {double size = 30}) {
     final parts = _pathFromInputs(inputs);
-    return Wrap(
-      spacing: size / 5,
-      runSpacing: size / 5,
-      children: parts.map((p) {
-        return Image.asset(
-          p,
-          fit: BoxFit.cover,
-          height: size,
-          errorBuilder: (_, __, ___) => Container(
-            height: size,
-            width: size,
-            decoration: BoxDecoration(
-              color: Colors.blueGrey,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Center(
-              child: Text(
-                textAlign: TextAlign.center,
-                p.split('/').last.split('.').first.toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+    final spacing = size / 5;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: parts.asMap().entries.map((entry) {
+          final p = entry.value;
+          final isLast = entry.key == parts.length - 1;
+          return Row(
+            children: [
+              Image.asset(
+                p,
+                fit: BoxFit.cover,
+                height: size,
+                errorBuilder: (_, __, ___) => Container(
+                  height: size,
+                  width: size,
+                  decoration: BoxDecoration(
+                    color: Colors.blueGrey,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Center(
+                    child: Text(
+                      textAlign: TextAlign.center,
+                      p.split('/').last.split('.').first.toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-        );
-      }).toList(),
+              if (!isLast) SizedBox(width: spacing),
+            ],
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -316,7 +326,7 @@ class _CheatSheetViewState extends State<CheatSheetView> {
         side: BorderSide(color: Colors.white.withOpacity(0.03)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -555,7 +565,7 @@ class _CheatSheetViewState extends State<CheatSheetView> {
   /// @param icon widget icon to display
   Widget _metaChip(String label, String value, Widget icon) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.02),
         borderRadius: BorderRadius.circular(12),
@@ -600,10 +610,14 @@ class _CheatSheetViewState extends State<CheatSheetView> {
       }
       return RefreshIndicator.adaptive(
         onRefresh: _loadAll,
-        child: ListView.separated(
-          padding: const EdgeInsets.all(12),
+        child: GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 6,
+            mainAxisSpacing: 6,
+            childAspectRatio: 0.9,
+          ),
           itemCount: _keyMoves.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
           itemBuilder: (_, i) => _keyMoveCard(_keyMoves[i]),
         ),
       );
