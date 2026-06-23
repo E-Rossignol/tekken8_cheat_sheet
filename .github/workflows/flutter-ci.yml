@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  app-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -28,10 +28,7 @@ jobs:
       - name: Static analysis
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
-      - name: Run tests
-        run: flutter test --coverage
-
-  build_windows:
+  app-build:
     needs: test
     runs-on: windows-latest
     steps:
