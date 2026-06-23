@@ -29,7 +29,7 @@ jobs:
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
   app-build:
-    needs: test
+    needs: app-test
     runs-on: windows-latest
     steps:
       - name: Checkout repository
