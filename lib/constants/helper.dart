@@ -525,11 +525,12 @@ class Helper {
           style: TextStyle(color: Colors.white70),
         ),
         content: const Text(
-            'Here you’ll find the portrait, quick actions and a hub to manage data. '
-                '\nTap CHEAT SHEET to open the Cheat Sheet. '
-                '\nUse the list cards to open Key Moves, Punishes, Combos or Stances editors. '
-                '\nClick the trash icon on the portrait to delete the character (confirmation shown).',
-            style: TextStyle(color: Colors.white70)),
+          'Here you’ll find the portrait, quick actions and a hub to manage data. '
+          '\nTap CHEAT SHEET to open the Cheat Sheet. '
+          '\nUse the list cards to open Key Moves, Punishes, Combos or Stances editors. '
+          '\nClick the trash icon on the portrait to delete the character (confirmation shown).',
+          style: TextStyle(color: Colors.white70),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -577,10 +578,11 @@ class Helper {
           style: TextStyle(color: Colors.white70),
         ),
         content: const Text(
-            'Here you can compose punish strings using the input grid, choose a frames value from the dropdown and press Save to store the punish for that frame advantage. '
-                '\nThe current composition area shows icons and wraps or scrolls when needed. '
-                '\nSaved punishes appear in the panel with their frame value and can be deleted with the trash icon after confirmation.',
-            style: TextStyle(color: Colors.white70)),
+          'Here you can compose punish strings using the input grid, choose a frames value from the dropdown and press Save to store the punish for that frame advantage. '
+          '\nThe current composition area shows icons and wraps or scrolls when needed. '
+          '\nSaved punishes appear in the panel with their frame value and can be deleted with the trash icon after confirmation.',
+          style: TextStyle(color: Colors.white70),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -631,11 +633,12 @@ class Helper {
           style: TextStyle(color: Colors.white70),
         ),
         content: const Text(
-            'Here you can compose and save stance-specific moves. '
-                '\nUse the input grid to build the input sequence, pick the stance from the dropdown and optionally add frames/on-hit/on-block/remark metadata. '
-                '\nThe left panel shows the current composition with Save, Remove-last and Clear actions. '
-                '\nSaved stance moves appear in the list with a stance badge and optional remark; delete an entry with the trash icon after confirmation.',
-            style: TextStyle(color: Colors.white70)),
+          'Here you can compose and save stance-specific moves. '
+          '\nUse the input grid to build the input sequence, pick the stance from the dropdown and optionally add frames/on-hit/on-block/remark metadata. '
+          '\nThe left panel shows the current composition with Save, Remove-last and Clear actions. '
+          '\nSaved stance moves appear in the list with a stance badge and optional remark; delete an entry with the trash icon after confirmation.',
+          style: TextStyle(color: Colors.white70),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),

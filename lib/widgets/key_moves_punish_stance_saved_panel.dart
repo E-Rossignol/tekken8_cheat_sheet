@@ -47,7 +47,8 @@ class KeyMovesPunishStanceSavedPanel extends StatefulWidget {
       _KeyMovesPunishStanceSavedPanelState();
 }
 
-class _KeyMovesPunishStanceSavedPanelState extends State<KeyMovesPunishStanceSavedPanel> {
+class _KeyMovesPunishStanceSavedPanelState
+    extends State<KeyMovesPunishStanceSavedPanel> {
   @override
   Widget build(BuildContext context) {
     late String title;

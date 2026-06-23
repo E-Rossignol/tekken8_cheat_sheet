@@ -452,7 +452,10 @@ class _StancesViewState extends State<StancesView> {
             const SizedBox(height: 8),
             CustomNumberField(label: 'On Hit', controller: _onHitController),
             const SizedBox(height: 8),
-            CustomNumberField(label: 'On Block', controller: _onBlockController),
+            CustomNumberField(
+              label: 'On Block',
+              controller: _onBlockController,
+            ),
           ],
         ),
       ],
