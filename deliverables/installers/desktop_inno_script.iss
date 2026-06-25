@@ -4,7 +4,7 @@
 
 #define MyAppName "TekkenCheatSheet"
 #define MyAppVersion "1.1"
-#define MyAppExeName "tekken_cheat_sheet.exe"
+#define MyAppExeName "tekken_cheat_sheet_installer.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
