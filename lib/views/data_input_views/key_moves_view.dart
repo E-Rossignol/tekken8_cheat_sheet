@@ -428,11 +428,20 @@ class _KeyMovesViewState extends State<KeyMovesView> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                CustomNumberField(label: 'Frames', controller: _framesController),
+                CustomNumberField(
+                  label: 'Frames',
+                  controller: _framesController,
+                ),
                 const SizedBox(height: 8),
-                CustomNumberField(label: 'On Hit', controller: _onHitController),
+                CustomNumberField(
+                  label: 'On Hit',
+                  controller: _onHitController,
+                ),
                 const SizedBox(height: 8),
-                CustomNumberField(label: 'On Block', controller: _onBlockController),
+                CustomNumberField(
+                  label: 'On Block',
+                  controller: _onBlockController,
+                ),
               ],
             ),
           ],
@@ -505,9 +514,7 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.02),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.03),
-                      ),
+                      border: Border.all(color: Colors.white.withOpacity(0.03)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -525,9 +532,7 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.02),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.03),
-                      ),
+                      border: Border.all(color: Colors.white.withOpacity(0.03)),
                     ),
                     child: InputGrid(
                       inputs: inputs,

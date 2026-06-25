@@ -1,0 +1,58 @@
+name: Flutter CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  app-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Display Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify formatting
+        run: dart format --set-exit-if-changed .
+
+      - name: Static analysis
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+  app-build:
+    needs: app-test
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Display Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Windows (release)
+        run: flutter build windows --release
+
+      - name: Update Deliverables
+        shell: pwsh
+        run: |
+          Set-Location -Path '.\build\windows\x64\runner\Release'
+          robocopy . ..\..\..\..\..\deliverables\raw_deliverables /E /COPYALL /R:3 /W:5
+          $rc = $LASTEXITCODE
+          if ($rc -ge 8) { exit $rc } else { exit 0 }

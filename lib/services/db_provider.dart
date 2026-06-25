@@ -701,11 +701,7 @@ class DBProvider {
     final stanceMoves = await db.query('stance_moves', orderBy: 'id ASC');
 
     res['my_characters'] = myChars.map((r) {
-      return {
-        'id': r['id'],
-        'name': r['name'],
-        'createdAt': r['createdAt'],
-      };
+      return {'id': r['id'], 'name': r['name'], 'createdAt': r['createdAt']};
     }).toList();
 
     res['key_moves'] = keyMoves.map((r) {

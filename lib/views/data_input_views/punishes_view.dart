@@ -484,9 +484,7 @@ class _PunishesViewState extends State<PunishesView> {
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.02),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.03),
-                      ),
+                      border: Border.all(color: Colors.white.withOpacity(0.03)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -507,9 +505,7 @@ class _PunishesViewState extends State<PunishesView> {
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.02),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.03),
-                      ),
+                      border: Border.all(color: Colors.white.withOpacity(0.03)),
                     ),
                     child: InputGrid(
                       inputs: inputs,

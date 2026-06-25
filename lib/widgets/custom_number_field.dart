@@ -4,14 +4,17 @@ import 'package:flutter/services.dart';
 class CustomNumberField extends StatefulWidget {
   final String label;
   final TextEditingController controller;
-  const CustomNumberField({super.key, required this.label, required this.controller});
+  const CustomNumberField({
+    super.key,
+    required this.label,
+    required this.controller,
+  });
 
   @override
   State<CustomNumberField> createState() => _CustomNumberFieldState();
 }
 
 class _CustomNumberFieldState extends State<CustomNumberField> {
-
   @override
   Widget build(BuildContext context) {
     return Column(
