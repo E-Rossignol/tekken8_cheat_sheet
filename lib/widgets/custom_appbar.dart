@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:tekken_cheat_sheet/services/db_provider.dart';
 import 'package:window_manager/window_manager.dart';
 import '../constants/helper.dart';
 import '../models/page_type_model.dart';
@@ -63,53 +62,6 @@ PreferredSizeWidget customAppBar(
             ),
             child: Center(
               child: Image.asset('assets/images/logo.png', fit: BoxFit.contain),
-            ),
-          ),
-        ),
-        Container(
-          color: Colors.blueGrey,
-          width: 100,
-          child: TextButton(
-            onPressed: () async {
-              showDialog(
-                context: context,
-                builder: (_) => AlertDialog(
-                  title: Text('Importing default database'),
-                  content: Text(
-                    'This will import the default database with all characters and moves. Do you want to proceed?',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () async {
-                        Navigator.of(context).pop();
-                        await DBProvider.instance.importDefaultDB();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('DEFAULT DATABASE IMPORTED'),
-                            duration: Duration(seconds: 1),
-                          ),
-                        );
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (_) => HomeView()),
-                        );
-                      },
-                      child: Text('OK'),
-                    ),
-                  ],
-                ),
-              );
-            },
-            child: Text(
-              'DB EXAMPLE',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
             ),
           ),
         ),

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tekken_cheat_sheet/models/page_type_model.dart';
 import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
+import '../../widgets/dev_dialog.dart';
 import 'character_gallery_view.dart';
-import '../test_views/db_explorer_view.dart';
 import 'my_character_view.dart';
 import '../../models/character_model.dart';
 import '../../constants/helper.dart';
@@ -186,24 +187,43 @@ class _HomeViewState extends State<HomeView> {
                     ),
                     const SizedBox(height: 8),
                     _SidebarButton(
-                      label: 'DATABASE',
-                      icon: Icons.storage,
-                      accent: accent,
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const DBExplorerView(),
-                          ),
-                        );
-                      },
-                      collapsed: !_isSidebarOpen,
-                    ),
-                    const SizedBox(height: 8),
-                    _SidebarButton(
-                      label: 'OPTIONS',
+                      label: 'DEV OPTIONS',
                       icon: Icons.settings,
                       accent: accent,
-                      onPressed: () {},
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) {
+                            return AlertDialog(
+                              title: Text('Enter password'),
+                              content: TextField(
+                                obscureText: true,
+                                decoration: const InputDecoration(
+                                  labelText: 'Password',
+                                ),
+                                onSubmitted: (value) {
+                                  if (value == '2563') {
+                                    Navigator.of(context).pop();
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const DevDialog(),
+                                      ),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Incorrect password'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            );
+                          },
+                        );
+                      },
                       collapsed: !_isSidebarOpen,
                     ),
                     // espaces pour futur contenu
