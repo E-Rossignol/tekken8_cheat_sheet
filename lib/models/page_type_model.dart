@@ -23,4 +23,7 @@ enum PageType {
 
   /// Database browser
   dbBrowser,
+
+  /// Default database view
+  defaultDB,
 }

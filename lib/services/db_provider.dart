@@ -179,6 +179,9 @@ class DBProvider {
     await db.execute('DELETE FROM combos WHERE characterName = ?', [
       characterName,
     ]);
+    await db.execute('DELETE FROM stance_moves WHERE characterName = ?', [
+      characterName,
+    ]);
   }
 
   /// Close DB connection.
@@ -624,6 +627,7 @@ class DBProvider {
         await txn.delete('key_moves');
         await txn.delete('punishes');
         await txn.delete('my_characters');
+        await txn.delete('stance_moves');
       }
 
       Future<void> insertList(String table, dynamic listObj) async {
@@ -647,6 +651,7 @@ class DBProvider {
       await insertList('key_moves', all['key_moves']);
       await insertList('punishes', all['punishes']);
       await insertList('launchers', all['launchers']);
+      await insertList('stance_moves', all['stance_moves']);
 
       // update sqlite_sequence to keep AUTOINCREMENT values coherent with inserted ids
       for (final table in [
@@ -655,6 +660,7 @@ class DBProvider {
         'punishes',
         'combos',
         'launchers',
+        'stance_moves',
       ]) {
         final maxRes = await txn.rawQuery(
           'SELECT MAX(id) as maxId FROM $table',
@@ -751,7 +757,7 @@ class DBProvider {
       return {
         'id': r['id'],
         'characterName': r['characterName'],
-        'stanceName': r['stance'],
+        'stance': r['stance'],
         'inputs': r['inputs'],
         'createdAt': r['createdAt'],
       };

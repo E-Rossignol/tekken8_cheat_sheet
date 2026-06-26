@@ -16,13 +16,18 @@ class DefaultDBView extends StatelessWidget {
       end: Alignment.bottomRight,
     );
     return Scaffold(
-      appBar: customAppBar(PageType.home, null, context),
+      appBar: customAppBar(PageType.defaultDB, null, context),
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: BoxDecoration(gradient: bgGradient),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: SingleChildScrollView(
-            child: SelectableText(value, style: const TextStyle(fontSize: 14)),
+            child: SelectableText(
+              value,
+              style: const TextStyle(fontSize: 14, color: Colors.white),
+            ),
           ),
         ),
       ),

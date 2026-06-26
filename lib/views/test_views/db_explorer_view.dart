@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:tekken_cheat_sheet/models/page_type_model.dart';
+import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
 import '../../services/db_provider.dart';
-import '../main_views/home_view.dart';
 
 /// Small database explorer used to inspect and manage SQLite tables at runtime.
 /// Useful for debugging and copying table contents.
@@ -400,25 +401,7 @@ class _DBExplorerViewState extends State<DBExplorerView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: const Text('Database Explorer'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios),
-          onPressed: () => Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const HomeView()),
-          ),
-        ),
-        actions: [
-          IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh)),
-          IconButton(
-            onPressed: _resetDatabase,
-            icon: const Icon(Icons.auto_delete),
-          ),
-        ],
-      ),
+      appBar: customAppBar(PageType.defaultDB, null, context),
       extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tekken_cheat_sheet/views/test_views/dev_view.dart';
 import 'package:window_manager/window_manager.dart';
 import '../constants/helper.dart';
 import '../models/page_type_model.dart';
@@ -21,7 +22,11 @@ PreferredSizeWidget customAppBar(
                   if (characterName == null ||
                       pageType == PageType.characterDetail) {
                     Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const HomeView()),
+                      MaterialPageRoute(
+                        builder: (_) => pageType == PageType.defaultDB
+                            ? const DevView()
+                            : const HomeView(),
+                      ),
                     );
                     return;
                   }
