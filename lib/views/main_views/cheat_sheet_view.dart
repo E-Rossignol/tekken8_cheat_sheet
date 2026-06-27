@@ -404,7 +404,42 @@ class _CheatSheetViewState extends State<CheatSheetView> {
             // header : inputs du combo
             Row(
               children: [
-                Expanded(child: _chipsForInputs(inputs)),
+                Expanded(
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _pathFromInputs(inputs).map((path) {
+                      return Image.asset(
+                        path,
+                        fit: BoxFit.cover,
+                        height: 30,
+                        errorBuilder: (_, __, ___) => Container(
+                          height: 30,
+                          width: 30,
+                          decoration: BoxDecoration(
+                            color: Colors.blueGrey,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Center(
+                            child: Text(
+                              path
+                                  .split('/')
+                                  .last
+                                  .split('.')
+                                  .first
+                                  .toUpperCase(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -700,10 +735,10 @@ class _CheatSheetViewState extends State<CheatSheetView> {
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.02),
+                          color: Colors.white.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.03),
+                            color: Colors.white.withOpacity(0.2),
                           ),
                         ),
                         child: ListView.separated(

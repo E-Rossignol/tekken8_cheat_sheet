@@ -7,7 +7,6 @@ import 'package:tekken_cheat_sheet/models/input_data.dart';
 import 'package:tekken_cheat_sheet/widgets/input_grid.dart';
 import '../../models/page_type_model.dart';
 import '../../services/db_provider.dart';
-import 'dart:math' as math;
 
 /// KeyMovesView: record and manage key moves for a character.
 /// Each saved move stores optional frames/onHit/onBlock/remark metadata.
@@ -250,9 +249,6 @@ class _KeyMovesViewState extends State<KeyMovesView> {
   Widget buildCurrentString() {
     return LayoutBuilder(
       builder: (context, outerConstraints) {
-        final availableWidth = outerConstraints.maxWidth;
-        final maxActionsWidth = math.min(140.0, availableWidth * 0.22);
-
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -263,6 +259,7 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Flexible(
                     flex: 1,
@@ -339,64 +336,50 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                   ),
 
                   const SizedBox(width: 8),
-
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: maxActionsWidth),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Tooltip(
-                            message: 'Save',
-                            child: IconButton(
-                              onPressed: saveString,
-                              iconSize: 20,
-                              padding: const EdgeInsets.all(6),
-                              constraints: const BoxConstraints(
-                                minWidth: 36,
-                                minHeight: 36,
-                              ),
-                              icon: const Icon(
-                                Icons.save,
-                                color: Colors.greenAccent,
-                              ),
-                            ),
-                          ),
-                          Tooltip(
-                            message: 'Remove last',
-                            child: IconButton(
-                              onPressed: removeLastInput,
-                              iconSize: 20,
-                              padding: const EdgeInsets.all(6),
-                              constraints: const BoxConstraints(
-                                minWidth: 36,
-                                minHeight: 36,
-                              ),
-                              icon: const Icon(
-                                Icons.backspace,
-                                color: Colors.orangeAccent,
-                              ),
-                            ),
-                          ),
-                          Tooltip(
-                            message: 'Clear',
-                            child: IconButton(
-                              onPressed: clearInputs,
-                              iconSize: 20,
-                              padding: const EdgeInsets.all(6),
-                              constraints: const BoxConstraints(
-                                minWidth: 36,
-                                minHeight: 36,
-                              ),
-                              icon: const Icon(
-                                Icons.delete,
-                                color: Colors.redAccent,
-                              ),
-                            ),
-                          ),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color.fromRGBO(0, 39, 115, 1.0),
+                          Color.fromRGBO(0, 19, 56, 1.0),
                         ],
                       ),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.black),
+                    ),
+                    child: Row(
+                      children: [
+                        Tooltip(
+                          message: 'Save',
+                          child: IconButton(
+                            onPressed: saveString,
+                            icon: const Icon(
+                              Icons.save,
+                              color: Colors.greenAccent,
+                            ),
+                          ),
+                        ),
+                        Tooltip(
+                          message: 'Remove last',
+                          child: IconButton(
+                            onPressed: removeLastInput,
+                            icon: const Icon(
+                              Icons.backspace,
+                              color: Colors.orangeAccent,
+                            ),
+                          ),
+                        ),
+                        Tooltip(
+                          message: 'Clear',
+                          child: IconButton(
+                            onPressed: clearInputs,
+                            icon: const Icon(
+                              Icons.delete,
+                              color: Colors.redAccent,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

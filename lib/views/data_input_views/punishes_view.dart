@@ -317,33 +317,45 @@ class _PunishesViewState extends State<PunishesView> {
               ),
 
               const SizedBox(width: 8),
-              Row(
-                children: [
-                  Tooltip(
-                    message: 'Save',
-                    child: IconButton(
-                      onPressed: saveString,
-                      icon: const Icon(Icons.save, color: Colors.greenAccent),
-                    ),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color.fromRGBO(0, 39, 115, 1.0),
+                      Color.fromRGBO(0, 19, 56, 1.0),
+                    ],
                   ),
-                  Tooltip(
-                    message: 'Remove last',
-                    child: IconButton(
-                      onPressed: removeLastInput,
-                      icon: const Icon(
-                        Icons.backspace,
-                        color: Colors.orangeAccent,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.black),
+                ),
+                child: Row(
+                  children: [
+                    Tooltip(
+                      message: 'Save',
+                      child: IconButton(
+                        onPressed: saveString,
+                        icon: const Icon(Icons.save, color: Colors.greenAccent),
                       ),
                     ),
-                  ),
-                  Tooltip(
-                    message: 'Clear',
-                    child: IconButton(
-                      onPressed: clearInputs,
-                      icon: const Icon(Icons.delete, color: Colors.redAccent),
+                    Tooltip(
+                      message: 'Remove last',
+                      child: IconButton(
+                        onPressed: removeLastInput,
+                        icon: const Icon(
+                          Icons.backspace,
+                          color: Colors.orangeAccent,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                    Tooltip(
+                      message: 'Clear',
+                      child: IconButton(
+                        onPressed: clearInputs,
+                        icon: const Icon(Icons.delete, color: Colors.redAccent),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
