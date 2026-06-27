@@ -198,17 +198,6 @@ class _CheatSheetViewState extends State<CheatSheetView> {
           btn('Combos', onComboEdit, _Panel.combo, ctx),
           btn('Stances', onStancesEdit, _Panel.stances, ctx),
           const Spacer(),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              side: BorderSide(color: Colors.white.withOpacity(0.04)),
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-            ),
-            onPressed: _loadAll,
-            icon: const Icon(Icons.refresh, size: 18),
-            label: const Text('Refresh', style: TextStyle(fontSize: 13)),
-          ),
         ],
       ),
     );
@@ -335,7 +324,7 @@ class _CheatSheetViewState extends State<CheatSheetView> {
             const SizedBox(height: 8),
             // remark displayed under inputs, small & italic (or "No remark")
             Text(
-              (remark != null && remark.isNotEmpty) ? 'Remark: $remark' : '',
+              (remark != null && remark.isNotEmpty) ? remark : '',
               style: const TextStyle(
                 color: Colors.white54,
                 fontStyle: FontStyle.italic,
@@ -508,7 +497,7 @@ class _CheatSheetViewState extends State<CheatSheetView> {
         side: BorderSide(color: Colors.white.withOpacity(0.03)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -525,7 +514,7 @@ class _CheatSheetViewState extends State<CheatSheetView> {
             ),
             const SizedBox(height: 8),
             Text(
-              (remark != null && remark.isNotEmpty) ? 'Remark: $remark' : '',
+              (remark != null && remark.isNotEmpty) ? remark : '',
               style: const TextStyle(
                 color: Colors.white54,
                 fontStyle: FontStyle.italic,
@@ -665,13 +654,72 @@ class _CheatSheetViewState extends State<CheatSheetView> {
           ),
         );
       }
+
+      // Group stance moves by stance name
+      final Map<String, List<Map<String, dynamic>>> groupedStances = {};
+      for (var stance in _stances) {
+        final stanceName = stance['stance'] ?? 'Unknown';
+        groupedStances.putIfAbsent(stanceName, () => []).add(stance);
+      }
+
+      final stanceNames = groupedStances.keys.toList();
+
       return RefreshIndicator.adaptive(
         onRefresh: _loadAll,
-        child: ListView.separated(
-          padding: const EdgeInsets.all(12),
-          itemCount: _stances.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (_, i) => _stanceCard(_stances[i]),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Dynamically calculate the number of columns (max 3)
+            final int columnCount = stanceNames.length < 3
+                ? stanceNames.length
+                : 3;
+            return GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columnCount,
+                crossAxisSpacing: 3,
+                mainAxisSpacing: 3,
+                childAspectRatio: 0.57, // Adjust height/width ratio
+              ),
+              itemCount: stanceNames.length,
+              itemBuilder: (context, index) {
+                final stanceName = stanceNames[index];
+                final moves = groupedStances[stanceName]!;
+                final scrollController = ScrollController();
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      stanceName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.02),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.03),
+                          ),
+                        ),
+                        child: ListView.separated(
+                          controller: scrollController,
+                          itemCount: moves.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 8),
+                          itemBuilder: (_, i) => _stanceCard(moves[i]),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
         ),
       );
     } else {

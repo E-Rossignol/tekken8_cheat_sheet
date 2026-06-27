@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 ; Non-commercial use only
 
-#define MyAppName "TekkenCheatSheet"
+#define MyAppName "Tekken Cheat Sheet"
 #define MyAppVersion "1.1"
 #define MyAppExeName "tekken_cheat_sheet.exe"
 
@@ -27,7 +27,7 @@ DisableProgramGroupPage=yes
 ; Uncomment the following line to run in non administrative install mode (install for current user only).
 ;PrivilegesRequired=lowest
 OutputDir=C:\Personal_Projects\updated_flutter\tekken_cheat_sheet\deliverables\installers
-OutputBaseFilename=tekken_cheat_sheet
+OutputBaseFilename=tekken_cheat_sheet_installer
 SetupIconFile=C:\Personal_Projects\updated_flutter\tekken_cheat_sheet\assets\images\logo.ico
 SolidCompression=yes
 WizardStyle=modern dark
