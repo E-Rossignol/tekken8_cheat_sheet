@@ -18,9 +18,9 @@ A lightweight, polished Flutter application for Tekken 8 players to save, browse
 - Export current DB state to JSON printable in console.
 
 ## Demonstration
-@TODO: SCREENSHOTS of key views (character list, move detail, punish table, combo management, DB browser) showcasing the UI and features.
+Screenshots of key views (character list, move detail, punish table, combo management, DB browser) showcasing the UI and features can be found in the ".deliverables/screenshots/" folder.
 
-You can also find a demo video here: @TODO.
+You can also find a demo video here: [https://youtu.be/8CjFosyT-rE]
 
 ## Tech Stack
 - Flutter (stable)
