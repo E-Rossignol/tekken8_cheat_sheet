@@ -398,14 +398,12 @@ class _CombosViewState extends State<CombosView> {
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final entries = currentInputs.asMap().entries.toList();
-                    double totalWidth = 0.0;
                     final List<Widget> iconWidgets = entries.map((entry) {
                       final data = inputs.firstWhere(
                         (e) => e.code == entry.value,
                         orElse: () => InputData(entry.value, "-"),
                       );
                       final double w = 40.0;
-                      totalWidth += w + 8;
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: SizedBox(
@@ -438,23 +436,8 @@ class _CombosViewState extends State<CombosView> {
                         ),
                       );
                     }).toList();
-
-                    if (totalWidth <= constraints.maxWidth) {
-                      return SizedBox(
-                        height: 56,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: iconWidgets,
-                          ),
-                        ),
-                      );
-                    }
-
-                    const double twoLineHeight = 40 * 2 + 12;
                     return SizedBox(
-                      height: twoLineHeight,
+                      height: 300,
                       child: SingleChildScrollView(
                         child: Wrap(
                           spacing: 8,
@@ -468,33 +451,45 @@ class _CombosViewState extends State<CombosView> {
               ),
 
               const SizedBox(width: 8),
-              Row(
-                children: [
-                  Tooltip(
-                    message: 'Save',
-                    child: IconButton(
-                      onPressed: saveString,
-                      icon: const Icon(Icons.save, color: Colors.greenAccent),
-                    ),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color.fromRGBO(0, 39, 115, 1.0),
+                      Color.fromRGBO(0, 19, 56, 1.0),
+                    ],
                   ),
-                  Tooltip(
-                    message: 'Remove last',
-                    child: IconButton(
-                      onPressed: removeLastInput,
-                      icon: const Icon(
-                        Icons.backspace,
-                        color: Colors.orangeAccent,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.black),
+                ),
+                child: Row(
+                  children: [
+                    Tooltip(
+                      message: 'Save',
+                      child: IconButton(
+                        onPressed: saveString,
+                        icon: const Icon(Icons.save, color: Colors.greenAccent),
                       ),
                     ),
-                  ),
-                  Tooltip(
-                    message: 'Clear',
-                    child: IconButton(
-                      onPressed: clearInputs,
-                      icon: const Icon(Icons.delete, color: Colors.redAccent),
+                    Tooltip(
+                      message: 'Remove last',
+                      child: IconButton(
+                        onPressed: removeLastInput,
+                        icon: const Icon(
+                          Icons.backspace,
+                          color: Colors.orangeAccent,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                    Tooltip(
+                      message: 'Clear',
+                      child: IconButton(
+                        onPressed: clearInputs,
+                        icon: const Icon(Icons.delete, color: Colors.redAccent),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

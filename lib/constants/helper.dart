@@ -8,11 +8,105 @@ class Helper {
   final dynamic defaultDB = {
     "my_characters": [
       {"id": 9, "name": "anna", "createdAt": 1782439069791},
+      {"id": 10, "name": "paul", "createdAt": 1782567749088},
+      {"id": 11, "name": "reina", "createdAt": 1782568549316},
     ],
-    "key_moves": [],
-    "punishes": [],
-    "combos": [],
-    "launchers": [],
+    "key_moves": [
+      {
+        "id": 2,
+        "characterName": "anna",
+        "inputs": "df/1/2",
+        "frames": 13,
+        "onHit": 2,
+        "onBlock": -5,
+        "remark": "transitions to HMC",
+        "createdAt": 1782566753099,
+      },
+      {
+        "id": 3,
+        "characterName": "paul",
+        "inputs": "d/df/f/2",
+        "frames": 13,
+        "onHit": 26,
+        "onBlock": -17,
+        "remark":
+            "heat engager and heat dash launcher; also huge pushback so not punishable",
+        "createdAt": 1782567749129,
+      },
+      {
+        "id": 4,
+        "characterName": "reina",
+        "inputs": "f/f/2",
+        "frames": 12,
+        "onHit": 2,
+        "onBlock": -9,
+        "remark":
+            "transition to SEN with f; SEN 2 and SEN 3 guarranteed on hit",
+        "createdAt": 1782568549331,
+      },
+    ],
+    "punishes": [
+      {
+        "id": 2,
+        "characterName": "anna",
+        "inputs": "b/2/2",
+        "frames": 12,
+        "createdAt": 1782566766505,
+      },
+      {
+        "id": 3,
+        "characterName": "paul",
+        "inputs": "b/1/2",
+        "frames": 12,
+        "createdAt": 1782567764909,
+      },
+      {
+        "id": 4,
+        "characterName": "reina",
+        "inputs": "1/1/2/f_h",
+        "frames": 10,
+        "createdAt": 1782568561958,
+      },
+      {
+        "id": 5,
+        "characterName": "reina",
+        "inputs": "2/2/1",
+        "frames": 12,
+        "createdAt": 1782568567955,
+      },
+    ],
+    "combos": [
+      {
+        "id": 2,
+        "characterName": "anna",
+        "inputs":
+            "d/df/f/perfectframe/1/next/uf/2/HMC/2/1/next/DASH/b/4/HMC/2/2/TORNADO/next/PLT/3/CJM/uf/3/next/db/2/PLT/2",
+        "createdAt": 1782566891641,
+      },
+      {
+        "id": 3,
+        "characterName": "paul",
+        "inputs":
+            "4/next/df/4/next/2/next/DASH/3/2/b_h/next/SWA/df/DPD/2/1/TORNADO/next/d/df/f/df/f/DPD/1/next/f/f/f_h/2",
+        "createdAt": 1782568060692,
+      },
+    ],
+    "launchers": [
+      {
+        "id": 2,
+        "characterName": "anna",
+        "inputs": "df/2",
+        "comboId": 2,
+        "createdAt": 1782566901087,
+      },
+      {
+        "id": 3,
+        "characterName": "paul",
+        "inputs": "df/2",
+        "comboId": 3,
+        "createdAt": 1782568066418,
+      },
+    ],
     "stance_moves": [
       {
         "id": 2,
@@ -167,6 +261,48 @@ class Helper {
         "stance": "PLT",
         "inputs": "4",
         "createdAt": 1782440519791,
+      },
+      {
+        "id": 26,
+        "characterName": "paul",
+        "stance": "DPD",
+        "inputs": "df_h/1",
+        "createdAt": 1782567842068,
+      },
+      {
+        "id": 27,
+        "characterName": "paul",
+        "stance": "SWA",
+        "inputs": "1+2",
+        "createdAt": 1782567979582,
+      },
+      {
+        "id": 28,
+        "characterName": "reina",
+        "stance": "SEN",
+        "inputs": "1+2",
+        "createdAt": 1782568616068,
+      },
+      {
+        "id": 29,
+        "characterName": "reina",
+        "stance": "WRA",
+        "inputs": "1/4",
+        "createdAt": 1782568640002,
+      },
+      {
+        "id": 30,
+        "characterName": "reina",
+        "stance": "UNS",
+        "inputs": "4",
+        "createdAt": 1782568675246,
+      },
+      {
+        "id": 31,
+        "characterName": "reina",
+        "stance": "CD",
+        "inputs": "1/3",
+        "createdAt": 1782568794972,
       },
     ],
   };
