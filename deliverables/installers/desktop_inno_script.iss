@@ -3,7 +3,7 @@
 ; Non-commercial use only
 
 #define MyAppName "Tekken Cheat Sheet"
-#define MyAppVersion "1.2"
+#define MyAppVersion "1.2.1"
 #define MyAppExeName "tekken_cheat_sheet.exe"
 
 [Setup]

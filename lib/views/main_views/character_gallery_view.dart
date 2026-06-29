@@ -73,6 +73,26 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
     return 6;
   }
 
+  Future<void> showIncomingCharacterInfoDialog() async {
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('INCOMING CHARACTER'),
+          content: Text(
+            'Character is not released yet. Please check back later for updates.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -116,6 +136,12 @@ class _CharacterGalleryViewState extends State<CharacterGalleryView> {
                     onExit: (_) => setState(() => _hoveredIndex = -1),
                     child: GestureDetector(
                       onTap: () {
+                        if (Helper().incomingCharacters.contains(
+                          displayName.toLowerCase(),
+                        )) {
+                          showIncomingCharacterInfoDialog();
+                          return;
+                        }
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => MyCharacterView(

@@ -8,21 +8,9 @@ class Helper {
 
   final dynamic defaultDB = {
     "my_characters": [
-      {
-        "id": 8,
-        "name": "anna",
-        "createdAt": 1780705402287
-      },
-      {
-        "id": 9,
-        "name": "reina",
-        "createdAt": 1781545722239
-      },
-      {
-        "id": 11,
-        "name": "paul",
-        "createdAt": 1782117354751
-      }
+      {"id": 8, "name": "anna", "createdAt": 1780705402287},
+      {"id": 9, "name": "reina", "createdAt": 1781545722239},
+      {"id": 11, "name": "paul", "createdAt": 1782117354751},
     ],
     "key_moves": [
       {
@@ -33,7 +21,7 @@ class Helper {
         "onHit": 32,
         "onBlock": 4,
         "remark": "safe launcher",
-        "createdAt": 1780705402322
+        "createdAt": 1780705402322,
       },
       {
         "id": 25,
@@ -43,7 +31,7 @@ class Helper {
         "onHit": 2,
         "onBlock": -5,
         "remark": "transition to HMC with F",
-        "createdAt": 1780705436552
+        "createdAt": 1780705436552,
       },
       {
         "id": 26,
@@ -53,7 +41,7 @@ class Helper {
         "onHit": 13,
         "onBlock": -9,
         "remark": "transition to SEN with f",
-        "createdAt": 1781545722245
+        "createdAt": 1781545722245,
       },
       {
         "id": 27,
@@ -63,7 +51,7 @@ class Helper {
         "onHit": 9,
         "onBlock": -9,
         "remark": "transition to SEN with f",
-        "createdAt": 1781545767819
+        "createdAt": 1781545767819,
       },
       {
         "id": 28,
@@ -73,7 +61,7 @@ class Helper {
         "onHit": 11,
         "onBlock": -17,
         "remark": "transition to SEN",
-        "createdAt": 1781545813680
+        "createdAt": 1781545813680,
       },
       {
         "id": 29,
@@ -83,7 +71,7 @@ class Helper {
         "onHit": 5,
         "onBlock": 2,
         "remark": "Electric war god kick guarranted on CH",
-        "createdAt": 1781545962474
+        "createdAt": 1781545962474,
       },
       {
         "id": 30,
@@ -93,7 +81,7 @@ class Helper {
         "onHit": 0,
         "onBlock": -14,
         "remark": "transition to UNS with u or d",
-        "createdAt": 1781546032657
+        "createdAt": 1781546032657,
       },
       {
         "id": 31,
@@ -103,7 +91,7 @@ class Helper {
         "onHit": 12,
         "onBlock": -1,
         "remark": "all string guarranted if first hit",
-        "createdAt": 1781546073880
+        "createdAt": 1781546073880,
       },
       {
         "id": 32,
@@ -113,7 +101,7 @@ class Helper {
         "onHit": 6,
         "onBlock": -6,
         "remark": "transition to WRA with d",
-        "createdAt": 1781546155602
+        "createdAt": 1781546155602,
       },
       {
         "id": 33,
@@ -123,7 +111,7 @@ class Helper {
         "onHit": 24,
         "onBlock": -10,
         "remark": null,
-        "createdAt": 1781546174427
+        "createdAt": 1781546174427,
       },
       {
         "id": 34,
@@ -133,7 +121,7 @@ class Helper {
         "onHit": 4,
         "onBlock": -3,
         "remark": "transition to SEN with f",
-        "createdAt": 1781546278054
+        "createdAt": 1781546278054,
       },
       {
         "id": 35,
@@ -143,7 +131,7 @@ class Helper {
         "onHit": 12,
         "onBlock": -14,
         "remark": "heat engager",
-        "createdAt": 1781546302548
+        "createdAt": 1781546302548,
       },
       {
         "id": 36,
@@ -153,7 +141,7 @@ class Helper {
         "onHit": 6,
         "onBlock": -8,
         "remark": "transition to WRA  with d",
-        "createdAt": 1781546434898
+        "createdAt": 1781546434898,
       },
       {
         "id": 37,
@@ -163,7 +151,7 @@ class Helper {
         "onHit": 3,
         "onBlock": 0,
         "remark": "Electric war god kick guarranted with CH",
-        "createdAt": 1781546552457
+        "createdAt": 1781546552457,
       },
       {
         "id": 38,
@@ -173,7 +161,7 @@ class Helper {
         "onHit": 3,
         "onBlock": -16,
         "remark": null,
-        "createdAt": 1781546718505
+        "createdAt": 1781546718505,
       },
       {
         "id": 39,
@@ -183,8 +171,8 @@ class Helper {
         "onHit": 39,
         "onBlock": -12,
         "remark": null,
-        "createdAt": 1781546823741
-      }
+        "createdAt": 1781546823741,
+      },
     ],
     "punishes": [
       {
@@ -192,201 +180,209 @@ class Helper {
         "characterName": "anna",
         "inputs": "1/2/1",
         "frames": 11,
-        "createdAt": 1780705451587
+        "createdAt": 1780705451587,
       },
       {
         "id": 26,
         "characterName": "reina",
         "inputs": "2/2/1",
         "frames": 12,
-        "createdAt": 1781546564177
+        "createdAt": 1781546564177,
       },
       {
         "id": 27,
         "characterName": "reina",
         "inputs": "df/2",
         "frames": 15,
-        "createdAt": 1781546569267
+        "createdAt": 1781546569267,
       },
       {
         "id": 28,
         "characterName": "anna",
         "inputs": "df/2",
         "frames": 15,
-        "createdAt": 1782212151486
+        "createdAt": 1782212151486,
       },
       {
         "id": 29,
         "characterName": "anna",
         "inputs": "2/3/next/CJM",
         "frames": 10,
-        "createdAt": 1782212227607
+        "createdAt": 1782212227607,
       },
       {
         "id": 30,
         "characterName": "anna",
         "inputs": "df/1/2/next/HMC",
         "frames": 13,
-        "createdAt": 1782212244559
+        "createdAt": 1782212244559,
       },
       {
         "id": 31,
         "characterName": "anna",
         "inputs": "1/2/1",
         "frames": 12,
-        "createdAt": 1782212297767
+        "createdAt": 1782212297767,
       },
       {
         "id": 32,
         "characterName": "anna",
         "inputs": "3+4/next/HEATDASH",
         "frames": 14,
-        "createdAt": 1782212314216
+        "createdAt": 1782212314216,
       },
       {
         "id": 33,
         "characterName": "reina",
         "inputs": "1/1/2/next/SEN",
         "frames": 10,
-        "createdAt": 1782212458401
+        "createdAt": 1782212458401,
       },
       {
         "id": 34,
         "characterName": "reina",
         "inputs": "1/1/2/next/SEN",
         "frames": 11,
-        "createdAt": 1782212471355
+        "createdAt": 1782212471355,
       },
       {
         "id": 35,
         "characterName": "reina",
         "inputs": "df/1/2/next/HEATDASH",
         "frames": 13,
-        "createdAt": 1782212488437
+        "createdAt": 1782212488437,
       },
       {
         "id": 36,
         "characterName": "reina",
         "inputs": "f/f/2/next/SEN",
         "frames": 14,
-        "createdAt": 1782212524439
+        "createdAt": 1782212524439,
       },
       {
         "id": 37,
         "characterName": "paul",
         "inputs": "2/3",
         "frames": 10,
-        "createdAt": 1782213051666
+        "createdAt": 1782213051666,
       },
       {
         "id": 38,
         "characterName": "paul",
         "inputs": "2/3",
         "frames": 11,
-        "createdAt": 1782213064220
+        "createdAt": 1782213064220,
       },
       {
         "id": 39,
         "characterName": "paul",
         "inputs": "b/1/2",
         "frames": 12,
-        "createdAt": 1782213074293
+        "createdAt": 1782213074293,
       },
       {
         "id": 40,
         "characterName": "paul",
         "inputs": "f/2/next/HEATDASH",
         "frames": 13,
-        "createdAt": 1782213088733
+        "createdAt": 1782213088733,
       },
       {
         "id": 41,
         "characterName": "paul",
         "inputs": "b/3",
         "frames": 14,
-        "createdAt": 1782213098721
+        "createdAt": 1782213098721,
       },
       {
         "id": 42,
         "characterName": "paul",
         "inputs": "df/2",
         "frames": 15,
-        "createdAt": 1782213213428
-      }
+        "createdAt": 1782213213428,
+      },
     ],
     "combos": [
       {
         "id": 17,
         "characterName": "anna",
-        "inputs": "4/next/uf/2/HMC/2/1/next/DASH/b/4/HMC/2/2/TORNADO/next/PLT/3/CJM/uf/3/next/db/2/PLT/2",
-        "createdAt": 1781808510628
+        "inputs":
+            "4/next/uf/2/HMC/2/1/next/DASH/b/4/HMC/2/2/TORNADO/next/PLT/3/CJM/uf/3/next/db/2/PLT/2",
+        "createdAt": 1781808510628,
       },
       {
         "id": 18,
         "characterName": "reina",
-        "inputs": "uf/1/WRA/next/df/n/3/4/next/DASH/df/1/next/f/2/3/next/SEN/1+2/TORNADO/next/WRA/d/df/f/n/f/f/3/next/3+4/4",
-        "createdAt": 1782114893681
+        "inputs":
+            "uf/1/WRA/next/df/n/3/4/next/DASH/df/1/next/f/2/3/next/SEN/1+2/TORNADO/next/WRA/d/df/f/n/f/f/3/next/3+4/4",
+        "createdAt": 1782114893681,
       },
       {
         "id": 19,
         "characterName": "reina",
-        "inputs": "f/n/d/perfectframe/df/2/next/df/3/n/3/4/next/DASH/df/1/next/f/2/3/next/SEN/1+2/TORNADO/next/WRA/d/df/f/n/f/f/3/next/3+4/4",
-        "createdAt": 1782115007581
+        "inputs":
+            "f/n/d/perfectframe/df/2/next/df/3/n/3/4/next/DASH/df/1/next/f/2/3/next/SEN/1+2/TORNADO/next/WRA/d/df/f/n/f/f/3/next/3+4/4",
+        "createdAt": 1782115007581,
       },
       {
         "id": 20,
         "characterName": "reina",
-        "inputs": "f/f/f_h/4/d_h/next/WRA/df/n/3/4/next/DASH/df/1/next/f/2/3/f_h/next/df/1/f_h/next/SEN/1/d/df/f/2",
-        "createdAt": 1782116156516
+        "inputs":
+            "f/f/f_h/4/d_h/next/WRA/df/n/3/4/next/DASH/df/1/next/f/2/3/f_h/next/df/1/f_h/next/SEN/1/d/df/f/2",
+        "createdAt": 1782116156516,
       },
       {
         "id": 21,
         "characterName": "anna",
         "inputs": "uf/2/next/HMC/2/1/next/DASH/b/4/db_h/next/WS/1/2/next/PLT/2",
-        "createdAt": 1782116925933
+        "createdAt": 1782116925933,
       },
       {
         "id": 22,
         "characterName": "paul",
-        "inputs": "4/next/df/4/next/2/next/DASH/3/2/b_h/next/SWA/df_h/DPD/2/1/TORNADO/next/d/df/f/df/f/DPD/df_h/1/next/f/f_h/2/perfectframe/1",
-        "createdAt": 1782117354758
+        "inputs":
+            "4/next/df/4/next/2/next/DASH/3/2/b_h/next/SWA/df_h/DPD/2/1/TORNADO/next/d/df/f/df/f/DPD/df_h/1/next/f/f_h/2/perfectframe/1",
+        "createdAt": 1782117354758,
       },
       {
         "id": 23,
         "characterName": "paul",
-        "inputs": "3/next/df/4/next/2/next/DASH/3/2/b_h/next/SWA/df_h/DPD/2/1/TORNADO/next/d/df/f/df/f/DPD/df_h/1/next/f/f_h/2/perfectframe/1",
-        "createdAt": 1782117476229
+        "inputs":
+            "3/next/df/4/next/2/next/DASH/3/2/b_h/next/SWA/df_h/DPD/2/1/TORNADO/next/d/df/f/df/f/DPD/df_h/1/next/f/f_h/2/perfectframe/1",
+        "createdAt": 1782117476229,
       },
       {
         "id": 24,
         "characterName": "paul",
         "inputs": "d/df/f/1/next/df/4/next/3/2/b_h/next/SWA/df_h/DPD/2/1",
-        "createdAt": 1782117896051
+        "createdAt": 1782117896051,
       },
       {
         "id": 26,
         "characterName": "paul",
         "inputs": "WALLSPLAT/next/d/db/b/3/2/1/TORNADO/next/d/1/3/2",
-        "createdAt": 1782211792533
+        "createdAt": 1782211792533,
       },
       {
         "id": 27,
         "characterName": "reina",
-        "inputs": "WALLSPLAT/next/3/2/TORNADO/next/SSL/f/n/d/perfectframe/df/2/next/1+2",
-        "createdAt": 1782211879108
+        "inputs":
+            "WALLSPLAT/next/3/2/TORNADO/next/SSL/f/n/d/perfectframe/df/2/next/1+2",
+        "createdAt": 1782211879108,
       },
       {
         "id": 28,
         "characterName": "anna",
         "inputs": "WALLSPLAT/next/f/1+2/TORNADO/next/f/3/next/HMC/2/1/2",
-        "createdAt": 1782211918817
+        "createdAt": 1782211918817,
       },
       {
         "id": 29,
         "characterName": "anna",
-        "inputs": "d/df/perfectframe/f/1/next/uf/2/HMC/2/1/next/DASH/b/4/HMC/2/2/TORNADO/next/PLT/3/CJM/uf/3/next/db/2/PLT/2",
-        "createdAt": 1782212103791
-      }
+        "inputs":
+            "d/df/perfectframe/f/1/next/uf/2/HMC/2/1/next/DASH/b/4/HMC/2/2/TORNADO/next/PLT/3/CJM/uf/3/next/db/2/PLT/2",
+        "createdAt": 1782212103791,
+      },
     ],
     "launchers": [
       {
@@ -394,190 +390,190 @@ class Helper {
         "characterName": "anna",
         "inputs": "uf/4",
         "comboId": 17,
-        "createdAt": 1781808521254
+        "createdAt": 1781808521254,
       },
       {
         "id": 35,
         "characterName": "reina",
         "inputs": "df/2",
         "comboId": 18,
-        "createdAt": 1782114898327
+        "createdAt": 1782114898327,
       },
       {
         "id": 36,
         "characterName": "reina",
         "inputs": "f/n/d/perfectframe/df/2",
         "comboId": 19,
-        "createdAt": 1782115026378
+        "createdAt": 1782115026378,
       },
       {
         "id": 37,
         "characterName": "reina",
         "inputs": "uf/4",
         "comboId": 20,
-        "createdAt": 1782116165468
+        "createdAt": 1782116165468,
       },
       {
         "id": 38,
         "characterName": "reina",
         "inputs": "df_h/TORNADO",
         "comboId": 20,
-        "createdAt": 1782116175331
+        "createdAt": 1782116175331,
       },
       {
         "id": 39,
         "characterName": "anna",
         "inputs": "db/3",
         "comboId": 21,
-        "createdAt": 1782116930752
+        "createdAt": 1782116930752,
       },
       {
         "id": 40,
         "characterName": "anna",
         "inputs": "FC/df/2",
         "comboId": 21,
-        "createdAt": 1782116946346
+        "createdAt": 1782116946346,
       },
       {
         "id": 41,
         "characterName": "anna",
         "inputs": "df_h/TORNADO",
         "comboId": 21,
-        "createdAt": 1782116953187
+        "createdAt": 1782116953187,
       },
       {
         "id": 42,
         "characterName": "anna",
         "inputs": "d/df/f/2/1",
         "comboId": 21,
-        "createdAt": 1782116977151
+        "createdAt": 1782116977151,
       },
       {
         "id": 43,
         "characterName": "anna",
         "inputs": "CJM/uf/4",
         "comboId": 17,
-        "createdAt": 1782117132456
+        "createdAt": 1782117132456,
       },
       {
         "id": 44,
         "characterName": "paul",
         "inputs": "df/2",
         "comboId": 22,
-        "createdAt": 1782117359815
+        "createdAt": 1782117359815,
       },
       {
         "id": 46,
         "characterName": "paul",
         "inputs": "uf/4",
         "comboId": 22,
-        "createdAt": 1782117386115
+        "createdAt": 1782117386115,
       },
       {
         "id": 47,
         "characterName": "paul",
         "inputs": "SWA/1+2",
         "comboId": 22,
-        "createdAt": 1782117429180
+        "createdAt": 1782117429180,
       },
       {
         "id": 48,
         "characterName": "paul",
         "inputs": "uf/3",
         "comboId": 23,
-        "createdAt": 1782117481119
+        "createdAt": 1782117481119,
       },
       {
         "id": 49,
         "characterName": "paul",
         "inputs": "WS/2",
         "comboId": 23,
-        "createdAt": 1782117487286
+        "createdAt": 1782117487286,
       },
       {
         "id": 50,
         "characterName": "paul",
         "inputs": "DPD/df_h/1",
         "comboId": 23,
-        "createdAt": 1782117532468
+        "createdAt": 1782117532468,
       },
       {
         "id": 51,
         "characterName": "paul",
         "inputs": "b/3",
         "comboId": 23,
-        "createdAt": 1782117823454
+        "createdAt": 1782117823454,
       },
       {
         "id": 52,
         "characterName": "paul",
         "inputs": "d/df/f/1+2",
         "comboId": 24,
-        "createdAt": 1782117901720
+        "createdAt": 1782117901720,
       },
       {
         "id": 53,
         "characterName": "paul",
         "inputs": "df_h/TORNADO",
         "comboId": 24,
-        "createdAt": 1782117907652
+        "createdAt": 1782117907652,
       },
       {
         "id": 54,
         "characterName": "paul",
         "inputs": "d/df/f/1",
         "comboId": 22,
-        "createdAt": 1782117982452
+        "createdAt": 1782117982452,
       },
       {
         "id": 56,
         "characterName": "paul",
         "inputs": "f/f_h/2/perfectframe/1",
         "comboId": 26,
-        "createdAt": 1782211804464
+        "createdAt": 1782211804464,
       },
       {
         "id": 57,
         "characterName": "paul",
         "inputs": "b/1+2",
         "comboId": 26,
-        "createdAt": 1782211833376
+        "createdAt": 1782211833376,
       },
       {
         "id": 58,
         "characterName": "reina",
         "inputs": "b/1+2",
         "comboId": 27,
-        "createdAt": 1782211883509
+        "createdAt": 1782211883509,
       },
       {
         "id": 59,
         "characterName": "anna",
         "inputs": "f/2/3",
         "comboId": 28,
-        "createdAt": 1782211927909
+        "createdAt": 1782211927909,
       },
       {
         "id": 60,
         "characterName": "anna",
         "inputs": "b/1+2",
         "comboId": 28,
-        "createdAt": 1782211934497
+        "createdAt": 1782211934497,
       },
       {
         "id": 61,
         "characterName": "anna",
         "inputs": "df/2",
         "comboId": 29,
-        "createdAt": 1782212109046
+        "createdAt": 1782212109046,
       },
       {
         "id": 62,
         "characterName": "anna",
         "inputs": "CH/d/df/perfectframe/f/1",
         "comboId": 29,
-        "createdAt": 1782212134510
-      }
+        "createdAt": 1782212134510,
+      },
     ],
     "stance_moves": [
       {
@@ -776,7 +772,7 @@ class Helper {
         "inputs": "1/3",
         "createdAt": 1782568794972,
       },
-    ]
+    ],
   };
 
   /// Known character keys used when listing/selecting characters.
@@ -786,6 +782,7 @@ class Helper {
     "armor-king",
     "asuka",
     "azucena",
+    "bob",
     "bryan",
     "claudio",
     "clive",
@@ -816,11 +813,13 @@ class Helper {
     "paul",
     "raven",
     "reina",
+    "roger",
     "shaheen",
     "steve",
     "victor",
     "xiaoyu",
     "yoshimitsu",
+    "yujiro",
     "zafina",
   };
 
@@ -934,6 +933,8 @@ class Helper {
     {'characterName': 'miary-zo', 'name': 'MMO'},
     {'characterName': 'miary-zo', 'name': 'KMH'},
   ];
+
+  final List<String> incomingCharacters = ["bob", "roger", "yujiro"];
 
   /// Build the path to the portrait asset for a character.
   /// @param characterName internal key
