@@ -1233,4 +1233,16 @@ class Helper {
       ),
     );
   }
+
+  /// Convert slash-separated inputs string to asset paths for chips.
+  /// @param inputs slash-separated string
+  /// @return List<String> asset paths
+  List<String> pathFromInputs(String inputs) {
+    final parts = inputs.split('/');
+    var res = <String>[];
+    for (var p in parts) {
+      res.add('assets/images/inputs/${p.trim().toLowerCase()}.png');
+    }
+    return res;
+  }
 }
