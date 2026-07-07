@@ -18,6 +18,8 @@ class MetaChip extends StatefulWidget {
 class _MetaChipState extends State<MetaChip> {
   @override
   Widget build(BuildContext context) {
+    String value = widget.value;
+    widget.label != "Frames" && widget.label != "Stance" ? ((int.parse(value) > 0 ? value = "+$value": value = value)) : value = value;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
       decoration: BoxDecoration(
@@ -33,7 +35,7 @@ class _MetaChipState extends State<MetaChip> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.value,
+                value,
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
@@ -41,7 +43,7 @@ class _MetaChipState extends State<MetaChip> {
               ),
               Text(
                 widget.label,
-                style: const TextStyle(color: Colors.white54, fontSize: 11),
+                style: const TextStyle(color: Colors.white54, fontSize: 6),
               ),
             ],
           ),

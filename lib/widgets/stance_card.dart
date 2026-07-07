@@ -29,7 +29,7 @@ class _StanceCardState extends State<StanceCard> {
         side: BorderSide(color: Colors.white.withOpacity(0.03)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -60,22 +60,22 @@ class _StanceCardState extends State<StanceCard> {
                   MetaChip(
                     label: 'Frames',
                     value: frames,
-                    icon: FrameIcon(size: Size(30, 20)),
+                    icon: FrameIcon(size: Size(20, 20)),
                   ),
                 if (onHit != null) ...[
                   const SizedBox(width: 8),
                   MetaChip(
-                    label: 'On hit',
+                    label: 'Hit',
                     value: onHit,
-                    icon: OnHitIcon(size: Size(30, 20)),
+                    icon: OnHitIcon(size: Size(20, 20)),
                   ),
                 ],
                 if (onBlock != null) ...[
                   const SizedBox(width: 8),
                   MetaChip(
-                    label: 'On block',
+                    label: 'Block',
                     value: onBlock,
-                    icon: OnBlockIcon(size: Size(30, 20)),
+                    icon: OnBlockIcon(size: Size(20, 20)),
                   ),
                 ],
                 const Spacer(),

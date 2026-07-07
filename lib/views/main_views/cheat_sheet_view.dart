@@ -6,12 +6,9 @@ import 'package:tekken_cheat_sheet/views/data_input_views/punishes_view.dart';
 import 'package:tekken_cheat_sheet/views/data_input_views/stances_view.dart';
 import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
 import 'package:tekken_cheat_sheet/widgets/key_move_card.dart';
-import 'package:tekken_cheat_sheet/widgets/my_icons.dart';
 import 'package:tekken_cheat_sheet/widgets/punish_card.dart';
-import '../../constants/helper.dart';
 import '../../services/db_provider.dart';
 import '../../widgets/combo_card.dart';
-import '../../widgets/inputs_chip.dart';
 import '../../widgets/stance_card.dart';
 
 enum _Panel { keyMoves, punishes, combo, stances }
@@ -261,7 +258,7 @@ class _CheatSheetViewState extends State<CheatSheetView> {
         onRefresh: _loadAll,
         child: GridView.builder(
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
+            crossAxisCount: 4,
             crossAxisSpacing: 6,
             mainAxisSpacing: 6,
             childAspectRatio: 1.6,

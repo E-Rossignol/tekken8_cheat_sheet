@@ -61,6 +61,8 @@ class _KeyMovesViewState extends State<KeyMovesView> {
         .map((s) => s['name'] as String)
         .toList();
     inputs.addAll(stances.map((s) => InputData(s, "-")));
+    stances.add('SS');
+    stances.add('WS');
     initSavedMoves();
   }
 
