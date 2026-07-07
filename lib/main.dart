@@ -6,18 +6,17 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
   WindowOptions windowOptions = WindowOptions(
-    size: const Size(800, 600),
+    size: Size(800, 600),
     center: true,
-    fullScreen: true,
     backgroundColor: Colors.transparent,
     skipTaskbar: false,
     titleBarStyle: TitleBarStyle.normal,
     windowButtonVisibility: true,
+    fullScreen: false, // Assurez-vous que le plein écran est désactivé par défaut
   );
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
-    await windowManager.maximize();
   });
   runApp(const MyApp());
 }

@@ -19,7 +19,9 @@ class _MetaChipState extends State<MetaChip> {
   @override
   Widget build(BuildContext context) {
     String value = widget.value;
-    widget.label != "Frames" && widget.label != "Stance" ? ((int.parse(value) > 0 ? value = "+$value": value = value)) : value = value;
+    widget.label != "Frames" && widget.label != "Stance"
+        ? ((int.parse(value) > 0 ? value = "+$value" : value = value))
+        : value = value;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
       decoration: BoxDecoration(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/views/dev_views/dev_view.dart';
+import 'package:tekken_cheat_sheet/widgets/full_screen_button.dart';
 import 'package:window_manager/window_manager.dart';
 import '../constants/helper.dart';
 import '../models/page_type_model.dart';
@@ -92,6 +93,7 @@ PreferredSizeWidget customAppBar(
     backgroundColor: Color.fromRGBO(5, 11, 32, 1),
     elevation: 0,
     actions: [
+      FullScreenToggleButton(),
       IconButton(
         icon: Icon(Icons.close, color: Colors.redAccent, size: 30),
         tooltip: 'Close app',
