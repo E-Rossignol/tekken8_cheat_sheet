@@ -71,6 +71,7 @@ class _StancesViewState extends State<StancesView> {
     inputs.addAll(stances.map((s) => InputData(s, "-")));
     stances.add('SS');
     stances.add('WS');
+    stances.add('FC');
     _selectedStance = stances.isNotEmpty ? stances[0] : '';
     _allowedStances.addAll(stances);
     initStanceMoves();

@@ -51,6 +51,7 @@ class _CombosViewState extends State<CombosView> {
     inputs.addAll(stances.map((s) => InputData(s, "-")));
     stances.add('SS');
     stances.add('WS');
+    stances.add('FC');
     initSavedMoves();
   }
 

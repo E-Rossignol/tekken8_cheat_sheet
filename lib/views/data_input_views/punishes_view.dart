@@ -54,6 +54,7 @@ class _PunishesViewState extends State<PunishesView> {
     inputs.addAll(stances.map((s) => InputData(s, "-")));
     stances.add('SS');
     stances.add('WS');
+    stances.add('FC');
     initPunishes();
   }
 
