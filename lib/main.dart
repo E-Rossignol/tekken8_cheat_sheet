@@ -12,7 +12,8 @@ void main() async {
     skipTaskbar: false,
     titleBarStyle: TitleBarStyle.normal,
     windowButtonVisibility: true,
-    fullScreen: false, // Assurez-vous que le plein écran est désactivé par défaut
+    fullScreen:
+        false, // Assurez-vous que le plein écran est désactivé par défaut
   );
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
