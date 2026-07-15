@@ -4,7 +4,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'dart:convert';
-import '../constants/helper.dart';
+import '../constants/default_data.dart';
 
 /// DBProvider is a singleton access layer to the SQLite database.
 /// Use DBProvider.instance for all DB operations.
@@ -679,8 +679,7 @@ class DBProvider {
   /// Import the embedded default DB stored in Helper().defaultDB.
   /// @param clearFirst whether to clear tables before inserting
   Future<void> importDefaultDB({bool clearFirst = true}) async {
-    final helper = Helper();
-    final dynamic raw = helper.defaultDB;
+    final dynamic raw = defaultData;
     if (raw == null || raw is! Map<String, dynamic>) {
       if (raw is Map) {
         await importAllTablesFromMap(
