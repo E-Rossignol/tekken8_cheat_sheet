@@ -6,9 +6,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 /// await db.add('notes', {'text': 'hello'});
 class FirebaseHelper {
   FirebaseHelper._();
-  static final FirebaseHelper instance = FirebaseHelper._();
+  static FirebaseHelper? _instance;
 
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  static FirebaseHelper get instance {
+    _instance ??= FirebaseHelper._();
+    return _instance!;
+  }
+
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
 
   CollectionReference<Map<String, dynamic>> _col(String path) =>
       _db.collection(path).withConverter<Map<String, dynamic>>(
@@ -28,7 +33,7 @@ class FirebaseHelper {
   Future<void> set(
       String collectionPath, String docId, Map<String, dynamic> data,
       {bool merge = false}) {
-    final docRef = _col(collectionPath).doc(docId);
+    final docRef = _col(collectionPath).doc();
     return docRef.set(data, SetOptions(merge: merge));
   }
 
@@ -50,16 +55,18 @@ class FirebaseHelper {
   }
 
   // Get all documents (optionally with limit and ordering)
-  Future<QuerySnapshot<Map<String, dynamic>>> getCollection(
+  // Returns a list of maps (each includes the document id under key 'id').
+  Future<List<Map<String, dynamic>>> getCollection(
     String collectionPath, {
     int? limit,
     String? orderBy,
     bool descending = false,
-  }) {
+  }) async {
     Query<Map<String, dynamic>> q = _col(collectionPath);
     if (orderBy != null) q = q.orderBy(orderBy, descending: descending);
     if (limit != null) q = q.limit(limit);
-    return q.get();
+    final snapshot = await q.get();
+    return snapshot.docs.map((d) => docDataWithId(d)).toList();
   }
 
   // Stream of documents for a collection (useful for UI)
@@ -95,5 +102,22 @@ class FirebaseHelper {
       DocumentSnapshot<Map<String, dynamic>> snap) {
     final data = snap.data() ?? <String, dynamic>{};
     return {'id': snap.id, ...data};
+  }
+
+  // Delete all documents in a collection using batched writes.
+  // Warning: this permanently removes all documents in the collection.
+  Future<void> deleteAllDocuments(String collectionPath,
+      {int batchSize = 500}) async {
+    final coll = _col(collectionPath);
+    while (true) {
+      final snapshot = await coll.limit(batchSize).get();
+      final docs = snapshot.docs;
+      if (docs.isEmpty) break;
+      final batch = _db.batch();
+      for (final doc in docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+    }
   }
 }

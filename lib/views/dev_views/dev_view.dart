@@ -44,17 +44,75 @@ class _DevViewState extends State<DevView> {
             ),
             TextButton(
               onPressed: () async {
-                String value = await DBProvider.instance
-                    .exportAllTablesAsJsonString();
-                Navigator.of(context).pop();
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (_) => DefaultDBView(value: value),
+                showDialog(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    title: const Text('Exporting default database'),
+                    content: const Text(
+                      'This will replace the default datas with the current app\'s state. Do you want to proceed?',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          // Close confirmation dialog
+                          Navigator.of(context).pop();
+
+                          // Show a modal progress indicator while importing/writing DB
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (_) => AlertDialog(
+                              content: Row(
+                                children: const [
+                                  SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                  SizedBox(width: 16),
+                                  Expanded(child: Text('Exporting default database, it might take a while ...')),
+                                ],
+                              ),
+                            ),
+                          );
+                          try {
+                            await DBProvider.instance.writeDefaultDB();
+                          } catch (e) {
+                            // Close progress dialog
+                            Navigator.of(context).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error exporting default DB: $e'),
+                                backgroundColor: Colors.red,
+                                duration: const Duration(seconds: 3),
+                              ),
+                            );
+                            return;
+                          }
+                          // Close progress dialog
+                          Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('DEFAULT DATABASE EXPORTED'),
+                              duration: Duration(seconds: 1),
+                            ),
+                          );
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(builder: (_) => const HomeView()),
+                          );
+                        },
+                        child: const Text('OK'),
+                      ),
+                    ],
                   ),
                 );
               },
               child: const Text(
-                'Generate default database',
+                'Update default database',
                 style: TextStyle(fontSize: 20, color: Colors.white),
               ),
             ),
@@ -74,9 +132,43 @@ class _DevViewState extends State<DevView> {
                       ),
                       TextButton(
                         onPressed: () async {
+                          // Close confirmation dialog
                           Navigator.of(context).pop();
-                          await DBProvider.instance.importDefaultDB();
-                          await DBProvider.instance.writeDefaultDB();
+
+                          // Show a modal progress indicator while importing/writing DB
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (_) => AlertDialog(
+                              content: Row(
+                                children: const [
+                                  SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                  SizedBox(width: 16),
+                                  Expanded(child: Text('Importing default database...')),
+                                ],
+                              ),
+                            ),
+                          );
+                          try {
+                            await DBProvider.instance.importDefaultDB();
+                          } catch (e) {
+                            // Close progress dialog
+                            Navigator.of(context).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error importing default DB: $e'),
+                                backgroundColor: Colors.red,
+                                duration: const Duration(seconds: 3),
+                              ),
+                            );
+                            return;
+                          }
+                          // Close progress dialog
+                          Navigator.of(context).pop();
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('DEFAULT DATABASE IMPORTED'),

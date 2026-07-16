@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'dart:convert';
 import '../constants/default_data.dart';
+import 'firebase_helper.dart';
 
 /// DBProvider is a singleton access layer to the SQLite database.
 /// Use DBProvider.instance for all DB operations.
@@ -679,7 +680,20 @@ class DBProvider {
   /// Import the embedded default DB stored in Helper().defaultDB.
   /// @param clearFirst whether to clear tables before inserting
   Future<void> importDefaultDB({bool clearFirst = true}) async {
-    final dynamic raw = defaultData;
+    dynamic myCharacters = await FirebaseHelper.instance.getCollection('my_characters');
+    dynamic keyMoves = await FirebaseHelper.instance.getCollection('key_moves');
+    dynamic punishes = await FirebaseHelper.instance.getCollection('punishes');
+    dynamic combos = await FirebaseHelper.instance.getCollection('combos');
+    dynamic launchers = await FirebaseHelper.instance.getCollection('launchers');
+    dynamic stanceMoves = await FirebaseHelper.instance.getCollection('stance_moves');
+    final dynamic raw = {
+      'my_characters': myCharacters,
+      'key_moves': keyMoves,
+      'punishes': punishes,
+      'combos': combos,
+      'launchers': launchers,
+      'stance_moves': stanceMoves,
+    };
     if (raw == null || raw is! Map<String, dynamic>) {
       if (raw is Map) {
         await importAllTablesFromMap(
@@ -695,11 +709,35 @@ class DBProvider {
   Future<void> writeDefaultDB () async{
     final dynamic raw = defaultData;
     final dynamic myCharacters = raw['my_characters'];
-    final dynamic key_moves = raw['key_moves'];
+    final dynamic keyMoves = raw['key_moves'];
     final dynamic punishes = raw['punishes'];
     final dynamic combos = raw['combos'];
     final dynamic launchers = raw['launchers'];
-    final dynamic stance_moves = raw['stance_moves'];
+    final dynamic stanceMoves = raw['stance_moves'];
+    await FirebaseHelper.instance.deleteAllDocuments('my_characters');
+    await FirebaseHelper.instance.deleteAllDocuments('key_moves');
+    await FirebaseHelper.instance.deleteAllDocuments('punishes');
+    await FirebaseHelper.instance.deleteAllDocuments('combos');
+    await FirebaseHelper.instance.deleteAllDocuments('launchers');
+    await FirebaseHelper.instance.deleteAllDocuments('stance_moves');
+    for (dynamic character in myCharacters){
+      await FirebaseHelper.instance.set('my_characters', 'default', character);
+    }
+    for (dynamic keyMove in keyMoves){
+      await FirebaseHelper.instance.set('key_moves', 'default', keyMove);
+    }
+    for (dynamic punish in punishes){
+      await FirebaseHelper.instance.set('punishes', 'default', punish);
+    }
+    for (dynamic combo in combos){
+      await FirebaseHelper.instance.set('combos', 'default', combo);
+    }
+    for (dynamic launcher in launchers){
+      await FirebaseHelper.instance.set('launchers', 'default', launcher);
+    }
+    for (dynamic stanceMove in stanceMoves){
+      await FirebaseHelper.instance.set('stance_moves', 'default', stanceMove);
+    }
   }
 
   /// Export all tables into a Map.

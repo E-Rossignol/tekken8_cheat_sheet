@@ -1,9 +1,12 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/views/main_views/home_view.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await windowManager.ensureInitialized();
   WindowOptions windowOptions = WindowOptions(
     size: Size(800, 600),
