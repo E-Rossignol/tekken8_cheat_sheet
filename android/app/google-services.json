@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "220025240484",
+    "project_id": "tekkencheatsheet-e7c89",
+    "storage_bucket": "tekkencheatsheet-e7c89.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:220025240484:android:e18b4968062c2cb4b11f31",
+        "android_client_info": {
+          "package_name": "com.example.tekken_cheat_sheet"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzeranlg68VaKevMynOcJ22dchH97QASk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
