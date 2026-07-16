@@ -4,7 +4,6 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'dart:convert';
-import '../constants/default_data.dart';
 import 'firebase_helper.dart';
 
 /// DBProvider is a singleton access layer to the SQLite database.
@@ -135,6 +134,88 @@ class DBProvider {
     if (await file.exists()) {
       await file.delete();
     }
+  }
+
+  Future<Map<String, dynamic>> getAllTables() async {
+    final db = await database;
+    var myCharactersTable = await db.query('my_characters');
+    var keyMovesTable = await db.query('key_moves');
+    var punishes = await db.query('punishes');
+    var combos = await db.query('combos');
+    var launchers = await db.query('launchers');
+    var stanceMoves = await db.query('stance_moves');
+    return {
+      'my_characters': myCharactersTable
+          .map(
+            (row) => {
+              'id': row['id'],
+              'name': row['name'],
+              'createdAt': row['createdAt'],
+            },
+          )
+          .toList(),
+      'key_moves': keyMovesTable
+          .map(
+            (row) => {
+              'id': row['id'],
+              'characterName': row['characterName'],
+              'inputs': row['inputs'],
+              'frames': row['frames'],
+              'onHit': row['onHit'],
+              'onBlock': row['onBlock'],
+              'remark': row['remark'],
+              'createdAt': row['createdAt'],
+            },
+          )
+          .toList(),
+      'punishes': punishes
+          .map(
+            (row) => {
+              'id': row['id'],
+              'characterName': row['characterName'],
+              'inputs': row['inputs'],
+              'frames': row['frames'],
+              'createdAt': row['createdAt'],
+            },
+          )
+          .toList(),
+      'combos': combos
+          .map(
+            (row) => {
+              'id': row['id'],
+              'characterName': row['characterName'],
+              'inputs': row['inputs'],
+              'createdAt': row['createdAt'],
+            },
+          )
+          .toList(),
+      'launchers': launchers
+          .map(
+            (row) => {
+              'id': row['id'],
+              'characterName': row['characterName'],
+              'inputs': row['inputs'],
+              'comboId': row['comboId'],
+              'createdAt': row['createdAt'],
+            },
+          )
+          .toList(),
+      'stance_moves': stanceMoves
+          .map(
+            (row) => {
+              'id': row['id'],
+              'characterName': row['characterName'],
+              'stance': row['stance'],
+              'inputs': row['inputs'],
+              'frames': row['frames'],
+              'onHit': row['onHit'],
+              'onBlock': row['onBlock'],
+              'remark': row['remark'],
+              'createdAt': row['createdAt'],
+            },
+          )
+          .toList(),
+    };
   }
 
   /// Insert a character row if needed.
@@ -712,8 +793,10 @@ class DBProvider {
     await importAllTablesFromMap(raw, clearFirst: clearFirst);
   }
 
+  /// Export the embedded default DB stored to Firestore.
+  /// @param clearFirst whether to clear tables before inserting
   Future<void> writeDefaultDB() async {
-    final dynamic raw = defaultData;
+    Map<String, dynamic> raw = await getAllTables();
     final dynamic myCharacters = raw['my_characters'];
     final dynamic keyMoves = raw['key_moves'];
     final dynamic punishes = raw['punishes'];

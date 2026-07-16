@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tekken_cheat_sheet/models/page_type_model.dart';
 import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
 import '../dev_views/dev_view.dart';
@@ -33,11 +34,59 @@ class _HomeViewState extends State<HomeView> {
 
   /// Hovered index in the grid for hover effects.
   int _hoveredIndex = -1;
+  bool _startupDialogShown = false;
+
+  late SharedPreferences prefs;
+
+  bool isFirstTimeInApp = true;
 
   @override
   void initState() {
     super.initState();
     _loadMyCharacters();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showStartupDialog();
+    });
+  }
+
+  Future<void> _showStartupDialog() async {
+    if (_startupDialogShown || !mounted) return;
+    _startupDialogShown = true;
+    prefs = await SharedPreferences.getInstance();
+    isFirstTimeInApp = prefs.getBool('isFirstTimeInApp') ?? true;
+    if (isFirstTimeInApp) {
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => AlertDialog(
+          title: const Text('Welcome to Tekken Cheat Sheet!'),
+          content: const Text(
+            'Do you want to apply default datas to see what the app can do ?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                await DBProvider.instance.importDefaultDB();
+                if (!mounted) return;
+                Navigator.of(context).pop();
+                prefs.setBool('isFirstTimeInApp', false);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Default datas imported successfully!'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
+              child: const Text('OK'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   /// Load the user's saved characters from DB and populate model list.

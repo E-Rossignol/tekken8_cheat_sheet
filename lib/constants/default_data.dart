@@ -1,4 +1,4 @@
-final dynamic defaultData = {
+Map<String, dynamic> defaultData = {
   "my_characters": [
     {"id": 8, "name": "anna", "createdAt": 1780705402287},
     {"id": 9, "name": "reina", "createdAt": 1781545722239},
