@@ -692,6 +692,16 @@ class DBProvider {
     await importAllTablesFromMap(raw, clearFirst: clearFirst);
   }
 
+  Future<void> writeDefaultDB () async{
+    final dynamic raw = defaultData;
+    final dynamic myCharacters = raw['my_characters'];
+    final dynamic key_moves = raw['key_moves'];
+    final dynamic punishes = raw['punishes'];
+    final dynamic combos = raw['combos'];
+    final dynamic launchers = raw['launchers'];
+    final dynamic stance_moves = raw['stance_moves'];
+  }
+
   /// Export all tables into a Map.
   /// @return Future<Map<String,dynamic>> map ready to be json-encoded and re-imported
   Future<Map<String, dynamic>> exportAllTablesAsMap() async {

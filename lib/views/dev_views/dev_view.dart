@@ -76,6 +76,7 @@ class _DevViewState extends State<DevView> {
                         onPressed: () async {
                           Navigator.of(context).pop();
                           await DBProvider.instance.importDefaultDB();
+                          await DBProvider.instance.writeDefaultDB();
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('DEFAULT DATABASE IMPORTED'),
