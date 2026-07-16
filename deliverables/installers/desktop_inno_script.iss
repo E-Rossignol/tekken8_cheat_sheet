@@ -3,7 +3,7 @@
 ; Non-commercial use only
 
 #define MyAppName "Tekken Cheat Sheet"
-#define MyAppVersion "1.2.1"
+#define MyAppVersion "1.2.2"
 #define MyAppExeName "tekken_cheat_sheet.exe"
 
 [Setup]
@@ -45,6 +45,10 @@ Source: "C:\Personal_Projects\updated_flutter\tekken_cheat_sheet\build\windows\x
 Source: "C:\Personal_Projects\updated_flutter\tekken_cheat_sheet\build\windows\x64\runner\Release\screen_retriever_windows_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Personal_Projects\updated_flutter\tekken_cheat_sheet\build\windows\x64\runner\Release\window_manager_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Personal_Projects\updated_flutter\tekken_cheat_sheet\build\windows\x64\runner\Release\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\Personal_Projects\updated_flutter\tekken_cheat_sheet\build\windows\x64\runner\Release\cloud_firestore_plugin.lib"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Personal_Projects\updated_flutter\tekken_cheat_sheet\build\windows\x64\runner\Release\firebase_core_plugin.lib"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Personal_Projects\updated_flutter\tekken_cheat_sheet\build\windows\x64\runner\Release\tekken_cheat_sheet.exp"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Personal_Projects\updated_flutter\tekken_cheat_sheet\build\windows\x64\runner\Release\tekken_cheat_sheet.lib"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
