@@ -15,15 +15,18 @@ class FirebaseHelper {
 
   FirebaseFirestore get _db => FirebaseFirestore.instance;
 
-  CollectionReference<Map<String, dynamic>> _col(String path) =>
-      _db.collection(path).withConverter<Map<String, dynamic>>(
+  CollectionReference<Map<String, dynamic>> _col(String path) => _db
+      .collection(path)
+      .withConverter<Map<String, dynamic>>(
         fromFirestore: (snap, _) => snap.data() ?? {},
         toFirestore: (obj, _) => obj,
       );
 
   // Add a document with auto-ID
   Future<DocumentReference<Map<String, dynamic>>> add(
-      String collectionPath, Map<String, dynamic> data) {
+    String collectionPath,
+    Map<String, dynamic> data,
+  ) {
     final docData = Map<String, dynamic>.from(data);
     docData['createdAt'] = FieldValue.serverTimestamp();
     return _col(collectionPath).add(docData);
@@ -31,15 +34,21 @@ class FirebaseHelper {
 
   // Set (create/replace) a document by id. Use merge=true to merge fields.
   Future<void> set(
-      String collectionPath, String docId, Map<String, dynamic> data,
-      {bool merge = false}) {
+    String collectionPath,
+    String docId,
+    Map<String, dynamic> data, {
+    bool merge = false,
+  }) {
     final docRef = _col(collectionPath).doc();
     return docRef.set(data, SetOptions(merge: merge));
   }
 
   // Update specific fields of a document
   Future<void> update(
-      String collectionPath, String docId, Map<String, dynamic> data) {
+    String collectionPath,
+    String docId,
+    Map<String, dynamic> data,
+  ) {
     return _col(collectionPath).doc(docId).update(data);
   }
 
@@ -50,7 +59,9 @@ class FirebaseHelper {
 
   // Get a single document
   Future<DocumentSnapshot<Map<String, dynamic>>> getDoc(
-      String collectionPath, String docId) {
+    String collectionPath,
+    String docId,
+  ) {
     return _col(collectionPath).doc(docId).get();
   }
 
@@ -70,8 +81,11 @@ class FirebaseHelper {
   }
 
   // Stream of documents for a collection (useful for UI)
-  Stream<QuerySnapshot<Map<String, dynamic>>> streamCollection(String collectionPath,
-      {String? orderBy, bool descending = false}) {
+  Stream<QuerySnapshot<Map<String, dynamic>>> streamCollection(
+    String collectionPath, {
+    String? orderBy,
+    bool descending = false,
+  }) {
     Query<Map<String, dynamic>> q = _col(collectionPath);
     if (orderBy != null) q = q.orderBy(orderBy, descending: descending);
     return q.snapshots();
@@ -79,19 +93,21 @@ class FirebaseHelper {
 
   // Stream a single document
   Stream<DocumentSnapshot<Map<String, dynamic>>> streamDocument(
-      String collectionPath, String docId) {
+    String collectionPath,
+    String docId,
+  ) {
     return _col(collectionPath).doc(docId).snapshots();
   }
 
   // Run a transaction
   Future<T> runTransaction<T>(
-      Future<T> Function(Transaction transaction) transactionHandler) {
+    Future<T> Function(Transaction transaction) transactionHandler,
+  ) {
     return _db.runTransaction<T>(transactionHandler);
   }
 
   // Perform a batched write
-  Future<void> runBatch(
-      void Function(WriteBatch batch) batchUpdater) async {
+  Future<void> runBatch(void Function(WriteBatch batch) batchUpdater) async {
     final batch = _db.batch();
     batchUpdater(batch);
     await batch.commit();
@@ -99,15 +115,18 @@ class FirebaseHelper {
 
   // Convenience: convert DocumentSnapshot to map with id included
   static Map<String, dynamic> docDataWithId(
-      DocumentSnapshot<Map<String, dynamic>> snap) {
+    DocumentSnapshot<Map<String, dynamic>> snap,
+  ) {
     final data = snap.data() ?? <String, dynamic>{};
     return {'id': snap.id, ...data};
   }
 
   // Delete all documents in a collection using batched writes.
   // Warning: this permanently removes all documents in the collection.
-  Future<void> deleteAllDocuments(String collectionPath,
-      {int batchSize = 500}) async {
+  Future<void> deleteAllDocuments(
+    String collectionPath, {
+    int batchSize = 500,
+  }) async {
     final coll = _col(collectionPath);
     while (true) {
       final snapshot = await coll.limit(batchSize).get();

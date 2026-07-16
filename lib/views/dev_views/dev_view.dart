@@ -5,7 +5,6 @@ import '../../models/page_type_model.dart';
 import '../../services/db_provider.dart';
 import '../main_views/home_view.dart';
 import 'db_explorer_view.dart';
-import 'default_db_view.dart'; // Import the new view
 
 class DevView extends StatefulWidget {
   const DevView({super.key});
@@ -74,7 +73,11 @@ class _DevViewState extends State<DevView> {
                                     child: CircularProgressIndicator(),
                                   ),
                                   SizedBox(width: 16),
-                                  Expanded(child: Text('Exporting default database, it might take a while ...')),
+                                  Expanded(
+                                    child: Text(
+                                      'Exporting default database, it might take a while ...',
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -148,7 +151,11 @@ class _DevViewState extends State<DevView> {
                                     child: CircularProgressIndicator(),
                                   ),
                                   SizedBox(width: 16),
-                                  Expanded(child: Text('Importing default database...')),
+                                  Expanded(
+                                    child: Text(
+                                      'Importing default database...',
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),

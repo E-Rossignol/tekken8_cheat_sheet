@@ -680,12 +680,18 @@ class DBProvider {
   /// Import the embedded default DB stored in Helper().defaultDB.
   /// @param clearFirst whether to clear tables before inserting
   Future<void> importDefaultDB({bool clearFirst = true}) async {
-    dynamic myCharacters = await FirebaseHelper.instance.getCollection('my_characters');
+    dynamic myCharacters = await FirebaseHelper.instance.getCollection(
+      'my_characters',
+    );
     dynamic keyMoves = await FirebaseHelper.instance.getCollection('key_moves');
     dynamic punishes = await FirebaseHelper.instance.getCollection('punishes');
     dynamic combos = await FirebaseHelper.instance.getCollection('combos');
-    dynamic launchers = await FirebaseHelper.instance.getCollection('launchers');
-    dynamic stanceMoves = await FirebaseHelper.instance.getCollection('stance_moves');
+    dynamic launchers = await FirebaseHelper.instance.getCollection(
+      'launchers',
+    );
+    dynamic stanceMoves = await FirebaseHelper.instance.getCollection(
+      'stance_moves',
+    );
     final dynamic raw = {
       'my_characters': myCharacters,
       'key_moves': keyMoves,
@@ -706,7 +712,7 @@ class DBProvider {
     await importAllTablesFromMap(raw, clearFirst: clearFirst);
   }
 
-  Future<void> writeDefaultDB () async{
+  Future<void> writeDefaultDB() async {
     final dynamic raw = defaultData;
     final dynamic myCharacters = raw['my_characters'];
     final dynamic keyMoves = raw['key_moves'];
@@ -720,22 +726,22 @@ class DBProvider {
     await FirebaseHelper.instance.deleteAllDocuments('combos');
     await FirebaseHelper.instance.deleteAllDocuments('launchers');
     await FirebaseHelper.instance.deleteAllDocuments('stance_moves');
-    for (dynamic character in myCharacters){
+    for (dynamic character in myCharacters) {
       await FirebaseHelper.instance.set('my_characters', 'default', character);
     }
-    for (dynamic keyMove in keyMoves){
+    for (dynamic keyMove in keyMoves) {
       await FirebaseHelper.instance.set('key_moves', 'default', keyMove);
     }
-    for (dynamic punish in punishes){
+    for (dynamic punish in punishes) {
       await FirebaseHelper.instance.set('punishes', 'default', punish);
     }
-    for (dynamic combo in combos){
+    for (dynamic combo in combos) {
       await FirebaseHelper.instance.set('combos', 'default', combo);
     }
-    for (dynamic launcher in launchers){
+    for (dynamic launcher in launchers) {
       await FirebaseHelper.instance.set('launchers', 'default', launcher);
     }
-    for (dynamic stanceMove in stanceMoves){
+    for (dynamic stanceMove in stanceMoves) {
       await FirebaseHelper.instance.set('stance_moves', 'default', stanceMove);
     }
   }
@@ -806,6 +812,10 @@ class DBProvider {
         'characterName': r['characterName'],
         'stance': r['stance'],
         'inputs': r['inputs'],
+        'remark': r['remark'],
+        'frames': r['frames'],
+        'onHit': r['onHit'],
+        'onBlock': r['onBlock'],
         'createdAt': r['createdAt'],
       };
     }).toList();
