@@ -15,6 +15,8 @@ class KeyMovesPunishStanceSavedPanel extends StatefulWidget {
   /// Callback invoked to delete a saved entry by index.
   final Future<void> Function(int) onDelete;
 
+  final Future<void> Function(int) onEdit;
+
   /// Accent color used in the panel for icons/highlights.
   final Color accent;
 
@@ -35,6 +37,7 @@ class KeyMovesPunishStanceSavedPanel extends StatefulWidget {
     required this.savedStrings,
     required this.inputs,
     required this.onDelete,
+    required this.onEdit,
     required this.accent,
     this.savedStances,
     required this.characterName,
@@ -290,6 +293,17 @@ class _KeyMovesPunishStanceSavedPanelState
                                 ),
                               ),
                             ],
+                            // bouton d'édition
+                            IconButton(
+                              icon: const Icon(
+                                Icons.edit,
+                                color: Colors.lightGreen,
+                              ),
+                              tooltip: 'Modifier',
+                              onPressed: () async {
+                                await widget.onEdit(index);
+                              },
+                            ),
 
                             // bouton supprimer
                             IconButton(

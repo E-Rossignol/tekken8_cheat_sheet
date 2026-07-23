@@ -194,29 +194,42 @@ class _KeyMovesViewState extends State<KeyMovesView> {
     }
   }
 
+  Future<void> _editSavedString(int index) async {
+    currentInputs.clear();
+    currentInputs.addAll(savedStrings[index]);
+    _framesController.text = savedFrames[index]?.toString() ?? '';
+    _onHitController.text = savedOnHit[index]?.toString() ?? '';
+    _onBlockController.text = savedOnBlock[index]?.toString() ?? '';
+    _remarkController.text = savedRemarks[index] ?? '';
+    await _deleteSavedString(index, isEditing: true);
+    setState(() {});
+  }
+
   /// Confirm and remove a saved move from DB and UI.
   /// @param index index in savedStrings
   /// @return Future<void>
-  Future<void> _deleteSavedString(int index) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete move?'),
-        content: const Text(
-          'Are you sure you want to delete this move? This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
+  Future<void> _deleteSavedString(int index, {bool isEditing = false}) async {
+    final ok = !isEditing
+        ? await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Delete move?'),
+              content: const Text(
+                'Are you sure you want to delete this move? This action cannot be undone.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: const Text('Delete'),
+                ),
+              ],
+            ),
+          )
+        : true;
     if (ok == true) {
       var res = await DBProvider.instance.deleteKeyMove(
         widget.characterName,
@@ -230,12 +243,14 @@ class _KeyMovesViewState extends State<KeyMovesView> {
           if (savedOnBlock.length > index) savedOnBlock.removeAt(index);
           if (savedRemarks.length > index) savedRemarks.removeAt(index);
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Move deleted'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        if (!isEditing) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Move deleted'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -436,45 +451,6 @@ class _KeyMovesViewState extends State<KeyMovesView> {
     );
   }
 
-  Widget buildSavedRow(int index, double iconSize, double spacing) {
-    final string = savedStrings[index];
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF23232D),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Row(
-              children: string.asMap().entries.map((entry) {
-                final data = inputs.firstWhere((e) => e.code == entry.value);
-                return Padding(
-                  padding: EdgeInsets.only(
-                    right: entry.key == string.length - 1 ? 0 : spacing,
-                  ),
-                  child: SizedBox(
-                    width: iconSize,
-                    height: iconSize,
-                    child: Image.asset(data.assetPath, fit: BoxFit.contain),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          const SizedBox(width: 4),
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.redAccent),
-            tooltip: 'Delete move',
-            onPressed: () => _deleteSavedString(index),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final bgGradient = const LinearGradient(
@@ -537,6 +513,7 @@ class _KeyMovesViewState extends State<KeyMovesView> {
                     savedStrings: savedStrings,
                     inputs: inputs,
                     onDelete: _deleteSavedString,
+                    onEdit: _editSavedString,
                     accent: accent,
                     pageType: 0,
                   ),

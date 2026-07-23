@@ -171,29 +171,38 @@ class _PunishesViewState extends State<PunishesView> {
     }
   }
 
+  Future<void> _editSavedString(int index) async {
+    currentInputs.clear();
+    currentInputs.addAll(savedStrings[index]);
+    await _deleteSavedString(index, isEditing: true);
+    setState(() {});
+  }
+
   /// Confirm then delete a saved punish.
   /// @param index index in savedStrings to delete
   /// @return Future<void>
-  Future<void> _deleteSavedString(int index) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete punish?'),
-        content: const Text(
-          'Are you sure you want to delete this punish? This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
+  Future<void> _deleteSavedString(int index, {bool isEditing = false}) async {
+    final ok = !isEditing
+        ? await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Delete punish?'),
+              content: const Text(
+                'Are you sure you want to delete this punish? This action cannot be undone.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: const Text('Delete'),
+                ),
+              ],
+            ),
+          )
+        : true;
     if (ok == true) {
       final inputsStr = savedStrings[index].join('/');
       final frames = savedFrames[index];
@@ -208,12 +217,14 @@ class _PunishesViewState extends State<PunishesView> {
             savedStrings.removeAt(index);
             savedFrames.removeAt(index);
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Punish deleted'),
-              duration: Duration(seconds: 2),
-            ),
-          );
+          if (!isEditing) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Punish deleted'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -540,6 +551,7 @@ class _PunishesViewState extends State<PunishesView> {
                     inputs: inputs,
                     savedFrames: savedFrames,
                     onDelete: _deleteSavedString,
+                    onEdit: _editSavedString,
                     accent: accent,
                     pageType: 1,
                   ),
