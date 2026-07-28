@@ -97,9 +97,11 @@ class _HomeViewState extends State<HomeView> {
       var list = await DBProvider.instance.getAllMyCharacters();
       setState(() {
         for (var c in list) {
+          bool tmp = c['isFavourite'] == 1;
           _myCharacters.add(
             Character(
               name: c['name'] as String,
+              isFavourite: tmp,
               createdAt: DateTime.fromMillisecondsSinceEpoch(
                 c['createdAt'] as int,
               ),
@@ -109,7 +111,7 @@ class _HomeViewState extends State<HomeView> {
       });
     } catch (_) {
       setState(() {
-        _myCharacters = [];
+        _myCharacters.sort((a, b) => a.isFavourite ? -1 : 1);
       });
     } finally {
       setState(() => _loadingCharacters = false);
@@ -449,6 +451,90 @@ class _HomeViewState extends State<HomeView> {
                                                           ),
                                                         ),
                                                         // Bouton delete en haut à droite
+                                                        Positioned(
+                                                          top: 8,
+                                                          right: 40,
+                                                          child: Material(
+                                                            color: Colors
+                                                                .transparent,
+                                                            child: IconButton(
+                                                              iconSize: 20,
+                                                              mouseCursor:
+                                                                  MouseCursor
+                                                                      .uncontrolled,
+                                                              padding:
+                                                                  EdgeInsets
+                                                                      .zero,
+                                                              constraints:
+                                                                  const BoxConstraints(),
+                                                              icon: CircleAvatar(
+                                                                radius: 14,
+                                                                backgroundColor:
+                                                                    Colors
+                                                                        .black12,
+                                                                child:
+                                                                    c.isFavourite
+                                                                    ? Icon(
+                                                                        Icons
+                                                                            .star,
+                                                                        color: Colors
+                                                                            .yellowAccent,
+                                                                        size:
+                                                                            16,
+                                                                      )
+                                                                    : Icon(
+                                                                        Icons
+                                                                            .star_border,
+                                                                        color: Colors
+                                                                            .yellowAccent,
+                                                                        size:
+                                                                            16,
+                                                                      ),
+                                                              ),
+                                                              tooltip:
+                                                                  'Add to favourite',
+                                                              onPressed: () async {
+                                                                bool
+                                                                isNowFavourite =
+                                                                    await DBProvider
+                                                                        .instance
+                                                                        .toggleFavouriteCharacter(
+                                                                          c.name,
+                                                                        );
+                                                                ScaffoldMessenger.of(
+                                                                  context,
+                                                                ).showSnackBar(
+                                                                  SnackBar(
+                                                                    content: Text(
+                                                                      isNowFavourite
+                                                                          ? 'Character "${Helper().getBeautifulName(name)}" added to favourites'
+                                                                          : 'Character "${Helper().getBeautifulName(name)}" removed from favourites',
+                                                                    ),
+                                                                    duration:
+                                                                        const Duration(
+                                                                          seconds:
+                                                                              2,
+                                                                        ),
+                                                                  ),
+                                                                );
+                                                                setState(() {
+                                                                  c.isFavourite =
+                                                                      isNowFavourite;
+                                                                  _myCharacters
+                                                                      .sort(
+                                                                        (
+                                                                          a,
+                                                                          b,
+                                                                        ) =>
+                                                                            a.isFavourite
+                                                                            ? -1
+                                                                            : 1,
+                                                                      );
+                                                                });
+                                                              },
+                                                            ),
+                                                          ),
+                                                        ),
                                                         Positioned(
                                                           top: 8,
                                                           right: 8,

@@ -23,7 +23,7 @@ class _DevViewState extends State<DevView> {
     );
     return Scaffold(
       extendBody: true,
-      appBar: customAppBar(PageType.characterDetail, 'Anna', context),
+      appBar: customAppBar(PageType.characterDetail, 'DEV VIEW', context),
       body: Container(
         width: double.infinity,
         height: double.infinity,

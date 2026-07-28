@@ -61,6 +61,7 @@ class DBProvider {
       CREATE TABLE my_characters(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
+        isFavourite INTEGER DEFAULT 0,
         createdAt INTEGER
       )
     ''');
@@ -150,6 +151,7 @@ class DBProvider {
             (row) => {
               'id': row['id'],
               'name': row['name'],
+              'isFavourite': row['isFavourite'],
               'createdAt': row['createdAt'],
             },
           )
@@ -225,6 +227,7 @@ class DBProvider {
     final db = await database;
     Map<String, dynamic> character = {
       'name': name,
+      'isFavourite': 0,
       'createdAt': DateTime.now().millisecondsSinceEpoch,
     };
     return await db.insert(
@@ -264,6 +267,26 @@ class DBProvider {
     await db.execute('DELETE FROM stance_moves WHERE characterName = ?', [
       characterName,
     ]);
+  }
+
+  Future<bool> toggleFavouriteCharacter(String characterName) async {
+    final db = await database;
+    final List<Map<String, dynamic>> existingCharacter = await db.query(
+      'my_characters',
+      where: 'name = ?',
+      whereArgs: [characterName],
+    );
+    if (existingCharacter.isNotEmpty) {
+      final isFavourite = existingCharacter[0]['isFavourite'] == 1;
+      await db.update(
+        'my_characters',
+        {'isFavourite': isFavourite ? 0 : 1},
+        where: 'name = ?',
+        whereArgs: [characterName],
+      );
+      return !isFavourite;
+    }
+    return false;
   }
 
   /// Close DB connection.
