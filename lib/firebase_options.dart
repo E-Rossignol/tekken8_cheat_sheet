@@ -42,7 +42,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyDMbhv85xQkimHvF2M9yobm_6CPRJtZxdY',
-    appId: '1:220025240484:web:df48651c2e39b0c8b11f31',
+    appId: '1:220025240484:web:b2d0416d99dfb982b11f31',
     messagingSenderId: '220025240484',
     projectId: 'tekkencheatsheet-e7c89',
     authDomain: 'tekkencheatsheet-e7c89.firebaseapp.com',
@@ -51,24 +51,22 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBzeranlg68VaKevMynOcJ22dchH97QASk',
-    appId: '1:220025240484:android:e18b4968062c2cb4b11f31',
+    appId: '1:220025240484:android:1663c0e320f87b2cb11f31',
     messagingSenderId: '220025240484',
     projectId: 'tekkencheatsheet-e7c89',
     storageBucket: 'tekkencheatsheet-e7c89.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDktcu5CQNdsJrF2JNBP3AQJS8DH102pYc',
-    appId: '1:220025240484:ios:62edc43b45824ad1b11f31',
+    appId: '1:220025240484:ios:d8535ba5098adaddb11f31',
     messagingSenderId: '220025240484',
     projectId: 'tekkencheatsheet-e7c89',
     storageBucket: 'tekkencheatsheet-e7c89.firebasestorage.app',
     iosBundleId: 'com.example.tekkenCheatSheet',
   );
-
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyDktcu5CQNdsJrF2JNBP3AQJS8DH102pYc',
-    appId: '1:220025240484:ios:62edc43b45824ad1b11f31',
+    appId: '1:220025240484:ios:d8535ba5098adaddb11f31',
     messagingSenderId: '220025240484',
     projectId: 'tekkencheatsheet-e7c89',
     storageBucket: 'tekkencheatsheet-e7c89.firebasestorage.app',
@@ -77,7 +75,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyDMbhv85xQkimHvF2M9yobm_6CPRJtZxdY',
-    appId: '1:220025240484:web:ee7e53f3a2a0202cb11f31',
+    appId: '1:220025240484:web:3ee48c64869addeeb11f31',
     messagingSenderId: '220025240484',
     projectId: 'tekkencheatsheet-e7c89',
     authDomain: 'tekkencheatsheet-e7c89.firebaseapp.com',

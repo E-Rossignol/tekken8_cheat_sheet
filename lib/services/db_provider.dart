@@ -220,6 +220,15 @@ class DBProvider {
     };
   }
 
+  /// Check app version in Firebase
+  /// @return Future<String> app version
+  Future<String> getAppVersion() async {
+    dynamic version = await FirebaseHelper.instance.getCollection(
+      'app_version',
+    );
+    return version[0]['version'];
+  }
+
   /// Insert a character row if needed.
   /// @param name character name
   /// @return Future<int> inserted row id

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tekken_cheat_sheet/models/page_type_model.dart';
 import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
@@ -9,6 +8,7 @@ import 'my_character_view.dart';
 import '../../models/character_model.dart';
 import '../../constants/helper.dart';
 import '../../services/db_provider.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 /// Home view that lists the user's characters and provides navigation to other tools.
 /// Contains an animated sidebar and grid of characters.
@@ -38,6 +38,8 @@ class _HomeViewState extends State<HomeView> {
 
   late SharedPreferences prefs;
 
+  String currentVersion = '';
+
   bool isFirstTimeInApp = true;
 
   @override
@@ -50,9 +52,12 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _showStartupDialog() async {
+    final info = await PackageInfo.fromPlatform();
+    currentVersion = info.version;
     if (_startupDialogShown || !mounted) return;
     _startupDialogShown = true;
     prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     isFirstTimeInApp = prefs.getBool('isFirstTimeInApp') ?? true;
     if (isFirstTimeInApp) {
       await showDialog(
@@ -282,7 +287,7 @@ class _HomeViewState extends State<HomeView> {
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(
-                        'v0.1',
+                        currentVersion,
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.4),
                           fontSize: 11,

@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  auto_updater_windows
   cloud_firestore
   firebase_core
   screen_retriever_windows

@@ -3,6 +3,7 @@ import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/views/main_views/home_view.dart';
 import 'package:window_manager/window_manager.dart';
+import 'services/update_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,11 +23,42 @@ void main() async {
     await windowManager.show();
     await windowManager.focus();
   });
+
+  try {
+    final updateService = UpdateService();
+
+    final currentVersion = await updateService.getCurrentVersion();
+
+    final updateInfo = await updateService.getUpdateInfo();
+
+    if (updateInfo != null &&
+        updateService.needsUpdate(
+          currentVersion: currentVersion,
+          remoteVersion: updateInfo.version,
+        )) {
+      await updateService.installUpdate(updateInfo.downloadUrl);
+
+      return;
+    }
+  } catch (e) {
+    print('Erreur update : $e');
+  }
+
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+  }
 
   // This widget is the root of your application.
   @override
