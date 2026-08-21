@@ -66,6 +66,8 @@ class Helper {
     {'characterName': 'asuka', 'name': 'NWG'},
     {'characterName': 'azucena', 'name': 'LIB'},
     {'characterName': 'azucena', 'name': 'BT'},
+    {'characterName': 'bob', 'name': 'UNS'},
+    {'characterName': 'bob', 'name': 'SPB'},
     {'characterName': 'bryan', 'name': 'SNE'},
     {'characterName': 'bryan', 'name': 'SWA'},
     {'characterName': 'bryan', 'name': 'CD'},
@@ -163,7 +165,7 @@ class Helper {
     {'characterName': 'miary-zo', 'name': 'KMH'},
   ];
 
-  final List<String> incomingCharacters = ["bob", "roger", "yujiro"];
+  final List<String> incomingCharacters = ["roger", "yujiro"];
 
   /// Build the path to the portrait asset for a character.
   /// @param characterName internal key
