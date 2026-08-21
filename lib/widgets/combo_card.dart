@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/constants/helper.dart';
 import 'package:tekken_cheat_sheet/widgets/inputs_chip.dart';
-
 import 'my_icons.dart';
 
 class ComboCard extends StatefulWidget {
@@ -31,49 +30,6 @@ class _ComboCardState extends State<ComboCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // header : inputs du combo
-            Row(
-              children: [
-                Expanded(
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: Helper().pathFromInputs(inputs).map((path) {
-                      return Image.asset(
-                        path,
-                        fit: BoxFit.cover,
-                        height: 30,
-                        errorBuilder: (_, __, ___) => Container(
-                          height: 30,
-                          width: 30,
-                          decoration: BoxDecoration(
-                            color: Colors.blueGrey,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Center(
-                            child: Text(
-                              path
-                                  .split('/')
-                                  .last
-                                  .split('.')
-                                  .first
-                                  .toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // launchers list : chips lisibles
             if (launchers.isEmpty)
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -121,6 +77,47 @@ class _ComboCardState extends State<ComboCard> {
                   );
                 }).toList(),
               ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: Helper().pathFromInputs(inputs).map((path) {
+                      return Image.asset(
+                        path,
+                        fit: BoxFit.cover,
+                        height: 30,
+                        errorBuilder: (_, __, ___) => Container(
+                          height: 30,
+                          width: 30,
+                          decoration: BoxDecoration(
+                            color: Colors.blueGrey,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Center(
+                            child: Text(
+                              path
+                                  .split('/')
+                                  .last
+                                  .split('.')
+                                  .first
+                                  .toUpperCase(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
