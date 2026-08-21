@@ -9,6 +9,7 @@ import '../../models/character_model.dart';
 import '../../constants/helper.dart';
 import '../../services/db_provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import '../../services/update_service.dart';
 
 /// Home view that lists the user's characters and provides navigation to other tools.
 /// Contains an animated sidebar and grid of characters.
@@ -91,6 +92,46 @@ class _HomeViewState extends State<HomeView> {
           ],
         ),
       );
+    }
+
+    // Check for updates and ask user confirmation before installing
+    try {
+      final updateService = UpdateService();
+      final updateInfo = await updateService.getUpdateInfo();
+
+      if (updateInfo != null &&
+          updateService.needsUpdate(
+            currentVersion: currentVersion,
+            remoteVersion: updateInfo.version,
+          )) {
+        if (!mounted) return;
+        final install = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => AlertDialog(
+            title: const Text('Mise à jour disponible'),
+            content: Text(
+              'Une nouvelle version (${updateInfo.version}) est disponible. Voulez-vous la télécharger et l\'installer maintenant ?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Plus tard'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Installer'),
+              ),
+            ],
+          ),
+        );
+
+        if (install == true) {
+          await updateService.installUpdate(updateInfo.downloadUrl);
+        }
+      }
+    } catch (e) {
+      print('Erreur update (UI) : $e');
     }
   }
 
@@ -287,7 +328,7 @@ class _HomeViewState extends State<HomeView> {
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(
-                        currentVersion,
+                        'v $currentVersion',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.4),
                           fontSize: 11,
