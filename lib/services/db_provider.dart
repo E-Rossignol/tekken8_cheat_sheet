@@ -827,14 +827,28 @@ class DBProvider {
 
   /// Export the embedded default DB stored to Firestore.
   /// @param clearFirst whether to clear tables before inserting
-  Future<void> writeDefaultDB() async {
+  Future<void> writeDefaultDB(List<String> selectedCharacters) async {
     Map<String, dynamic> raw = await getAllTables();
-    final dynamic myCharacters = raw['my_characters'];
-    final dynamic keyMoves = raw['key_moves'];
-    final dynamic punishes = raw['punishes'];
-    final dynamic combos = raw['combos'];
-    final dynamic launchers = raw['launchers'];
-    final dynamic stanceMoves = raw['stance_moves'];
+    List<Map<String, dynamic>> myCharacters = raw['my_characters'];
+    List<Map<String, dynamic>> keyMoves = raw['key_moves'];
+    List<Map<String, dynamic>> punishes = raw['punishes'];
+    List<Map<String, dynamic>> combos = raw['combos'];
+    List<Map<String, dynamic>> launchers = raw['launchers'];
+    List<Map<String, dynamic>> stanceMoves = raw['stance_moves'];
+    myCharacters.removeWhere((c) => !selectedCharacters.contains(c['name']));
+    keyMoves.removeWhere(
+      (k) => !selectedCharacters.contains(k['characterName']),
+    );
+    punishes.removeWhere(
+      (p) => !selectedCharacters.contains(p['characterName']),
+    );
+    combos.removeWhere((c) => !selectedCharacters.contains(c['characterName']));
+    launchers.removeWhere(
+      (l) => !selectedCharacters.contains(l['characterName']),
+    );
+    stanceMoves.removeWhere(
+      (s) => !selectedCharacters.contains(s['characterName']),
+    );
     await FirebaseHelper.instance.deleteAllDocuments('my_characters');
     await FirebaseHelper.instance.deleteAllDocuments('key_moves');
     await FirebaseHelper.instance.deleteAllDocuments('punishes');

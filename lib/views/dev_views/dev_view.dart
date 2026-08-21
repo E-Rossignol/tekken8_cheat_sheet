@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:tekken_cheat_sheet/views/dev_views/export_db_view.dart';
 import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
-
+import '../../constants/helper.dart';
 import '../../models/page_type_model.dart';
 import '../../services/db_provider.dart';
 import '../main_views/home_view.dart';
@@ -43,74 +44,14 @@ class _DevViewState extends State<DevView> {
             ),
             TextButton(
               onPressed: () async {
-                showDialog(
-                  context: context,
-                  builder: (_) => AlertDialog(
-                    title: const Text('Exporting default database'),
-                    content: const Text(
-                      'This will replace the default datas with the current app\'s state. Do you want to proceed?',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () async {
-                          // Close confirmation dialog
-                          Navigator.of(context).pop();
-
-                          // Show a modal progress indicator while importing/writing DB
-                          showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (_) => AlertDialog(
-                              content: Row(
-                                children: const [
-                                  SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                  SizedBox(width: 16),
-                                  Expanded(
-                                    child: Text(
-                                      'Exporting default database, it might take a while ...',
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                          try {
-                            await DBProvider.instance.writeDefaultDB();
-                          } catch (e) {
-                            // Close progress dialog
-                            Navigator.of(context).pop();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Error exporting default DB: $e'),
-                                backgroundColor: Colors.red,
-                                duration: const Duration(seconds: 3),
-                              ),
-                            );
-                            return;
-                          }
-                          // Close progress dialog
-                          Navigator.of(context).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('DEFAULT DATABASE EXPORTED'),
-                              duration: Duration(seconds: 1),
-                            ),
-                          );
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (_) => const HomeView()),
-                          );
-                        },
-                        child: const Text('OK'),
-                      ),
-                    ],
+                dynamic res = await DBProvider.instance.getAllMyCharacters();
+                List<String> chars = [];
+                for (dynamic raw in res) {
+                  chars.add(Helper().getBeautifulName(raw['name']));
+                }
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ExportDbView(myCharacters: chars),
                   ),
                 );
               },
