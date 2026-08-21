@@ -97,6 +97,40 @@ class _CheatSheetViewState extends State<CheatSheetView> {
     }
   }
 
+  void search() {
+    switch (_selected) {
+      case _Panel.keyMoves:
+        print("Searching key moves");
+        break;
+      case _Panel.punishes:
+        print("Searching punishes");
+        break;
+      case _Panel.combo:
+        print("Searching combos");
+        break;
+      case _Panel.stances:
+        print("Searching stances");
+        break;
+    }
+  }
+
+  void sort() {
+    switch (_selected) {
+      case _Panel.keyMoves:
+        print("Sorting key moves");
+        break;
+      case _Panel.punishes:
+        print("Sorting punishes");
+        break;
+      case _Panel.combo:
+        print("Sorting combos");
+        break;
+      case _Panel.stances:
+        print("Sorting stances");
+        break;
+    }
+  }
+
   /// Left panel builder containing modern buttons for switching data sets.
   /// @param ctx BuildContext
   /// @return Widget left panel
@@ -400,14 +434,59 @@ class _CheatSheetViewState extends State<CheatSheetView> {
             _leftPanel(context),
             const SizedBox(width: 20),
             Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.02),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withOpacity(0.03)),
-                ),
-                child: _rightContent(),
+              child: Stack(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.02),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white.withOpacity(0.03)),
+                    ),
+                    child: _rightContent(),
+                  ),
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.search,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                            onPressed: () {
+                              search();
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.sort,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                            onPressed: () {
+                              sort();
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
