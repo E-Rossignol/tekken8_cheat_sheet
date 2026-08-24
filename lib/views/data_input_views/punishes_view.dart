@@ -5,6 +5,7 @@ import '../../constants/helper.dart';
 import 'package:tekken_cheat_sheet/models/input_data.dart';
 import 'package:tekken_cheat_sheet/widgets/input_grid.dart';
 import '../../services/db_provider.dart';
+import '../../widgets/error_message.dart';
 import '../../widgets/key_moves_punish_stance_saved_panel.dart';
 
 /// PunishesView: manage punish strings associated with a frame value.
@@ -163,7 +164,7 @@ class _PunishesViewState extends State<PunishesView> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Error saving punish'),
+          content: ErrorMessage(),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 2),
         ),
@@ -228,7 +229,7 @@ class _PunishesViewState extends State<PunishesView> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('No row deleted'),
+              content: ErrorMessage(),
               duration: Duration(seconds: 2),
             ),
           );
@@ -236,7 +237,7 @@ class _PunishesViewState extends State<PunishesView> {
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Error deleting punish'),
+            content: ErrorMessage(),
             backgroundColor: Colors.red,
             duration: Duration(seconds: 2),
           ),

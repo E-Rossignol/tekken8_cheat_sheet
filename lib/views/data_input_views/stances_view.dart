@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/models/page_type_model.dart';
 import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
 import 'package:tekken_cheat_sheet/widgets/custom_number_field.dart';
+import 'package:tekken_cheat_sheet/widgets/error_message.dart';
 import '../../constants/helper.dart';
 import 'package:tekken_cheat_sheet/models/input_data.dart';
 import 'package:tekken_cheat_sheet/widgets/input_grid.dart';
@@ -209,7 +210,7 @@ class _StancesViewState extends State<StancesView> {
       // log / notify on unexpected error
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Error saving stance move'),
+          content: ErrorMessage(),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 2),
         ),
@@ -279,7 +280,7 @@ class _StancesViewState extends State<StancesView> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('No row deleted'),
+              content: ErrorMessage(),
               duration: Duration(seconds: 2),
             ),
           );
@@ -287,7 +288,7 @@ class _StancesViewState extends State<StancesView> {
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Error deleting stance move'),
+            content: ErrorMessage(),
             backgroundColor: Colors.red,
             duration: Duration(seconds: 2),
           ),

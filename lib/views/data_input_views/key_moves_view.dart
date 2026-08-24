@@ -7,6 +7,7 @@ import 'package:tekken_cheat_sheet/models/input_data.dart';
 import 'package:tekken_cheat_sheet/widgets/input_grid.dart';
 import '../../models/page_type_model.dart';
 import '../../services/db_provider.dart';
+import '../../widgets/error_message.dart';
 
 /// KeyMovesView: record and manage key moves for a character.
 /// Each saved move stores optional frames/onHit/onBlock/remark metadata.
@@ -179,17 +180,14 @@ class _KeyMovesViewState extends State<KeyMovesView> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Error saving move'),
+            content: ErrorMessage(),
             duration: Duration(seconds: 2),
           ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error saving move'),
-          duration: Duration(seconds: 2),
-        ),
+        const SnackBar(content: ErrorMessage(), duration: Duration(seconds: 2)),
       );
     }
   }
@@ -254,7 +252,7 @@ class _KeyMovesViewState extends State<KeyMovesView> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Error deleting move'),
+            content: ErrorMessage(),
             duration: Duration(seconds: 2),
           ),
         );

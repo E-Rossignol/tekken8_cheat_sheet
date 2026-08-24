@@ -139,4 +139,23 @@ class FirebaseHelper {
       await batch.commit();
     }
   }
+
+  // Delete every document in a collection whose `name` field matches exactly.
+  Future<void> deleteDocumentsByName(
+    String collectionPath,
+    String name, {
+    int batchSize = 500,
+  }) async {
+    final query = _col(collectionPath).where('name', isEqualTo: name);
+    while (true) {
+      final snapshot = await query.limit(batchSize).get();
+      final docs = snapshot.docs;
+      if (docs.isEmpty) break;
+      final batch = _db.batch();
+      for (final doc in docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+    }
+  }
 }

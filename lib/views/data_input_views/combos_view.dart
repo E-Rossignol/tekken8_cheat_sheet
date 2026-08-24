@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/models/page_type_model.dart';
 import 'package:tekken_cheat_sheet/widgets/combo_panel.dart';
 import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
+import 'package:tekken_cheat_sheet/widgets/error_message.dart';
 import '../../constants/helper.dart';
 import 'package:tekken_cheat_sheet/models/input_data.dart';
 import 'package:tekken_cheat_sheet/widgets/input_grid.dart';
@@ -126,18 +127,12 @@ class _CombosViewState extends State<CombosView> {
         _showAddLauncherDialog(newId);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error saving combo'),
-            duration: Duration(seconds: 2),
-          ),
+          SnackBar(content: ErrorMessage(), duration: Duration(seconds: 2)),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error saving combo'),
-          duration: Duration(seconds: 2),
-        ),
+        const SnackBar(content: ErrorMessage(), duration: Duration(seconds: 2)),
       );
     }
   }
@@ -184,7 +179,7 @@ class _CombosViewState extends State<CombosView> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Error deleting combo'),
+            content: ErrorMessage(),
             duration: Duration(seconds: 2),
           ),
         );
@@ -333,7 +328,7 @@ class _CombosViewState extends State<CombosView> {
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        content: Text('Error adding launcher'),
+                                        content: ErrorMessage(),
                                         duration: Duration(seconds: 2),
                                       ),
                                     );
@@ -377,10 +372,7 @@ class _CombosViewState extends State<CombosView> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error deleting launcher'),
-          duration: Duration(seconds: 2),
-        ),
+        const SnackBar(content: ErrorMessage(), duration: Duration(seconds: 2)),
       );
     }
   }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -15,20 +16,42 @@ class DBProvider {
 
   /// Cached Database instance.
   Database? _db;
+  static const String _lastErrorMessageKey = 'errorMessage';
+
+  Future<void> _storeErrorMessage(Object error) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_lastErrorMessageKey, error.toString());
+  }
+
+  Future<T> _withErrorStorage<T>(Future<T> Function() action) async {
+    try {
+      return await action();
+    } catch (error) {
+      await _storeErrorMessage(error);
+      rethrow;
+    }
+  }
 
   /// Get or open the database connection.
   /// @return Future<Database> opened database handle
   Future<Database> get database async {
     if (_db != null) return _db!;
-    _db = await _initDB();
-    return _db!;
+    try {
+      _db = await _initDB();
+      return _db!;
+    } catch (error) {
+      await _storeErrorMessage(error);
+      rethrow;
+    }
   }
 
   /// Force initialization of DB (open connection).
   /// @return Future<Database>
   Future<Database> initDb() async {
-    _db = await _initDB();
-    return _db!;
+    return _withErrorStorage(() async {
+      _db = await _initDB();
+      return _db!;
+    });
   }
 
   /// Internal initializer for the DB file and platform-specific setup.
@@ -124,187 +147,204 @@ class DBProvider {
   /// @param characterName name of character to remove (not used)
   /// @return Future<void>
   Future<void> deleteDatabaseFile() async {
-    if (_db != null) {
-      await _db!.close();
-      _db = null;
-    }
+    return _withErrorStorage(() async {
+      if (_db != null) {
+        await _db!.close();
+        _db = null;
+      }
 
-    final documentsDirectory = await getApplicationDocumentsDirectory();
-    final path = join(documentsDirectory.path, 'tekken_cheat_sheet.db');
-    final file = File(path);
-    if (await file.exists()) {
-      await file.delete();
-    }
+      final documentsDirectory = await getApplicationDocumentsDirectory();
+      final path = join(documentsDirectory.path, 'tekken_cheat_sheet.db');
+      final file = File(path);
+      if (await file.exists()) {
+        await file.delete();
+      }
+    });
   }
 
   Future<Map<String, dynamic>> getAllTables() async {
-    final db = await database;
-    var myCharactersTable = await db.query('my_characters');
-    var keyMovesTable = await db.query('key_moves');
-    var punishes = await db.query('punishes');
-    var combos = await db.query('combos');
-    var launchers = await db.query('launchers');
-    var stanceMoves = await db.query('stance_moves');
-    return {
-      'my_characters': myCharactersTable
-          .map(
-            (row) => {
-              'id': row['id'],
-              'name': row['name'],
-              'isFavourite': row['isFavourite'],
-              'createdAt': row['createdAt'],
-            },
-          )
-          .toList(),
-      'key_moves': keyMovesTable
-          .map(
-            (row) => {
-              'id': row['id'],
-              'characterName': row['characterName'],
-              'inputs': row['inputs'],
-              'frames': row['frames'],
-              'onHit': row['onHit'],
-              'onBlock': row['onBlock'],
-              'remark': row['remark'],
-              'createdAt': row['createdAt'],
-            },
-          )
-          .toList(),
-      'punishes': punishes
-          .map(
-            (row) => {
-              'id': row['id'],
-              'characterName': row['characterName'],
-              'inputs': row['inputs'],
-              'frames': row['frames'],
-              'createdAt': row['createdAt'],
-            },
-          )
-          .toList(),
-      'combos': combos
-          .map(
-            (row) => {
-              'id': row['id'],
-              'characterName': row['characterName'],
-              'inputs': row['inputs'],
-              'createdAt': row['createdAt'],
-            },
-          )
-          .toList(),
-      'launchers': launchers
-          .map(
-            (row) => {
-              'id': row['id'],
-              'characterName': row['characterName'],
-              'inputs': row['inputs'],
-              'comboId': row['comboId'],
-              'createdAt': row['createdAt'],
-            },
-          )
-          .toList(),
-      'stance_moves': stanceMoves
-          .map(
-            (row) => {
-              'id': row['id'],
-              'characterName': row['characterName'],
-              'stance': row['stance'],
-              'inputs': row['inputs'],
-              'frames': row['frames'],
-              'onHit': row['onHit'],
-              'onBlock': row['onBlock'],
-              'remark': row['remark'],
-              'createdAt': row['createdAt'],
-            },
-          )
-          .toList(),
-    };
+    return _withErrorStorage(() async {
+      final db = await database;
+      var myCharactersTable = await db.query('my_characters');
+      var keyMovesTable = await db.query('key_moves');
+      var punishes = await db.query('punishes');
+      var combos = await db.query('combos');
+      var launchers = await db.query('launchers');
+      var stanceMoves = await db.query('stance_moves');
+      return {
+        'my_characters': myCharactersTable
+            .map(
+              (row) => {
+                'id': row['id'],
+                'name': row['name'],
+                'isFavourite': row['isFavourite'],
+                'createdAt': row['createdAt'],
+              },
+            )
+            .toList(),
+        'key_moves': keyMovesTable
+            .map(
+              (row) => {
+                'id': row['id'],
+                'characterName': row['characterName'],
+                'inputs': row['inputs'],
+                'frames': row['frames'],
+                'onHit': row['onHit'],
+                'onBlock': row['onBlock'],
+                'remark': row['remark'],
+                'createdAt': row['createdAt'],
+              },
+            )
+            .toList(),
+        'punishes': punishes
+            .map(
+              (row) => {
+                'id': row['id'],
+                'characterName': row['characterName'],
+                'inputs': row['inputs'],
+                'frames': row['frames'],
+                'createdAt': row['createdAt'],
+              },
+            )
+            .toList(),
+        'combos': combos
+            .map(
+              (row) => {
+                'id': row['id'],
+                'characterName': row['characterName'],
+                'inputs': row['inputs'],
+                'createdAt': row['createdAt'],
+              },
+            )
+            .toList(),
+        'launchers': launchers
+            .map(
+              (row) => {
+                'id': row['id'],
+                'characterName': row['characterName'],
+                'inputs': row['inputs'],
+                'comboId': row['comboId'],
+                'createdAt': row['createdAt'],
+              },
+            )
+            .toList(),
+        'stance_moves': stanceMoves
+            .map(
+              (row) => {
+                'id': row['id'],
+                'characterName': row['characterName'],
+                'stance': row['stance'],
+                'inputs': row['inputs'],
+                'frames': row['frames'],
+                'onHit': row['onHit'],
+                'onBlock': row['onBlock'],
+                'remark': row['remark'],
+                'createdAt': row['createdAt'],
+              },
+            )
+            .toList(),
+      };
+    });
   }
 
   /// Check app version in Firebase
   /// @return Future<String> app version
   Future<String> getAppVersion() async {
-    dynamic version = await FirebaseHelper.instance.getCollection(
-      'app_version',
-    );
-    return version[0]['version'];
+    return _withErrorStorage(() async {
+      dynamic version = await FirebaseHelper.instance.getCollection(
+        'app_version',
+      );
+      return version[0]['version'];
+    });
   }
 
   /// Insert a character row if needed.
   /// @param name character name
   /// @return Future<int> inserted row id
   Future<int> insertMyCharacter(String name) async {
-    final db = await database;
-    Map<String, dynamic> character = {
-      'name': name,
-      'isFavourite': 0,
-      'createdAt': DateTime.now().millisecondsSinceEpoch,
-    };
-    return await db.insert(
-      'my_characters',
-      character,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    return _withErrorStorage(() async {
+      final db = await database;
+      Map<String, dynamic> character = {
+        'name': name,
+        'isFavourite': 0,
+        'createdAt': DateTime.now().millisecondsSinceEpoch,
+      };
+      final int res = await db.insert(
+        'my_characters',
+        character,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      return res;
+    });
   }
 
   /// Return all saved characters ordered by creation.
   /// @return Future<List<Map<String,dynamic>>> list of rows
   Future<List<Map<String, dynamic>>> getAllMyCharacters() async {
-    final db = await database;
-    return await db.query('my_characters', orderBy: 'createdAt DESC');
+    return _withErrorStorage(() async {
+      final db = await database;
+      return await db.query('my_characters', orderBy: 'createdAt DESC');
+    });
   }
 
   /// Delete all data related to a character (characters, moves, combos, launchers).
   /// @param characterName
   /// @return Future<void>
   Future<void> deleteAllCharacterData(String characterName) async {
-    final db = await database;
-    await db.execute('DELETE FROM my_characters WHERE name = ?', [
-      characterName,
-    ]);
-    await db.execute('DELETE FROM key_moves WHERE characterName = ?', [
-      characterName,
-    ]);
-    await db.execute('DELETE FROM punishes WHERE characterName = ?', [
-      characterName,
-    ]);
-    await db.execute('DELETE FROM launchers WHERE characterName = ?', [
-      characterName,
-    ]);
-    await db.execute('DELETE FROM combos WHERE characterName = ?', [
-      characterName,
-    ]);
-    await db.execute('DELETE FROM stance_moves WHERE characterName = ?', [
-      characterName,
-    ]);
+    return _withErrorStorage(() async {
+      final db = await database;
+      await db.execute('DELETE FROM my_characters WHERE name = ?', [
+        characterName,
+      ]);
+      await db.execute('DELETE FROM key_moves WHERE characterName = ?', [
+        characterName,
+      ]);
+      await db.execute('DELETE FROM punishes WHERE characterName = ?', [
+        characterName,
+      ]);
+      await db.execute('DELETE FROM launchers WHERE characterName = ?', [
+        characterName,
+      ]);
+      await db.execute('DELETE FROM combos WHERE characterName = ?', [
+        characterName,
+      ]);
+      await db.execute('DELETE FROM stance_moves WHERE characterName = ?', [
+        characterName,
+      ]);
+    });
   }
 
   Future<bool> toggleFavouriteCharacter(String characterName) async {
-    final db = await database;
-    final List<Map<String, dynamic>> existingCharacter = await db.query(
-      'my_characters',
-      where: 'name = ?',
-      whereArgs: [characterName],
-    );
-    if (existingCharacter.isNotEmpty) {
-      final isFavourite = existingCharacter[0]['isFavourite'] == 1;
-      await db.update(
+    return _withErrorStorage(() async {
+      final db = await database;
+      final List<Map<String, dynamic>> existingCharacter = await db.query(
         'my_characters',
-        {'isFavourite': isFavourite ? 0 : 1},
         where: 'name = ?',
         whereArgs: [characterName],
       );
-      return !isFavourite;
-    }
-    return false;
+      if (existingCharacter.isNotEmpty) {
+        final isFavourite = existingCharacter[0]['isFavourite'] == 1;
+        await db.update(
+          'my_characters',
+          {'isFavourite': isFavourite ? 0 : 1},
+          where: 'name = ?',
+          whereArgs: [characterName],
+        );
+        return !isFavourite;
+      }
+      return false;
+    });
   }
 
   /// Close DB connection.
   /// @return Future<void>
   Future<void> close() async {
-    if (_db != null) {
-      await _db!.close();
-      _db = null;
-    }
+    return _withErrorStorage(() async {
+      if (_db != null) {
+        await _db!.close();
+        _db = null;
+      }
+    });
   }
 
   /// Insert a key move with optional metadata; prevents duplicates.
@@ -323,36 +363,38 @@ class DBProvider {
     int? onBlock,
     String? remark,
   }) async {
-    final db = await database;
-    // ensure character exists to keep referential consistency for later queries
-    List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
-    if (!existingChars.any((c) => c['name'] == characterName)) {
-      await insertMyCharacter(characterName);
-    }
-    Map<String, dynamic> move = {
-      'characterName': characterName,
-      'inputs': input,
-      'frames': frames,
-      'onHit': onHit,
-      'onBlock': onBlock,
-      'remark': remark,
-      'createdAt': DateTime.now().millisecondsSinceEpoch,
-    };
-    // Prevent duplicates based on character + inputs
-    final List<Map<String, dynamic>> existingMove = await db.query(
-      'key_moves',
-      where: 'characterName = ? AND inputs = ?',
-      whereArgs: [characterName, input],
-    );
-    if (existingMove.isNotEmpty) {
-      return -1;
-    } else {
-      return await db.insert(
+    return _withErrorStorage(() async {
+      final db = await database;
+      // ensure character exists to keep referential consistency for later queries
+      List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
+      if (!existingChars.any((c) => c['name'] == characterName)) {
+        await insertMyCharacter(characterName);
+      }
+      Map<String, dynamic> move = {
+        'characterName': characterName,
+        'inputs': input,
+        'frames': frames,
+        'onHit': onHit,
+        'onBlock': onBlock,
+        'remark': remark,
+        'createdAt': DateTime.now().millisecondsSinceEpoch,
+      };
+      // Prevent duplicates based on character + inputs
+      final List<Map<String, dynamic>> existingMove = await db.query(
         'key_moves',
-        move,
-        conflictAlgorithm: ConflictAlgorithm.replace,
+        where: 'characterName = ? AND inputs = ?',
+        whereArgs: [characterName, input],
       );
-    }
+      if (existingMove.isNotEmpty) {
+        return -1;
+      } else {
+        return await db.insert(
+          'key_moves',
+          move,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
   }
 
   /// Fetch key moves for a character.
@@ -361,24 +403,26 @@ class DBProvider {
   Future<List<Map<String, dynamic>>> getKeyMovesForCharacter(
     String characterName,
   ) async {
-    final db = await database;
-    final res = await db.query(
-      'key_moves',
-      where: 'characterName = ?',
-      whereArgs: [characterName],
-      orderBy: 'createdAt ASC',
-    );
-    return res
-        .map(
-          (row) => {
-            'inputs': row['inputs'],
-            'frames': row['frames'],
-            'onHit': row['onHit'],
-            'onBlock': row['onBlock'],
-            'remark': row['remark'],
-          },
-        )
-        .toList();
+    return _withErrorStorage(() async {
+      final db = await database;
+      final res = await db.query(
+        'key_moves',
+        where: 'characterName = ?',
+        whereArgs: [characterName],
+        orderBy: 'createdAt ASC',
+      );
+      return res
+          .map(
+            (row) => {
+              'inputs': row['inputs'],
+              'frames': row['frames'],
+              'onHit': row['onHit'],
+              'onBlock': row['onBlock'],
+              'remark': row['remark'],
+            },
+          )
+          .toList();
+    });
   }
 
   /// Delete a key move row.
@@ -386,13 +430,15 @@ class DBProvider {
   /// @param string inputs string
   /// @return Future<bool> true if deleted
   Future<bool> deleteKeyMove(String characterName, String string) async {
-    final db = await database;
-    var res = await db.delete(
-      'key_moves',
-      where: 'characterName = ? AND inputs = ?',
-      whereArgs: [characterName, string],
-    );
-    return res > 0;
+    return _withErrorStorage(() async {
+      final db = await database;
+      var res = await db.delete(
+        'key_moves',
+        where: 'characterName = ? AND inputs = ?',
+        whereArgs: [characterName, string],
+      );
+      return res > 0;
+    });
   }
 
   /// Insert or update a punish (unique by character + frames).
@@ -405,36 +451,38 @@ class DBProvider {
     String input,
     int frames,
   ) async {
-    final db = await database;
-    List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
-    if (!existingChars.any((c) => c['name'] == characterName)) {
-      await insertMyCharacter(characterName);
-    }
-    Map<String, dynamic> punish = {
-      'characterName': characterName,
-      'inputs': input,
-      'frames': frames,
-      'createdAt': DateTime.now().millisecondsSinceEpoch,
-    };
-    final List<Map<String, dynamic>> existingPunishes = await db.query(
-      'punishes',
-      where: 'characterName = ? AND frames = ?',
-      whereArgs: [characterName, frames],
-    );
-    if (existingPunishes.isNotEmpty) {
-      await db.update(
+    return _withErrorStorage(() async {
+      final db = await database;
+      List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
+      if (!existingChars.any((c) => c['name'] == characterName)) {
+        await insertMyCharacter(characterName);
+      }
+      Map<String, dynamic> punish = {
+        'characterName': characterName,
+        'inputs': input,
+        'frames': frames,
+        'createdAt': DateTime.now().millisecondsSinceEpoch,
+      };
+      final List<Map<String, dynamic>> existingPunishes = await db.query(
         'punishes',
-        punish,
         where: 'characterName = ? AND frames = ?',
         whereArgs: [characterName, frames],
       );
-    } else {
-      await db.insert(
-        'punishes',
-        punish,
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    }
+      if (existingPunishes.isNotEmpty) {
+        await db.update(
+          'punishes',
+          punish,
+          where: 'characterName = ? AND frames = ?',
+          whereArgs: [characterName, frames],
+        );
+      } else {
+        await db.insert(
+          'punishes',
+          punish,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
   }
 
   /// Get punish rows for a character sorted by frames.
@@ -443,20 +491,22 @@ class DBProvider {
   Future<List<Map<String, dynamic>>> getPunishesForCharacter(
     String characterName,
   ) async {
-    final db = await database;
-    final res = await db.query(
-      'punishes',
-      where: 'characterName = ?',
-      whereArgs: [characterName],
-      orderBy: 'frames DESC',
-    );
-    List<Map<String, dynamic>> formattedRes = res
-        .map((row) => {'inputs': row['inputs'], 'frames': row['frames']})
-        .toList();
-    formattedRes.sort(
-      (a, b) => (a['frames'] as int).compareTo(b['frames'] as int),
-    );
-    return formattedRes;
+    return _withErrorStorage(() async {
+      final db = await database;
+      final res = await db.query(
+        'punishes',
+        where: 'characterName = ?',
+        whereArgs: [characterName],
+        orderBy: 'frames DESC',
+      );
+      List<Map<String, dynamic>> formattedRes = res
+          .map((row) => {'inputs': row['inputs'], 'frames': row['frames']})
+          .toList();
+      formattedRes.sort(
+        (a, b) => (a['frames'] as int).compareTo(b['frames'] as int),
+      );
+      return formattedRes;
+    });
   }
 
   /// Delete a punish row.
@@ -469,13 +519,15 @@ class DBProvider {
     String string,
     int frames,
   ) async {
-    final db = await database;
-    var res = await db.delete(
-      'punishes',
-      where: 'characterName = ? AND inputs = ? AND frames = ?',
-      whereArgs: [characterName, string, frames],
-    );
-    return res > 0;
+    return _withErrorStorage(() async {
+      final db = await database;
+      var res = await db.delete(
+        'punishes',
+        where: 'characterName = ? AND inputs = ? AND frames = ?',
+        whereArgs: [characterName, string, frames],
+      );
+      return res > 0;
+    });
   }
 
   /// Insert a combo row.
@@ -483,21 +535,23 @@ class DBProvider {
   /// @param input inputs string
   /// @return Future<int> inserted row id
   Future<int> insertCombo(String characterName, String input) async {
-    final db = await database;
-    List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
-    if (!existingChars.any((c) => c['name'] == characterName)) {
-      await insertMyCharacter(characterName);
-    }
-    Map<String, dynamic> combo = {
-      'characterName': characterName,
-      'inputs': input,
-      'createdAt': DateTime.now().millisecondsSinceEpoch,
-    };
-    return await db.insert(
-      'combos',
-      combo,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    return _withErrorStorage(() async {
+      final db = await database;
+      List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
+      if (!existingChars.any((c) => c['name'] == characterName)) {
+        await insertMyCharacter(characterName);
+      }
+      Map<String, dynamic> combo = {
+        'characterName': characterName,
+        'inputs': input,
+        'createdAt': DateTime.now().millisecondsSinceEpoch,
+      };
+      return await db.insert(
+        'combos',
+        combo,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    });
   }
 
   /// Insert a launcher tied to a combo (foreign key comboId).
@@ -510,22 +564,24 @@ class DBProvider {
     String input,
     int comboId,
   ) async {
-    final db = await database;
-    List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
-    if (!existingChars.any((c) => c['name'] == characterName)) {
-      await insertMyCharacter(characterName);
-    }
-    Map<String, dynamic> launcher = {
-      'characterName': characterName,
-      'inputs': input,
-      'comboId': comboId,
-      'createdAt': DateTime.now().millisecondsSinceEpoch,
-    };
-    return await db.insert(
-      'launchers',
-      launcher,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    return _withErrorStorage(() async {
+      final db = await database;
+      List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
+      if (!existingChars.any((c) => c['name'] == characterName)) {
+        await insertMyCharacter(characterName);
+      }
+      Map<String, dynamic> launcher = {
+        'characterName': characterName,
+        'inputs': input,
+        'comboId': comboId,
+        'createdAt': DateTime.now().millisecondsSinceEpoch,
+      };
+      return await db.insert(
+        'launchers',
+        launcher,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    });
   }
 
   /// Get a combo with its launchers.
@@ -536,25 +592,27 @@ class DBProvider {
     String characterName,
     int comboId,
   ) async {
-    final db = await database;
-    final comboRes = await db.query(
-      'combos',
-      where: 'characterName = ? AND id = ?',
-      whereArgs: [characterName, comboId],
-    );
-    if (comboRes.isEmpty) return null;
+    return _withErrorStorage(() async {
+      final db = await database;
+      final comboRes = await db.query(
+        'combos',
+        where: 'characterName = ? AND id = ?',
+        whereArgs: [characterName, comboId],
+      );
+      if (comboRes.isEmpty) return null;
 
-    final combo = Map<String, dynamic>.from(comboRes.first);
-    final launchersRes = await db.query(
-      'launchers',
-      where: 'comboId = ?',
-      whereArgs: [comboId],
-      orderBy: 'createdAt ASC',
-    );
-    combo['launchers'] = launchersRes
-        .map((l) => {'id': l['id'], 'inputs': l['inputs']})
-        .toList();
-    return combo;
+      final combo = Map<String, dynamic>.from(comboRes.first);
+      final launchersRes = await db.query(
+        'launchers',
+        where: 'comboId = ?',
+        whereArgs: [comboId],
+        orderBy: 'createdAt ASC',
+      );
+      combo['launchers'] = launchersRes
+          .map((l) => {'id': l['id'], 'inputs': l['inputs']})
+          .toList();
+      return combo;
+    });
   }
 
   /// Get all combos for a character together with their launchers.
@@ -563,31 +621,33 @@ class DBProvider {
   Future<List<Map<String, dynamic>>> getCombosForCharacter(
     String characterName,
   ) async {
-    final db = await database;
-    final res = await db.query(
-      'combos',
-      where: 'characterName = ?',
-      whereArgs: [characterName],
-      orderBy: 'createdAt ASC',
-    );
-    List<Map<String, dynamic>> formattedRes = [];
-    for (var row in res) {
-      final int comboId = row['id'] as int;
-      final launchersRes = await db.query(
-        'launchers',
-        where: 'comboId = ?',
-        whereArgs: [comboId],
+    return _withErrorStorage(() async {
+      final db = await database;
+      final res = await db.query(
+        'combos',
+        where: 'characterName = ?',
+        whereArgs: [characterName],
         orderBy: 'createdAt ASC',
       );
-      formattedRes.add({
-        'id': comboId,
-        'inputs': row['inputs'],
-        'launchers': launchersRes
-            .map((l) => {'id': l['id'], 'inputs': l['inputs']})
-            .toList(),
-      });
-    }
-    return formattedRes;
+      List<Map<String, dynamic>> formattedRes = [];
+      for (var row in res) {
+        final int comboId = row['id'] as int;
+        final launchersRes = await db.query(
+          'launchers',
+          where: 'comboId = ?',
+          whereArgs: [comboId],
+          orderBy: 'createdAt ASC',
+        );
+        formattedRes.add({
+          'id': comboId,
+          'inputs': row['inputs'],
+          'launchers': launchersRes
+              .map((l) => {'id': l['id'], 'inputs': l['inputs']})
+              .toList(),
+        });
+      }
+      return formattedRes;
+    });
   }
 
   /// Delete a combo row (launchers cascade if FK enforced).
@@ -595,13 +655,15 @@ class DBProvider {
   /// @param inputs string
   /// @return Future<bool>
   Future<bool> deleteCombo(String characterName, String inputs) async {
-    final db = await database;
-    final res = await db.delete(
-      'combos',
-      where: 'characterName = ? AND inputs = ?',
-      whereArgs: [characterName, inputs],
-    );
-    return res > 0;
+    return _withErrorStorage(() async {
+      final db = await database;
+      final res = await db.delete(
+        'combos',
+        where: 'characterName = ? AND inputs = ?',
+        whereArgs: [characterName, inputs],
+      );
+      return res > 0;
+    });
   }
 
   /// Delete a launcher by id for a character.
@@ -609,13 +671,15 @@ class DBProvider {
   /// @param launcherId
   /// @return Future<bool>
   Future<bool> deleteLauncher(String characterName, int launcherId) async {
-    final db = await database;
-    final res = await db.delete(
-      'launchers',
-      where: 'id = ? AND characterName = ?',
-      whereArgs: [launcherId, characterName],
-    );
-    return res > 0;
+    return _withErrorStorage(() async {
+      final db = await database;
+      final res = await db.delete(
+        'launchers',
+        where: 'id = ? AND characterName = ?',
+        whereArgs: [launcherId, characterName],
+      );
+      return res > 0;
+    });
   }
 
   /// Insert a stance move with stance metadata.
@@ -636,35 +700,37 @@ class DBProvider {
     int? onHit,
     int? onBlock,
   }) async {
-    final db = await database;
-    List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
-    if (!existingChars.any((c) => c['name'] == characterName)) {
-      await insertMyCharacter(characterName);
-    }
-    Map<String, dynamic> move = {
-      'characterName': characterName,
-      'inputs': input,
-      'stance': stance,
-      'frames': frames,
-      'onHit': onHit,
-      'onBlock': onBlock,
-      'remark': remark,
-      'createdAt': DateTime.now().millisecondsSinceEpoch,
-    };
-    final List<Map<String, dynamic>> existingMove = await db.query(
-      'stance_moves',
-      where: 'characterName = ? AND inputs = ? AND stance = ?',
-      whereArgs: [characterName, input, stance],
-    );
-    if (existingMove.isNotEmpty) {
-      return -1;
-    } else {
-      return await db.insert(
+    return _withErrorStorage(() async {
+      final db = await database;
+      List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
+      if (!existingChars.any((c) => c['name'] == characterName)) {
+        await insertMyCharacter(characterName);
+      }
+      Map<String, dynamic> move = {
+        'characterName': characterName,
+        'inputs': input,
+        'stance': stance,
+        'frames': frames,
+        'onHit': onHit,
+        'onBlock': onBlock,
+        'remark': remark,
+        'createdAt': DateTime.now().millisecondsSinceEpoch,
+      };
+      final List<Map<String, dynamic>> existingMove = await db.query(
         'stance_moves',
-        move,
-        conflictAlgorithm: ConflictAlgorithm.replace,
+        where: 'characterName = ? AND inputs = ? AND stance = ?',
+        whereArgs: [characterName, input, stance],
       );
-    }
+      if (existingMove.isNotEmpty) {
+        return -1;
+      } else {
+        return await db.insert(
+          'stance_moves',
+          move,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
   }
 
   /// Get stance moves for a character.
@@ -673,25 +739,27 @@ class DBProvider {
   Future<List<Map<String, dynamic>>> getStanceMovesForCharacter(
     String characterName,
   ) async {
-    final db = await database;
-    final res = await db.query(
-      'stance_moves',
-      where: 'characterName = ?',
-      whereArgs: [characterName],
-      orderBy: 'createdAt ASC',
-    );
-    return res
-        .map(
-          (row) => {
-            'inputs': row['inputs'],
-            'stance': row['stance'],
-            'frames': row['frames'],
-            'onHit': row['onHit'],
-            'onBlock': row['onBlock'],
-            'remark': row['remark'],
-          },
-        )
-        .toList();
+    return _withErrorStorage(() async {
+      final db = await database;
+      final res = await db.query(
+        'stance_moves',
+        where: 'characterName = ?',
+        whereArgs: [characterName],
+        orderBy: 'createdAt ASC',
+      );
+      return res
+          .map(
+            (row) => {
+              'inputs': row['inputs'],
+              'stance': row['stance'],
+              'frames': row['frames'],
+              'onHit': row['onHit'],
+              'onBlock': row['onBlock'],
+              'remark': row['remark'],
+            },
+          )
+          .toList();
+    });
   }
 
   /// Delete a stance move by inputs + stance.
@@ -704,13 +772,15 @@ class DBProvider {
     String string,
     String stance,
   ) async {
-    final db = await database;
-    var res = await db.delete(
-      'stance_moves',
-      where: 'characterName = ? AND inputs = ? AND stance = ?',
-      whereArgs: [characterName, string, stance],
-    );
-    return res > 0;
+    return _withErrorStorage(() async {
+      final db = await database;
+      var res = await db.delete(
+        'stance_moves',
+        where: 'characterName = ? AND inputs = ? AND stance = ?',
+        whereArgs: [characterName, string, stance],
+      );
+      return res > 0;
+    });
   }
 
   /// Parse JSON and import all tables (delegates to importAllTablesFromMap).
@@ -720,9 +790,11 @@ class DBProvider {
     String jsonString, {
     bool clearFirst = true,
   }) async {
-    final Map<String, dynamic> data =
-        jsonDecode(jsonString) as Map<String, dynamic>;
-    await importAllTablesFromMap(data, clearFirst: clearFirst);
+    return _withErrorStorage(() async {
+      final Map<String, dynamic> data =
+          jsonDecode(jsonString) as Map<String, dynamic>;
+      await importAllTablesFromMap(data, clearFirst: clearFirst);
+    });
   }
 
   /// Import data from a Map into DB within a transaction.
@@ -732,230 +804,262 @@ class DBProvider {
     Map<String, dynamic> all, {
     bool clearFirst = true,
   }) async {
-    final db = await database;
+    return _withErrorStorage(() async {
+      final db = await database;
 
-    await db.transaction((txn) async {
-      if (clearFirst) {
-        await txn.delete('launchers');
-        await txn.delete('combos');
-        await txn.delete('key_moves');
-        await txn.delete('punishes');
-        await txn.delete('my_characters');
-        await txn.delete('stance_moves');
-      }
+      await db.transaction((txn) async {
+        if (clearFirst) {
+          await txn.delete('launchers');
+          await txn.delete('combos');
+          await txn.delete('key_moves');
+          await txn.delete('punishes');
+          await txn.delete('my_characters');
+          await txn.delete('stance_moves');
+        }
 
-      Future<void> insertList(String table, dynamic listObj) async {
-        if (listObj == null) return;
-        if (listObj is! List) return;
-        for (var raw in listObj) {
-          if (raw is Map) {
-            final Map<String, dynamic> row = Map<String, dynamic>.from(raw);
-            // conflictAlgorithm.replace lets us insert rows with explicit ids safely
-            await txn.insert(
-              table,
-              row,
-              conflictAlgorithm: ConflictAlgorithm.replace,
-            );
+        Future<void> insertList(String table, dynamic listObj) async {
+          if (listObj == null) return;
+          if (listObj is! List) return;
+          for (var raw in listObj) {
+            if (raw is Map) {
+              final Map<String, dynamic> row = Map<String, dynamic>.from(raw);
+              // conflictAlgorithm.replace lets us insert rows with explicit ids safely
+              await txn.insert(
+                table,
+                row,
+                conflictAlgorithm: ConflictAlgorithm.replace,
+              );
+            }
           }
         }
-      }
 
-      await insertList('my_characters', all['my_characters']);
-      await insertList('combos', all['combos']);
-      await insertList('key_moves', all['key_moves']);
-      await insertList('punishes', all['punishes']);
-      await insertList('launchers', all['launchers']);
-      await insertList('stance_moves', all['stance_moves']);
+        await insertList('my_characters', all['my_characters']);
+        await insertList('combos', all['combos']);
+        await insertList('key_moves', all['key_moves']);
+        await insertList('punishes', all['punishes']);
+        await insertList('launchers', all['launchers']);
+        await insertList('stance_moves', all['stance_moves']);
 
-      // update sqlite_sequence to keep AUTOINCREMENT values coherent with inserted ids
-      for (final table in [
-        'my_characters',
-        'key_moves',
-        'punishes',
-        'combos',
-        'launchers',
-        'stance_moves',
-      ]) {
-        final maxRes = await txn.rawQuery(
-          'SELECT MAX(id) as maxId FROM $table',
-        );
-        final maxId = (maxRes.isNotEmpty && maxRes.first['maxId'] != null)
-            ? (maxRes.first['maxId'] as int)
-            : 0;
-        await txn.rawUpdate(
-          'UPDATE sqlite_sequence SET seq = ? WHERE name = ?',
-          [maxId, table],
-        );
-      }
+        // update sqlite_sequence to keep AUTOINCREMENT values coherent with inserted ids
+        for (final table in [
+          'my_characters',
+          'key_moves',
+          'punishes',
+          'combos',
+          'launchers',
+          'stance_moves',
+        ]) {
+          final maxRes = await txn.rawQuery(
+            'SELECT MAX(id) as maxId FROM $table',
+          );
+          final maxId = (maxRes.isNotEmpty && maxRes.first['maxId'] != null)
+              ? (maxRes.first['maxId'] as int)
+              : 0;
+          await txn.rawUpdate(
+            'UPDATE sqlite_sequence SET seq = ? WHERE name = ?',
+            [maxId, table],
+          );
+        }
+      });
     });
   }
 
   /// Import the embedded default DB stored in Helper().defaultDB.
   /// @param clearFirst whether to clear tables before inserting
   Future<void> importDefaultDB({bool clearFirst = true}) async {
-    dynamic myCharacters = await FirebaseHelper.instance.getCollection(
-      'my_characters',
-    );
-    dynamic keyMoves = await FirebaseHelper.instance.getCollection('key_moves');
-    dynamic punishes = await FirebaseHelper.instance.getCollection('punishes');
-    dynamic combos = await FirebaseHelper.instance.getCollection('combos');
-    dynamic launchers = await FirebaseHelper.instance.getCollection(
-      'launchers',
-    );
-    dynamic stanceMoves = await FirebaseHelper.instance.getCollection(
-      'stance_moves',
-    );
-    final dynamic raw = {
-      'my_characters': myCharacters,
-      'key_moves': keyMoves,
-      'punishes': punishes,
-      'combos': combos,
-      'launchers': launchers,
-      'stance_moves': stanceMoves,
-    };
-    if (raw == null || raw is! Map<String, dynamic>) {
-      if (raw is Map) {
-        await importAllTablesFromMap(
-          Map<String, dynamic>.from(raw),
-          clearFirst: clearFirst,
-        );
+    return _withErrorStorage(() async {
+      dynamic myCharacters = await FirebaseHelper.instance.getCollection(
+        'my_characters',
+      );
+      dynamic keyMoves = await FirebaseHelper.instance.getCollection(
+        'key_moves',
+      );
+      dynamic punishes = await FirebaseHelper.instance.getCollection(
+        'punishes',
+      );
+      dynamic combos = await FirebaseHelper.instance.getCollection('combos');
+      dynamic launchers = await FirebaseHelper.instance.getCollection(
+        'launchers',
+      );
+      dynamic stanceMoves = await FirebaseHelper.instance.getCollection(
+        'stance_moves',
+      );
+      final dynamic raw = {
+        'my_characters': myCharacters,
+        'key_moves': keyMoves,
+        'punishes': punishes,
+        'combos': combos,
+        'launchers': launchers,
+        'stance_moves': stanceMoves,
+      };
+      if (raw == null || raw is! Map<String, dynamic>) {
+        if (raw is Map) {
+          await importAllTablesFromMap(
+            Map<String, dynamic>.from(raw),
+            clearFirst: clearFirst,
+          );
+        }
+        return;
       }
-      return;
-    }
-    await importAllTablesFromMap(raw, clearFirst: clearFirst);
+      await importAllTablesFromMap(raw, clearFirst: clearFirst);
+    });
   }
 
   /// Export the embedded default DB stored to Firestore.
   /// @param clearFirst whether to clear tables before inserting
   Future<void> writeDefaultDB(List<String> selectedCharacters) async {
-    Map<String, dynamic> raw = await getAllTables();
-    List<Map<String, dynamic>> myCharacters = raw['my_characters'];
-    List<Map<String, dynamic>> keyMoves = raw['key_moves'];
-    List<Map<String, dynamic>> punishes = raw['punishes'];
-    List<Map<String, dynamic>> combos = raw['combos'];
-    List<Map<String, dynamic>> launchers = raw['launchers'];
-    List<Map<String, dynamic>> stanceMoves = raw['stance_moves'];
-    myCharacters.removeWhere((c) => !selectedCharacters.contains(c['name']));
-    keyMoves.removeWhere(
-      (k) => !selectedCharacters.contains(k['characterName']),
-    );
-    punishes.removeWhere(
-      (p) => !selectedCharacters.contains(p['characterName']),
-    );
-    combos.removeWhere((c) => !selectedCharacters.contains(c['characterName']));
-    launchers.removeWhere(
-      (l) => !selectedCharacters.contains(l['characterName']),
-    );
-    stanceMoves.removeWhere(
-      (s) => !selectedCharacters.contains(s['characterName']),
-    );
-    await FirebaseHelper.instance.deleteAllDocuments('my_characters');
-    await FirebaseHelper.instance.deleteAllDocuments('key_moves');
-    await FirebaseHelper.instance.deleteAllDocuments('punishes');
-    await FirebaseHelper.instance.deleteAllDocuments('combos');
-    await FirebaseHelper.instance.deleteAllDocuments('launchers');
-    await FirebaseHelper.instance.deleteAllDocuments('stance_moves');
-    for (dynamic character in myCharacters) {
-      await FirebaseHelper.instance.set('my_characters', 'default', character);
-    }
-    for (dynamic keyMove in keyMoves) {
-      await FirebaseHelper.instance.set('key_moves', 'default', keyMove);
-    }
-    for (dynamic punish in punishes) {
-      await FirebaseHelper.instance.set('punishes', 'default', punish);
-    }
-    for (dynamic combo in combos) {
-      await FirebaseHelper.instance.set('combos', 'default', combo);
-    }
-    for (dynamic launcher in launchers) {
-      await FirebaseHelper.instance.set('launchers', 'default', launcher);
-    }
-    for (dynamic stanceMove in stanceMoves) {
-      await FirebaseHelper.instance.set('stance_moves', 'default', stanceMove);
-    }
+    return _withErrorStorage(() async {
+      Map<String, dynamic> raw = await getAllTables();
+      List<Map<String, dynamic>> myCharacters = raw['my_characters'];
+      List<Map<String, dynamic>> keyMoves = raw['key_moves'];
+      List<Map<String, dynamic>> punishes = raw['punishes'];
+      List<Map<String, dynamic>> combos = raw['combos'];
+      List<Map<String, dynamic>> launchers = raw['launchers'];
+      List<Map<String, dynamic>> stanceMoves = raw['stance_moves'];
+      myCharacters.removeWhere((c) => !selectedCharacters.contains(c['name']));
+      keyMoves.removeWhere(
+        (k) => !selectedCharacters.contains(k['characterName']),
+      );
+      punishes.removeWhere(
+        (p) => !selectedCharacters.contains(p['characterName']),
+      );
+      combos.removeWhere(
+        (c) => !selectedCharacters.contains(c['characterName']),
+      );
+      launchers.removeWhere(
+        (l) => !selectedCharacters.contains(l['characterName']),
+      );
+      stanceMoves.removeWhere(
+        (s) => !selectedCharacters.contains(s['characterName']),
+      );
+      for (String char in selectedCharacters) {
+        await FirebaseHelper.instance.deleteDocumentsByName(
+          'my_characters',
+          char,
+        );
+        await FirebaseHelper.instance.deleteDocumentsByName('key_moves', char);
+        await FirebaseHelper.instance.deleteDocumentsByName('punishes', char);
+        await FirebaseHelper.instance.deleteDocumentsByName('combos', char);
+        await FirebaseHelper.instance.deleteDocumentsByName('launchers', char);
+        await FirebaseHelper.instance.deleteDocumentsByName(
+          'stance_moves',
+          char,
+        );
+      }
+      for (dynamic character in myCharacters) {
+        await FirebaseHelper.instance.set(
+          'my_characters',
+          'default',
+          character,
+        );
+      }
+      for (dynamic keyMove in keyMoves) {
+        await FirebaseHelper.instance.set('key_moves', 'default', keyMove);
+      }
+      for (dynamic punish in punishes) {
+        await FirebaseHelper.instance.set('punishes', 'default', punish);
+      }
+      for (dynamic combo in combos) {
+        await FirebaseHelper.instance.set('combos', 'default', combo);
+      }
+      for (dynamic launcher in launchers) {
+        await FirebaseHelper.instance.set('launchers', 'default', launcher);
+      }
+      for (dynamic stanceMove in stanceMoves) {
+        await FirebaseHelper.instance.set(
+          'stance_moves',
+          'default',
+          stanceMove,
+        );
+      }
+    });
   }
 
   /// Export all tables into a Map.
   /// @return Future<Map<String,dynamic>> map ready to be json-encoded and re-imported
   Future<Map<String, dynamic>> exportAllTablesAsMap() async {
-    final db = await database;
-    final Map<String, dynamic> res = {};
+    return _withErrorStorage(() async {
+      final db = await database;
+      final Map<String, dynamic> res = {};
 
-    final myChars = await db.query('my_characters', orderBy: 'id ASC');
-    final keyMoves = await db.query('key_moves', orderBy: 'id ASC');
-    final punishes = await db.query('punishes', orderBy: 'id ASC');
-    final combos = await db.query('combos', orderBy: 'id ASC');
-    final launchers = await db.query('launchers', orderBy: 'id ASC');
-    final stanceMoves = await db.query('stance_moves', orderBy: 'id ASC');
+      final myChars = await db.query('my_characters', orderBy: 'id ASC');
+      final keyMoves = await db.query('key_moves', orderBy: 'id ASC');
+      final punishes = await db.query('punishes', orderBy: 'id ASC');
+      final combos = await db.query('combos', orderBy: 'id ASC');
+      final launchers = await db.query('launchers', orderBy: 'id ASC');
+      final stanceMoves = await db.query('stance_moves', orderBy: 'id ASC');
 
-    res['my_characters'] = myChars.map((r) {
-      return {'id': r['id'], 'name': r['name'], 'createdAt': r['createdAt']};
-    }).toList();
+      res['my_characters'] = myChars.map((r) {
+        return {'id': r['id'], 'name': r['name'], 'createdAt': r['createdAt']};
+      }).toList();
 
-    res['key_moves'] = keyMoves.map((r) {
-      return {
-        'id': r['id'],
-        'characterName': r['characterName'],
-        'inputs': r['inputs'],
-        'frames': r['frames'],
-        'onHit': r['onHit'],
-        'onBlock': r['onBlock'],
-        'remark': r['remark'],
-        'createdAt': r['createdAt'],
-      };
-    }).toList();
+      res['key_moves'] = keyMoves.map((r) {
+        return {
+          'id': r['id'],
+          'characterName': r['characterName'],
+          'inputs': r['inputs'],
+          'frames': r['frames'],
+          'onHit': r['onHit'],
+          'onBlock': r['onBlock'],
+          'remark': r['remark'],
+          'createdAt': r['createdAt'],
+        };
+      }).toList();
 
-    res['punishes'] = punishes.map((r) {
-      return {
-        'id': r['id'],
-        'characterName': r['characterName'],
-        'inputs': r['inputs'],
-        'frames': r['frames'],
-        'createdAt': r['createdAt'],
-      };
-    }).toList();
+      res['punishes'] = punishes.map((r) {
+        return {
+          'id': r['id'],
+          'characterName': r['characterName'],
+          'inputs': r['inputs'],
+          'frames': r['frames'],
+          'createdAt': r['createdAt'],
+        };
+      }).toList();
 
-    res['combos'] = combos.map((r) {
-      return {
-        'id': r['id'],
-        'characterName': r['characterName'],
-        'inputs': r['inputs'],
-        'createdAt': r['createdAt'],
-      };
-    }).toList();
+      res['combos'] = combos.map((r) {
+        return {
+          'id': r['id'],
+          'characterName': r['characterName'],
+          'inputs': r['inputs'],
+          'createdAt': r['createdAt'],
+        };
+      }).toList();
 
-    res['launchers'] = launchers.map((r) {
-      return {
-        'id': r['id'],
-        'characterName': r['characterName'],
-        'inputs': r['inputs'],
-        'comboId': r['comboId'],
-        'createdAt': r['createdAt'],
-      };
-    }).toList();
+      res['launchers'] = launchers.map((r) {
+        return {
+          'id': r['id'],
+          'characterName': r['characterName'],
+          'inputs': r['inputs'],
+          'comboId': r['comboId'],
+          'createdAt': r['createdAt'],
+        };
+      }).toList();
 
-    // Helper.defaultDB uses "stanceName" key; map DB column 'stance' to that name
-    res['stance_moves'] = stanceMoves.map((r) {
-      return {
-        'id': r['id'],
-        'characterName': r['characterName'],
-        'stance': r['stance'],
-        'inputs': r['inputs'],
-        'remark': r['remark'],
-        'frames': r['frames'],
-        'onHit': r['onHit'],
-        'onBlock': r['onBlock'],
-        'createdAt': r['createdAt'],
-      };
-    }).toList();
+      // Helper.defaultDB uses "stanceName" key; map DB column 'stance' to that name
+      res['stance_moves'] = stanceMoves.map((r) {
+        return {
+          'id': r['id'],
+          'characterName': r['characterName'],
+          'stance': r['stance'],
+          'inputs': r['inputs'],
+          'remark': r['remark'],
+          'frames': r['frames'],
+          'onHit': r['onHit'],
+          'onBlock': r['onBlock'],
+          'createdAt': r['createdAt'],
+        };
+      }).toList();
 
-    return res;
+      return res;
+    });
   }
 
   /// Export all tables as a pretty JSON string ready to be copy/pasted.
   /// @return Future<String> pretty-printed JSON
   Future<String> exportAllTablesAsJsonString() async {
-    final map = await exportAllTablesAsMap();
-    return const JsonEncoder.withIndent('  ').convert(map);
+    return _withErrorStorage(() async {
+      final map = await exportAllTablesAsMap();
+      return const JsonEncoder.withIndent('  ').convert(map);
+    });
   }
 }

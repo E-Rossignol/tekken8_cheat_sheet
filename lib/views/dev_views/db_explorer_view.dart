@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/models/page_type_model.dart';
 import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
+import 'package:tekken_cheat_sheet/widgets/error_message.dart';
 import '../../services/db_provider.dart';
 
 /// Small database explorer used to inspect and manage SQLite tables at runtime.
@@ -80,10 +81,7 @@ class _DBExplorerViewState extends State<DBExplorerView> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur lors de la suppression de "$table"'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: ErrorMessage(), backgroundColor: Colors.red),
       );
     }
     await _refresh();
@@ -115,10 +113,7 @@ class _DBExplorerViewState extends State<DBExplorerView> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Erreur lors de la suppression'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: ErrorMessage(), backgroundColor: Colors.red),
       );
     }
     // recharger la table courante
@@ -146,10 +141,7 @@ class _DBExplorerViewState extends State<DBExplorerView> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Erreur lors de la suppression de la base'),
-          backgroundColor: Colors.red,
-        ),
+        const SnackBar(content: ErrorMessage(), backgroundColor: Colors.red),
       );
     }
   }
