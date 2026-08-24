@@ -84,7 +84,6 @@ class DBProvider {
       CREATE TABLE my_characters(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        isFavourite INTEGER DEFAULT 0,
         createdAt INTEGER
       )
     ''');
@@ -162,10 +161,45 @@ class DBProvider {
     });
   }
 
+  Future<void> rebuildMyCharacters() async {
+    return _withErrorStorage(() async {
+      final db = await database;
+      await db.transaction((txn) async {
+        await txn.execute('DROP TABLE IF EXISTS my_characters_old');
+        await txn.execute(
+          'ALTER TABLE my_characters RENAME TO my_characters_old',
+        );
+        await txn.execute('''
+          CREATE TABLE my_characters(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            createdAt INTEGER
+          )
+        ''');
+        await txn.execute('''
+          INSERT INTO my_characters (id, name, createdAt)
+          SELECT id, name, createdAt FROM my_characters_old
+        ''');
+        await txn.execute('DROP TABLE my_characters_old');
+
+        final maxRes = await txn.rawQuery(
+          'SELECT MAX(id) as maxId FROM my_characters',
+        );
+        final maxId = (maxRes.isNotEmpty && maxRes.first['maxId'] != null)
+            ? (maxRes.first['maxId'] as int)
+            : 0;
+        await txn.rawUpdate(
+          'UPDATE sqlite_sequence SET seq = ? WHERE name = ?',
+          [maxId, 'my_characters'],
+        );
+      });
+    });
+  }
+
   Future<Map<String, dynamic>> getAllTables() async {
     return _withErrorStorage(() async {
       final db = await database;
-      var myCharactersTable = await db.query('my_characters');
+      var myCharactersTable = await getAllMyCharacters();
       var keyMovesTable = await db.query('key_moves');
       var punishes = await db.query('punishes');
       var combos = await db.query('combos');
@@ -177,7 +211,6 @@ class DBProvider {
               (row) => {
                 'id': row['id'],
                 'name': row['name'],
-                'isFavourite': row['isFavourite'],
                 'createdAt': row['createdAt'],
               },
             )
@@ -266,7 +299,6 @@ class DBProvider {
       final db = await database;
       Map<String, dynamic> character = {
         'name': name,
-        'isFavourite': 0,
         'createdAt': DateTime.now().millisecondsSinceEpoch,
       };
       final int res = await db.insert(
@@ -315,25 +347,7 @@ class DBProvider {
   }
 
   Future<bool> toggleFavouriteCharacter(String characterName) async {
-    return _withErrorStorage(() async {
-      final db = await database;
-      final List<Map<String, dynamic>> existingCharacter = await db.query(
-        'my_characters',
-        where: 'name = ?',
-        whereArgs: [characterName],
-      );
-      if (existingCharacter.isNotEmpty) {
-        final isFavourite = existingCharacter[0]['isFavourite'] == 1;
-        await db.update(
-          'my_characters',
-          {'isFavourite': isFavourite ? 0 : 1},
-          where: 'name = ?',
-          whereArgs: [characterName],
-        );
-        return !isFavourite;
-      }
-      return false;
-    });
+    return false;
   }
 
   /// Close DB connection.
@@ -823,6 +837,9 @@ class DBProvider {
           for (var raw in listObj) {
             if (raw is Map) {
               final Map<String, dynamic> row = Map<String, dynamic>.from(raw);
+              if (table == 'my_characters') {
+                row.remove('isFavourite');
+              }
               // conflictAlgorithm.replace lets us insert rows with explicit ids safely
               await txn.insert(
                 table,

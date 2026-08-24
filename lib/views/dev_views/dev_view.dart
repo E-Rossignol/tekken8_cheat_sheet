@@ -138,6 +138,21 @@ class _DevViewState extends State<DevView> {
                 style: TextStyle(fontSize: 20, color: Colors.white),
               ),
             ),
+            TextButton(
+              onPressed: () async {
+                await DBProvider.instance.rebuildMyCharacters();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Database rebuilt successfully!'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
+              child: const Text(
+                'Rebuild correct DB',
+                style: TextStyle(fontSize: 20, color: Colors.white),
+              ),
+            ),
           ],
         ),
       ),

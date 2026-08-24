@@ -12,13 +12,10 @@ class Character {
   /// Creation timestamp.
   final DateTime createdAt;
 
-  bool isFavourite;
-
   Character({
     required this.name,
     this.imagePath,
     this.notes,
-    this.isFavourite = false,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
