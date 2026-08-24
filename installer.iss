@@ -1,5 +1,5 @@
 #define MyAppName "Tekken 8 Cheat Sheet"
-#define MyAppVersion "1.3.2"
+#define MyAppVersion "1.3.3"
 #define MyAppPublisher "Rossignol Erwan"
 #define MyAppExeName "tekken_cheat_sheet.exe"
 
