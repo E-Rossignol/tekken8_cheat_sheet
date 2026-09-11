@@ -992,6 +992,11 @@ class DBProvider {
     });
   }
 
+  Future<List<String>> getOnlineCharacters() async {
+    var res = await FirebaseHelper.instance.getCollection('my_characters');
+    return res.map((c) => c['name'] as String).toList();
+  }
+
   /// Export all tables into a Map.
   /// @return Future<Map<String,dynamic>> map ready to be json-encoded and re-imported
   Future<Map<String, dynamic>> exportAllTablesAsMap() async {

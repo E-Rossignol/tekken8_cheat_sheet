@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tekken_cheat_sheet/services/db_provider.dart';
+import 'package:tekken_cheat_sheet/widgets/default_db_character_card.dart';
 
 import '../../models/page_type_model.dart';
 import '../../widgets/custom_appbar.dart';
@@ -14,8 +15,34 @@ class ExportDbView extends StatefulWidget {
 }
 
 class _ExportDbViewState extends State<ExportDbView> {
-  final List<String> _selectedCharacters = [];
   bool _isWriting = false;
+  final List<String> _onlineCharacters = [];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    initOnlineCharacters();
+  }
+
+  Future<void> initOnlineCharacters() async {
+    try {
+      final onlineChars = await DBProvider.instance.getOnlineCharacters();
+      setState(() {
+        _onlineCharacters.addAll(onlineChars);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Erreur lors de la récupération des personnages en ligne: $e',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,78 +62,69 @@ class _ExportDbViewState extends State<ExportDbView> {
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Expanded(
-                    child: ListView.builder(
-                      itemCount: widget.myCharacters.length,
-                      itemBuilder: (context, index) {
-                        final name = widget.myCharacters[index];
-                        final isSelected = _selectedCharacters.contains(name);
-                        return Card(
-                          color: Colors.white10,
-                          margin: const EdgeInsets.symmetric(
-                            vertical: 6,
-                            horizontal: 8,
-                          ),
-                          child: CheckboxListTile(
-                            value: isSelected,
-                            title: Text(
-                              name,
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            controlAffinity: ListTileControlAffinity.leading,
-                            onChanged: (checked) {
-                              setState(() {
-                                if (checked == true) {
-                                  if (!_selectedCharacters.contains(name)) {
-                                    _selectedCharacters.add(name);
-                                  }
-                                } else {
-                                  _selectedCharacters.remove(name);
-                                }
-                              });
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  TextButton(
-                    onPressed: _isWriting
-                        ? null
-                        : () async {
-                            if (_selectedCharacters.isEmpty) return;
-                            setState(() => _isWriting = true);
-                            try {
-                              _selectedCharacters.sort();
-                              List<String> tmp = _selectedCharacters
-                                  .map((c) => c.toLowerCase())
-                                  .toList();
-                              await DBProvider.instance.writeDefaultDB(tmp);
-                              if (!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Export réussi'),
-                                  duration: Duration(seconds: 2),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Each ListView must have bounded height; wrap them in Expanded
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: 500),
+                          child: Column(
+                            children: [
+                              Text(
+                                "LOCAL",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                              );
-                            } catch (e) {
-                              if (!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Erreur: $e'),
-                                  backgroundColor: Colors.red,
+                              ),
+                              Expanded(
+                                child: ListView.builder(
+                                  itemCount: widget.myCharacters.length,
+                                  itemBuilder: (context, index) {
+                                    final name = widget.myCharacters[index];
+                                    return DefaultDbCharacterCard(
+                                      name: name,
+                                      isLocal: true,
+                                    );
+                                  },
                                 ),
-                              );
-                            } finally {
-                              if (mounted) setState(() => _isWriting = false);
-                            }
-                          },
-                    child: const Text(
-                      'Validate',
-                      style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ),
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: 500),
+                          child: Column(
+                            children: [
+                              Text(
+                                "ONLINE",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Expanded(
+                                child: ListView.builder(
+                                  itemCount: _onlineCharacters.length,
+                                  itemBuilder: (context, index) {
+                                    final name = _onlineCharacters[index];
+                                    return DefaultDbCharacterCard(
+                                      name: name,
+                                      isLocal: false,
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                     ),
                   ),
                 ],

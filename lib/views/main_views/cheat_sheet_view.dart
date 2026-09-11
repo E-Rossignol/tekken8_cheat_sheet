@@ -39,6 +39,9 @@ class _CheatSheetViewState extends State<CheatSheetView> {
   /// Loaded key moves rows.
   List<Map<String, dynamic>> _keyMoves = [];
 
+  /// Backup of all key moves used for searching/restore.
+  List<Map<String, dynamic>> _allKeyMoves = [];
+
   /// Loaded punishes rows.
   List<Map<String, dynamic>> _punishes = [];
 
@@ -51,10 +54,25 @@ class _CheatSheetViewState extends State<CheatSheetView> {
   /// Loading indicator while fetching all tables.
   bool _loading = true;
 
+  /// Controller for inline search input.
+  final TextEditingController _searchController = TextEditingController();
+
+  /// Whether the small inline search bar is visible.
+  bool _showInlineSearch = false;
+
+  /// When true, search the 'input' field; when false, search the 'remark' field.
+  bool _searchUseInput = false;
+
   @override
   void initState() {
     super.initState();
     _loadAll();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   /// Load all relevant tables for the current character (key moves, punishes, combos, stances).
@@ -69,6 +87,7 @@ class _CheatSheetViewState extends State<CheatSheetView> {
       final s = await db.getStanceMovesForCharacter(widget.characterName);
       setState(() {
         _keyMoves = km;
+        _allKeyMoves = List<Map<String, dynamic>>.from(km);
         _punishes = p;
         _combos = c;
         _stances = s;
@@ -98,19 +117,19 @@ class _CheatSheetViewState extends State<CheatSheetView> {
   }
 
   void search() {
-    switch (_selected) {
-      case _Panel.keyMoves:
-        print("Searching key moves");
-        break;
-      case _Panel.punishes:
-        print("Searching punishes");
-        break;
-      case _Panel.combo:
-        print("Searching combos");
-        break;
-      case _Panel.stances:
-        print("Searching stances");
-        break;
+    if (_selected != _Panel.keyMoves) return;
+
+    // Toggle a small inline search bar shown just under the icon; does not block the UI.
+    setState(() {
+      _showInlineSearch = !_showInlineSearch;
+    });
+
+    if (!_showInlineSearch) {
+      // hide -> clear and restore
+      _searchController.clear();
+      setState(() {
+        _keyMoves = List<Map<String, dynamic>>.from(_allKeyMoves);
+      });
     }
   }
 
@@ -486,6 +505,119 @@ class _CheatSheetViewState extends State<CheatSheetView> {
                       ],
                     ),
                   ),
+                  // Inline search bar shown under the icons when activated. Does not block the UI.
+                  if (_showInlineSearch)
+                    Positioned(
+                      top: 44,
+                      right: 0,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: Container(
+                          width: 360,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _searchController,
+                                  autofocus: true,
+                                  decoration: InputDecoration(
+                                    hintText: !_searchUseInput
+                                        ? 'Ex: "low poke"'
+                                        : 'Ex: "df1/4"',
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                  ),
+                                  onChanged: (value) {
+                                    final q = value.toLowerCase();
+                                    final field = _searchUseInput
+                                        ? 'inputs'
+                                        : 'remark';
+                                    setState(() {
+                                      _keyMoves = _allKeyMoves
+                                          .where(
+                                            (m) => (m[field] ?? '')
+                                                .toString()
+                                                .toLowerCase()
+                                                .contains(q),
+                                          )
+                                          .toList();
+                                    });
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Switch to toggle between 'remark' and 'input' fields
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        'remark',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                      Switch(
+                                        value: _searchUseInput,
+                                        activeColor: Colors.blue,
+                                        onChanged: (v) {
+                                          setState(() {
+                                            _searchUseInput = v;
+                                            final q = _searchController.text
+                                                .toLowerCase();
+                                            final field = _searchUseInput
+                                                ? 'input'
+                                                : 'remark';
+                                            _keyMoves = _allKeyMoves
+                                                .where(
+                                                  (m) => (m[field] ?? '')
+                                                      .toString()
+                                                      .toLowerCase()
+                                                      .contains(q),
+                                                )
+                                                .toList();
+                                          });
+                                        },
+                                      ),
+                                      const Text(
+                                        'input',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() {
+                                    _keyMoves = List<Map<String, dynamic>>.from(
+                                      _allKeyMoves,
+                                    );
+                                    _showInlineSearch = false;
+                                    _searchUseInput = false;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
