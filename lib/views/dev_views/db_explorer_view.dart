@@ -159,7 +159,6 @@ class _DBExplorerViewState extends State<DBExplorerView> {
       "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
     );
     final tables = tablesQuery.map((e) => e['name'] as String).toList();
-
     setState(() {
       _tables = tables;
       if (_selectedTable == null && _tables.isNotEmpty) {
@@ -191,10 +190,20 @@ class _DBExplorerViewState extends State<DBExplorerView> {
     final pragma = await db.rawQuery("PRAGMA table_info('$table')");
     final cols = pragma.map((c) => (c['name'] as String)).toList();
 
+    // Déterminer la colonne de tri
+    String orderByColumn = 'characterName';
+    if (!cols.contains('characterName') && cols.contains('name')) {
+      orderByColumn = 'name';
+    }
+
     // quelques lignes (limite pour éviter freeze)
     List<Map<String, dynamic>> rows = [];
     try {
-      rows = await db.query(table, limit: 200); // limite configurable
+      rows = await db.query(
+        table,
+        orderBy: orderByColumn,
+        limit: 200,
+      ); // limite configurable
     } catch (e) {
       rows = [];
     }

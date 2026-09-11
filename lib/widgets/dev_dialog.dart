@@ -38,19 +38,6 @@ class _DevDialogState extends State<DevDialog> {
             ),
             TextButton(
               onPressed: () async {
-                String value = await DBProvider.instance
-                    .exportAllTablesAsJsonString();
-                Navigator.of(context).pop();
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (_) => DefaultDBView(value: value),
-                  ),
-                );
-              },
-              child: const Text('Generate default database'),
-            ),
-            TextButton(
-              onPressed: () async {
                 showDialog(
                   context: context,
                   builder: (_) => AlertDialog(

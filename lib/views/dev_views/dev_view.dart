@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tekken_cheat_sheet/views/dev_views/export_db_view.dart';
 import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
-import '../../constants/helper.dart';
 import '../../models/page_type_model.dart';
 import '../../services/db_provider.dart';
 import '../main_views/home_view.dart';
@@ -15,6 +15,27 @@ class DevView extends StatefulWidget {
 }
 
 class _DevViewState extends State<DevView> {
+  bool isGod = false;
+  @override
+  void initState() {
+    super.initState();
+    checkIsGod();
+  }
+
+  Future<void> checkIsGod() async {
+    var prefs = await SharedPreferences.getInstance();
+    var tmpIsGod = prefs.getBool('isGOD');
+    if (tmpIsGod == true) {
+      setState(() {
+        isGod = true;
+      });
+    } else {
+      setState(() {
+        isGod = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bgGradient = const LinearGradient(
@@ -33,6 +54,15 @@ class _DevViewState extends State<DevView> {
           children: [
             TextButton(
               onPressed: () {
+                if (!isGod) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('You are not GOD!'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                  return;
+                }
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const DBExplorerView()),
                 );
@@ -44,16 +74,18 @@ class _DevViewState extends State<DevView> {
             ),
             TextButton(
               onPressed: () async {
-                dynamic res = await DBProvider.instance.getAllMyCharacters();
-                List<String> chars = [];
-                for (dynamic raw in res) {
-                  chars.add(Helper().getBeautifulName(raw['name']));
+                if (!isGod) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('You are not GOD!'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                  return;
                 }
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => ExportDbView(myCharacters: chars),
-                  ),
-                );
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => ExportDbView()));
               },
               child: const Text(
                 'Update default database',
@@ -62,6 +94,15 @@ class _DevViewState extends State<DevView> {
             ),
             TextButton(
               onPressed: () async {
+                if (!isGod) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('You are not GOD!'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                  return;
+                }
                 showDialog(
                   context: context,
                   builder: (_) => AlertDialog(
@@ -140,6 +181,15 @@ class _DevViewState extends State<DevView> {
             ),
             TextButton(
               onPressed: () async {
+                if (!isGod) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('You are not GOD!'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                  return;
+                }
                 await DBProvider.instance.rebuildMyCharacters();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(

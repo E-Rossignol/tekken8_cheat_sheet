@@ -18,6 +18,11 @@ class DBProvider {
   Database? _db;
   static const String _lastErrorMessageKey = 'errorMessage';
 
+  /// Normalize character names by replacing spaces with hyphens
+  String _normalizeName(String name) {
+    return name.replaceAll(' ', '-');
+  }
+
   Future<void> _storeErrorMessage(Object error) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_lastErrorMessageKey, error.toString());
@@ -295,6 +300,7 @@ class DBProvider {
   /// @param name character name
   /// @return Future<int> inserted row id
   Future<int> insertMyCharacter(String name) async {
+    name = _normalizeName(name);
     return _withErrorStorage(() async {
       final db = await database;
       Map<String, dynamic> character = {
@@ -323,6 +329,7 @@ class DBProvider {
   /// @param characterName
   /// @return Future<void>
   Future<void> deleteAllCharacterData(String characterName) async {
+    characterName = _normalizeName(characterName);
     return _withErrorStorage(() async {
       final db = await database;
       await db.execute('DELETE FROM my_characters WHERE name = ?', [
@@ -347,6 +354,7 @@ class DBProvider {
   }
 
   Future<bool> toggleFavouriteCharacter(String characterName) async {
+    characterName = _normalizeName(characterName);
     return false;
   }
 
@@ -377,6 +385,7 @@ class DBProvider {
     int? onBlock,
     String? remark,
   }) async {
+    characterName = _normalizeName(characterName);
     return _withErrorStorage(() async {
       final db = await database;
       // ensure character exists to keep referential consistency for later queries
@@ -417,6 +426,7 @@ class DBProvider {
   Future<List<Map<String, dynamic>>> getKeyMovesForCharacter(
     String characterName,
   ) async {
+    characterName = _normalizeName(characterName);
     return _withErrorStorage(() async {
       final db = await database;
       final res = await db.query(
@@ -444,6 +454,7 @@ class DBProvider {
   /// @param string inputs string
   /// @return Future<bool> true if deleted
   Future<bool> deleteKeyMove(String characterName, String string) async {
+    characterName = _normalizeName(characterName);
     return _withErrorStorage(() async {
       final db = await database;
       var res = await db.delete(
@@ -465,6 +476,7 @@ class DBProvider {
     String input,
     int frames,
   ) async {
+    characterName = _normalizeName(characterName);
     return _withErrorStorage(() async {
       final db = await database;
       List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
@@ -505,6 +517,7 @@ class DBProvider {
   Future<List<Map<String, dynamic>>> getPunishesForCharacter(
     String characterName,
   ) async {
+    characterName = _normalizeName(characterName);
     return _withErrorStorage(() async {
       final db = await database;
       final res = await db.query(
@@ -533,6 +546,7 @@ class DBProvider {
     String string,
     int frames,
   ) async {
+    characterName = _normalizeName(characterName);
     return _withErrorStorage(() async {
       final db = await database;
       var res = await db.delete(
@@ -549,6 +563,7 @@ class DBProvider {
   /// @param input inputs string
   /// @return Future<int> inserted row id
   Future<int> insertCombo(String characterName, String input) async {
+    characterName = _normalizeName(characterName);
     return _withErrorStorage(() async {
       final db = await database;
       List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
@@ -578,6 +593,7 @@ class DBProvider {
     String input,
     int comboId,
   ) async {
+    characterName = _normalizeName(characterName);
     return _withErrorStorage(() async {
       final db = await database;
       List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
@@ -606,6 +622,7 @@ class DBProvider {
     String characterName,
     int comboId,
   ) async {
+    characterName = _normalizeName(characterName);
     return _withErrorStorage(() async {
       final db = await database;
       final comboRes = await db.query(
@@ -635,6 +652,7 @@ class DBProvider {
   Future<List<Map<String, dynamic>>> getCombosForCharacter(
     String characterName,
   ) async {
+    characterName = _normalizeName(characterName);
     return _withErrorStorage(() async {
       final db = await database;
       final res = await db.query(
@@ -669,6 +687,7 @@ class DBProvider {
   /// @param inputs string
   /// @return Future<bool>
   Future<bool> deleteCombo(String characterName, String inputs) async {
+    characterName = _normalizeName(characterName);
     return _withErrorStorage(() async {
       final db = await database;
       final res = await db.delete(
@@ -685,6 +704,7 @@ class DBProvider {
   /// @param launcherId
   /// @return Future<bool>
   Future<bool> deleteLauncher(String characterName, int launcherId) async {
+    characterName = _normalizeName(characterName);
     return _withErrorStorage(() async {
       final db = await database;
       final res = await db.delete(
@@ -714,6 +734,7 @@ class DBProvider {
     int? onHit,
     int? onBlock,
   }) async {
+    characterName = _normalizeName(characterName);
     return _withErrorStorage(() async {
       final db = await database;
       List<Map<String, dynamic>> existingChars = await getAllMyCharacters();
@@ -753,6 +774,7 @@ class DBProvider {
   Future<List<Map<String, dynamic>>> getStanceMovesForCharacter(
     String characterName,
   ) async {
+    characterName = _normalizeName(characterName);
     return _withErrorStorage(() async {
       final db = await database;
       final res = await db.query(
@@ -786,6 +808,7 @@ class DBProvider {
     String string,
     String stance,
   ) async {
+    characterName = _normalizeName(characterName);
     return _withErrorStorage(() async {
       final db = await database;
       var res = await db.delete(
@@ -1076,12 +1099,256 @@ class DBProvider {
     });
   }
 
-  /// Export all tables as a pretty JSON string ready to be copy/pasted.
-  /// @return Future<String> pretty-printed JSON
-  Future<String> exportAllTablesAsJsonString() async {
+  /// Sync character: Replace all local data for a character with Firebase data
+  /// Deletes all local data for the character and imports everything from Firebase
+  /// @param characterName name of the character to import from Firebase
+  Future<void> importCharacterFromFirebase(String characterName) async {
+    characterName = _normalizeName(characterName);
     return _withErrorStorage(() async {
-      final map = await exportAllTablesAsMap();
-      return const JsonEncoder.withIndent('  ').convert(map);
+      // 1. Delete all local data for this character
+      await deleteAllCharacterData(characterName);
+
+      // 2. Fetch all data from Firebase
+      final keyMoves = await FirebaseHelper.instance.getCollection('key_moves');
+      final punishes = await FirebaseHelper.instance.getCollection('punishes');
+      final combos = await FirebaseHelper.instance.getCollection('combos');
+      final launchers = await FirebaseHelper.instance.getCollection(
+        'launchers',
+      );
+      final stanceMoves = await FirebaseHelper.instance.getCollection(
+        'stance_moves',
+      );
+
+      // 3. Import data for this character into local DB
+      final db = await database;
+
+      await db.transaction((txn) async {
+        // Insert character if not exists
+        final existingChar = await txn.query(
+          'my_characters',
+          where: 'name = ?',
+          whereArgs: [characterName],
+        );
+        if (existingChar.isEmpty) {
+          await txn.insert('my_characters', {
+            'name': characterName,
+            'createdAt': DateTime.now().millisecondsSinceEpoch,
+          });
+        }
+
+        // Insert key moves for this character
+        for (final move in keyMoves) {
+          if (move['characterName'] == characterName) {
+            await txn.insert('key_moves', {
+              'characterName': move['characterName'],
+              'inputs': move['inputs'],
+              'frames': move['frames'],
+              'onHit': move['onHit'],
+              'onBlock': move['onBlock'],
+              'remark': move['remark'],
+              'createdAt': move['createdAt'],
+            }, conflictAlgorithm: ConflictAlgorithm.replace);
+          }
+        }
+
+        // Insert punishes
+        for (final punish in punishes) {
+          if (punish['characterName'] == characterName) {
+            await txn.insert('punishes', {
+              'characterName': punish['characterName'],
+              'inputs': punish['inputs'],
+              'frames': punish['frames'],
+              'createdAt': punish['createdAt'],
+            }, conflictAlgorithm: ConflictAlgorithm.replace);
+          }
+        }
+
+        // Insert combos
+        for (final combo in combos) {
+          if (combo['characterName'] == characterName) {
+            await txn.insert('combos', {
+              'characterName': combo['characterName'],
+              'inputs': combo['inputs'],
+              'createdAt': combo['createdAt'],
+            }, conflictAlgorithm: ConflictAlgorithm.replace);
+          }
+        }
+
+        // Insert launchers
+        for (final launcher in launchers) {
+          if (launcher['characterName'] == characterName) {
+            await txn.insert('launchers', {
+              'characterName': launcher['characterName'],
+              'inputs': launcher['inputs'],
+              'comboId': launcher['comboId'],
+              'createdAt': launcher['createdAt'],
+            }, conflictAlgorithm: ConflictAlgorithm.replace);
+          }
+        }
+
+        // Insert stance moves
+        for (final stance in stanceMoves) {
+          if (stance['characterName'] == characterName) {
+            await txn.insert('stance_moves', {
+              'characterName': stance['characterName'],
+              'stance': stance['stance'],
+              'inputs': stance['inputs'],
+              'remark': stance['remark'],
+              'frames': stance['frames'],
+              'onHit': stance['onHit'],
+              'onBlock': stance['onBlock'],
+              'createdAt': stance['createdAt'],
+            }, conflictAlgorithm: ConflictAlgorithm.replace);
+          }
+        }
+      });
+    });
+  }
+
+  /// Delete all data for a character from Firebase
+  /// @param characterName name of the character to delete
+  Future<void> deleteCharacterFromFirebase(String characterName) async {
+    characterName = _normalizeName(characterName);
+    return _withErrorStorage(() async {
+      await FirebaseHelper.instance.deleteDocumentsByField(
+        'my_characters',
+        'name',
+        characterName,
+      );
+      await FirebaseHelper.instance.deleteDocumentsByField(
+        'key_moves',
+        'characterName',
+        characterName,
+      );
+      await FirebaseHelper.instance.deleteDocumentsByField(
+        'punishes',
+        'characterName',
+        characterName,
+      );
+      await FirebaseHelper.instance.deleteDocumentsByField(
+        'combos',
+        'characterName',
+        characterName,
+      );
+      await FirebaseHelper.instance.deleteDocumentsByField(
+        'launchers',
+        'characterName',
+        characterName,
+      );
+      await FirebaseHelper.instance.deleteDocumentsByField(
+        'stance_moves',
+        'characterName',
+        characterName,
+      );
+    });
+  }
+
+  /// Save all local data for a character to Firebase
+  /// @param characterName name of the character to save
+  Future<void> saveCharacterToFirebase(String characterName) async {
+    characterName = _normalizeName(characterName);
+    return _withErrorStorage(() async {
+      final db = await database;
+
+      // Delete existing Firebase data for this character
+      await deleteCharacterFromFirebase(characterName);
+
+      // Fetch all local data for this character
+      final charData = await db.query(
+        'my_characters',
+        where: 'name = ?',
+        whereArgs: [characterName],
+      );
+      final keyMoves = await db.query(
+        'key_moves',
+        where: 'characterName = ?',
+        whereArgs: [characterName],
+      );
+      final punishes = await db.query(
+        'punishes',
+        where: 'characterName = ?',
+        whereArgs: [characterName],
+      );
+      final combos = await db.query(
+        'combos',
+        where: 'characterName = ?',
+        whereArgs: [characterName],
+      );
+      final launchers = await db.query(
+        'launchers',
+        where: 'characterName = ?',
+        whereArgs: [characterName],
+      );
+      final stanceMoves = await db.query(
+        'stance_moves',
+        where: 'characterName = ?',
+        whereArgs: [characterName],
+      );
+
+      // Save to Firebase
+      for (final char in charData) {
+        await FirebaseHelper.instance.set('my_characters', 'default', {
+          'id': char['id'],
+          'name': char['name'],
+          'createdAt': char['createdAt'],
+        });
+      }
+
+      for (final move in keyMoves) {
+        await FirebaseHelper.instance.set('key_moves', 'default', {
+          'id': move['id'],
+          'characterName': move['characterName'],
+          'inputs': move['inputs'],
+          'frames': move['frames'],
+          'onHit': move['onHit'],
+          'onBlock': move['onBlock'],
+          'remark': move['remark'],
+          'createdAt': move['createdAt'],
+        });
+      }
+
+      for (final punish in punishes) {
+        await FirebaseHelper.instance.set('punishes', 'default', {
+          'id': punish['id'],
+          'characterName': punish['characterName'],
+          'inputs': punish['inputs'],
+          'frames': punish['frames'],
+          'createdAt': punish['createdAt'],
+        });
+      }
+
+      for (final combo in combos) {
+        await FirebaseHelper.instance.set('combos', 'default', {
+          'id': combo['id'],
+          'characterName': combo['characterName'],
+          'inputs': combo['inputs'],
+          'createdAt': combo['createdAt'],
+        });
+      }
+
+      for (final launcher in launchers) {
+        await FirebaseHelper.instance.set('launchers', 'default', {
+          'id': launcher['id'],
+          'characterName': launcher['characterName'],
+          'inputs': launcher['inputs'],
+          'comboId': launcher['comboId'],
+          'createdAt': launcher['createdAt'],
+        });
+      }
+
+      for (final stance in stanceMoves) {
+        await FirebaseHelper.instance.set('stance_moves', 'default', {
+          'id': stance['id'],
+          'characterName': stance['characterName'],
+          'stance': stance['stance'],
+          'inputs': stance['inputs'],
+          'remark': stance['remark'],
+          'frames': stance['frames'],
+          'onHit': stance['onHit'],
+          'onBlock': stance['onBlock'],
+          'createdAt': stance['createdAt'],
+        });
+      }
     });
   }
 }

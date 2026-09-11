@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/helper.dart';
 
 class DefaultDbCharacterCard extends StatefulWidget {
@@ -7,15 +7,44 @@ class DefaultDbCharacterCard extends StatefulWidget {
     super.key,
     required this.name,
     required this.isLocal,
+    required this.onUpdate,
+    required this.onDelete,
+    required this.onImport,
   });
+
   final String name;
   final bool isLocal;
+  final Function onUpdate;
+  final Function onDelete;
+  final Function onImport;
 
   @override
   State<DefaultDbCharacterCard> createState() => _DefaultDbCharacterCardState();
 }
 
 class _DefaultDbCharacterCardState extends State<DefaultDbCharacterCard> {
+  bool isGod = false;
+
+  @override
+  void initState() {
+    super.initState();
+    checkIsGod();
+  }
+
+  Future<void> checkIsGod() async {
+    var prefs = await SharedPreferences.getInstance();
+    var tmpIsGod = prefs.getBool('isGOD');
+    if (tmpIsGod == true) {
+      setState(() {
+        isGod = true;
+      });
+    } else {
+      setState(() {
+        isGod = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bgGradient = const LinearGradient(
@@ -58,23 +87,33 @@ class _DefaultDbCharacterCardState extends State<DefaultDbCharacterCard> {
                   ),
                 ),
                 widget.isLocal
-                    ? IconButton(
-                        icon: Icon(
-                          Icons.arrow_circle_right_outlined,
-                          color: Colors.blue,
-                        ),
-                        onPressed: () {},
-                      )
+                    ? isGod
+                          ? IconButton(
+                              icon: Icon(
+                                Icons.arrow_circle_right_outlined,
+                                color: Colors.blue,
+                              ),
+                              onPressed: () async {
+                                await widget.onUpdate(widget.name);
+                              },
+                            )
+                          : SizedBox(width: 0, height: 0)
                     : Row(
                         children: [
                           IconButton(
-                            onPressed: () {},
+                            onPressed: () async {
+                              await widget.onImport(widget.name);
+                            },
                             icon: Icon(Icons.upload, color: Colors.green),
                           ),
-                          IconButton(
-                            onPressed: () {},
-                            icon: Icon(Icons.delete, color: Colors.red),
-                          ),
+                          isGod
+                              ? IconButton(
+                                  onPressed: () async {
+                                    await widget.onDelete(widget.name);
+                                  },
+                                  icon: Icon(Icons.delete, color: Colors.red),
+                                )
+                              : SizedBox(width: 0, height: 0),
                         ],
                       ),
               ],

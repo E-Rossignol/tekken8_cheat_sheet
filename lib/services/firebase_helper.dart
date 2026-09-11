@@ -158,4 +158,28 @@ class FirebaseHelper {
       await batch.commit();
     }
   }
+
+  // Delete all documents in a collection where a specific field matches a value.
+  // @param collectionPath name of the collection
+  // @param fieldName name of the field to filter on
+  // @param fieldValue value to match
+  // @param batchSize number of documents to delete per batch (default 500)
+  Future<void> deleteDocumentsByField(
+    String collectionPath,
+    String fieldName,
+    dynamic fieldValue, {
+    int batchSize = 500,
+  }) async {
+    final query = _col(collectionPath).where(fieldName, isEqualTo: fieldValue);
+    while (true) {
+      final snapshot = await query.limit(batchSize).get();
+      final docs = snapshot.docs;
+      if (docs.isEmpty) break;
+      final batch = _db.batch();
+      for (final doc in docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+    }
+  }
 }

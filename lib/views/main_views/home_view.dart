@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tekken_cheat_sheet/models/page_type_model.dart';
+import 'package:tekken_cheat_sheet/views/dev_views/export_db_view.dart';
 import 'package:tekken_cheat_sheet/widgets/custom_appbar.dart';
 import '../dev_views/dev_view.dart';
 import 'character_gallery_view.dart';
@@ -278,6 +279,21 @@ class _HomeViewState extends State<HomeView> {
                     ),
                     const SizedBox(height: 8),
                     _SidebarButton(
+                      label: 'DEFAULT DATAS',
+                      icon: Icons.data_usage,
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ExportDbView(),
+                          ),
+                        );
+                      },
+                      accent: accent,
+                    ),
+                    const SizedBox(height: 8),
+                    _SidebarButton(
                       label: 'DEV OPTIONS',
                       icon: Icons.settings,
                       accent: accent,
@@ -292,8 +308,11 @@ class _HomeViewState extends State<HomeView> {
                                 decoration: const InputDecoration(
                                   labelText: 'Password',
                                 ),
-                                onSubmitted: (value) {
+                                onSubmitted: (value) async {
+                                  var prefs =
+                                      await SharedPreferences.getInstance();
                                   if (value == '2563') {
+                                    prefs.setBool('isGOD', true);
                                     Navigator.of(context).pop();
                                     Navigator.push(
                                       context,

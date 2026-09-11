@@ -6,9 +6,7 @@ import '../../models/page_type_model.dart';
 import '../../widgets/custom_appbar.dart';
 
 class ExportDbView extends StatefulWidget {
-  const ExportDbView({super.key, required this.myCharacters});
-
-  final List<String> myCharacters;
+  const ExportDbView({super.key});
 
   @override
   State<ExportDbView> createState() => _ExportDbViewState();
@@ -16,21 +14,29 @@ class ExportDbView extends StatefulWidget {
 
 class _ExportDbViewState extends State<ExportDbView> {
   bool _isWriting = false;
-  final List<String> _onlineCharacters = [];
+  List<String> _onlineCharacters = [];
+  List<String> _localCharacters = [];
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     initOnlineCharacters();
+    initLocalCharacters();
   }
 
   Future<void> initOnlineCharacters() async {
     try {
+      _onlineCharacters.clear();
       final onlineChars = await DBProvider.instance.getOnlineCharacters();
       setState(() {
         _onlineCharacters.addAll(onlineChars);
+        for (String char in _onlineCharacters) {
+          char = char.replaceAll(" ", "-");
+        }
       });
+      _onlineCharacters.sort(
+        (a, b) => a.toLowerCase().compareTo(b.toLowerCase()),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -42,6 +48,22 @@ class _ExportDbViewState extends State<ExportDbView> {
         ),
       );
     }
+  }
+
+  Future<void> initLocalCharacters() async {
+    var chars = await DBProvider.instance.getAllMyCharacters();
+    setState(() {
+      _localCharacters.clear();
+      for (var char in chars) {
+        _localCharacters.add(char['name']);
+      }
+      for (String char in _localCharacters) {
+        char = char.replaceAll(" ", "-");
+      }
+      _localCharacters.sort(
+        (a, b) => a.toLowerCase().compareTo(b.toLowerCase()),
+      );
+    });
   }
 
   @override
@@ -83,12 +105,15 @@ class _ExportDbViewState extends State<ExportDbView> {
                               ),
                               Expanded(
                                 child: ListView.builder(
-                                  itemCount: widget.myCharacters.length,
+                                  itemCount: _localCharacters.length,
                                   itemBuilder: (context, index) {
-                                    final name = widget.myCharacters[index];
+                                    final name = _localCharacters[index];
                                     return DefaultDbCharacterCard(
                                       name: name,
                                       isLocal: true,
+                                      onDelete: deleteCharacter,
+                                      onImport: importCharacter,
+                                      onUpdate: updateCharacter,
                                     );
                                   },
                                 ),
@@ -116,6 +141,9 @@ class _ExportDbViewState extends State<ExportDbView> {
                                     return DefaultDbCharacterCard(
                                       name: name,
                                       isLocal: false,
+                                      onUpdate: updateCharacter,
+                                      onDelete: deleteCharacter,
+                                      onImport: importCharacter,
                                     );
                                   },
                                 ),
@@ -153,5 +181,50 @@ class _ExportDbViewState extends State<ExportDbView> {
         ),
       ),
     );
+  }
+
+  Future<void> updateCharacter(String name) async {
+    var db = DBProvider.instance;
+    setState(() {
+      _isWriting = true;
+    });
+    await db.saveCharacterToFirebase(name);
+    await initOnlineCharacters();
+    await initLocalCharacters();
+    setState(() {
+      _isWriting = false;
+      _onlineCharacters = _onlineCharacters;
+      _localCharacters = _localCharacters;
+    });
+  }
+
+  Future<void> deleteCharacter(String name) async {
+    setState(() {
+      _isWriting = true;
+    });
+    var db = DBProvider.instance;
+    await db.deleteCharacterFromFirebase(name.toLowerCase());
+    await initOnlineCharacters();
+    await initLocalCharacters();
+    setState(() {
+      _isWriting = false;
+      _onlineCharacters = _onlineCharacters;
+      _localCharacters = _localCharacters;
+    });
+  }
+
+  Future<void> importCharacter(String name) async {
+    var db = DBProvider.instance;
+    setState(() {
+      _isWriting = true;
+    });
+    await db.importCharacterFromFirebase(name);
+    await initOnlineCharacters();
+    await initLocalCharacters();
+    setState(() {
+      _isWriting = false;
+      _onlineCharacters = _onlineCharacters;
+      _localCharacters = _localCharacters;
+    });
   }
 }

@@ -9,7 +9,7 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await windowManager.ensureInitialized();
   WindowOptions windowOptions = WindowOptions(
-    size: Size(800, 600),
+    size: Size(1000, 600),
     center: true,
     backgroundColor: Colors.transparent,
     skipTaskbar: false,
@@ -19,6 +19,7 @@ void main() async {
         false, // Assurez-vous que le plein écran est désactivé par défaut
   );
   windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.maximize();
     await windowManager.show();
     await windowManager.focus();
   });
