@@ -5,7 +5,6 @@ import '../models/page_type_model.dart';
 import '../services/db_provider.dart';
 import '../views/main_views/home_view.dart';
 import '../views/dev_views/db_explorer_view.dart';
-import '../views/dev_views/default_db_view.dart'; // Import the new view
 
 class DevDialog extends StatefulWidget {
   const DevDialog({super.key});

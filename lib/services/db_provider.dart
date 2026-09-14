@@ -1121,7 +1121,6 @@ class DBProvider {
 
       // 3. Import data for this character into local DB
       final db = await database;
-
       await db.transaction((txn) async {
         // Insert character if not exists
         final existingChar = await txn.query(
@@ -1170,10 +1169,10 @@ class DBProvider {
               'characterName': combo['characterName'],
               'inputs': combo['inputs'],
               'createdAt': combo['createdAt'],
+              'id': combo['id'],
             }, conflictAlgorithm: ConflictAlgorithm.replace);
           }
         }
-
         // Insert launchers
         for (final launcher in launchers) {
           if (launcher['characterName'] == characterName) {
